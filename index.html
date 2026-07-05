@@ -317,10 +317,15 @@
 
       <p>Player 1 name:</p>
       <input type="text" id="player-name" placeholder="Type your name" maxlength="20">
+      <p>Player 1 email:</p>
+      <input type="email" id="player-email" placeholder="Type your email" maxlength="60">
       <div id="player2-name-wrap" style="display:none;">
         <p>Player 2 name:</p>
         <input type="text" id="player2-name" placeholder="Type player 2's name" maxlength="20">
+        <p>Player 2 email:</p>
+        <input type="email" id="player2-email" placeholder="Type player 2's email" maxlength="60">
       </div>
+      <p id="login-error" class="muted" style="display:none; color:#ff8888;">Please enter a name and a valid email for each player.</p>
       <div class="btn-row">
         <button class="btn" onclick="goToCharSelect()">Start the mission →</button>
         <button class="btn teal" onclick="openInstructions('start')">📖 How to play</button>
@@ -1898,7 +1903,7 @@ function diffRangeForLevel(level, questions, count){
 /* ---------------- STATE ---------------- */
 
 let state = {
-  name:'', name2:'', character:null, character2:null,
+  name:'', name2:'', email:'', email2:'', character:null, character2:null,
   mode:'single', // 'single' | 'two'
   totalScore:0, totalScore2:0,
   gems:0, gems2:0, // lifetime gems, drive the overall 10-level progression
@@ -1956,7 +1961,7 @@ function drawQuestions(missionId, count){
 function saveState(){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      name:state.name, name2:state.name2, character:state.character, character2:state.character2,
+      name:state.name, name2:state.name2, email:state.email, email2:state.email2, character:state.character, character2:state.character2,
       mode:state.mode, totalScore:state.totalScore, totalScore2:state.totalScore2,
       gems:state.gems, gems2:state.gems2,
       missionGems:state.missionGems, missionGems2:state.missionGems2,
@@ -1971,6 +1976,8 @@ function loadState(){
     const d = JSON.parse(raw);
     state.name = d.name || '';
     state.name2 = d.name2 || '';
+    state.email = d.email || '';
+    state.email2 = d.email2 || '';
     state.character = d.character || null;
     state.character2 = d.character2 || null;
     state.mode = d.mode || 'single';
@@ -2021,12 +2028,28 @@ function setMode(mode){
   document.getElementById('player2-name-wrap').style.display = mode==='two' ? 'block' : 'none';
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
 function goToCharSelect(){
-  const nameInput = document.getElementById('player-name');
-  state.name = nameInput.value.trim() || 'Crew Leader';
+  const errEl = document.getElementById('login-error');
+  const name1 = document.getElementById('player-name').value.trim();
+  const email1 = document.getElementById('player-email').value.trim();
+  let name2 = '', email2 = '';
   if(state.mode==='two'){
-    const n2 = document.getElementById('player2-name').value.trim();
-    state.name2 = n2 || 'Player 2';
+    name2 = document.getElementById('player2-name').value.trim();
+    email2 = document.getElementById('player2-email').value.trim();
+  }
+  const valid = name1 && EMAIL_RE.test(email1) && (state.mode!=='two' || (name2 && EMAIL_RE.test(email2)));
+  if(!valid){
+    if(errEl) errEl.style.display = 'block';
+    return;
+  }
+  if(errEl) errEl.style.display = 'none';
+  state.name = name1;
+  state.email = email1;
+  if(state.mode==='two'){
+    state.name2 = name2;
+    state.email2 = email2;
   }
   state.charSelectFor = 1;
   renderCharGrid();
@@ -3297,12 +3320,12 @@ function spawnConfettiBurst(count=10){
 /* ---------------- INIT ---------------- */
 
 loadState();
-if(state.name && state.character && (state.mode!=='two' || (state.name2 && state.character2))){
-  document.getElementById('player-name').value = state.name;
-  if(state.mode==='two'){
-    document.getElementById('player2-name').value = state.name2;
-    setMode('two');
-  }
+if(state.name) document.getElementById('player-name').value = state.name;
+if(state.email) document.getElementById('player-email').value = state.email;
+if(state.name2) document.getElementById('player2-name').value = state.name2;
+if(state.email2) document.getElementById('player2-email').value = state.email2;
+if(state.name && state.email && state.character && (state.mode!=='two' || (state.name2 && state.email2 && state.character2))){
+  if(state.mode==='two') setMode('two');
   showScreen('hub');
 }
 </script>
