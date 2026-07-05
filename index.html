@@ -393,6 +393,38 @@
       <p>You've proven it — brains beat old tricks. Claim your certificate.</p>
       <div class="btn-row"><button class="btn teal" onclick="showScreen('certificate')">View my certificate →</button></div>
     </div>
+    <div class="panel">
+      <h2>🏆 Crew Leaderboard</h2>
+      <p class="muted">Compare scores with everyone else who's played this game, anywhere.</p>
+      <div class="btn-row"><button class="btn secondary" onclick="showScreen('leaderboard')">View leaderboard →</button></div>
+    </div>
+  </div>
+
+  <!-- SHARED LEADERBOARD -->
+  <div class="screen" id="screen-leaderboard">
+    <div class="hud">
+      <div>🏆 Crew Leaderboard</div>
+      <div class="hud-right">
+        <button class="btn icon-btn small sound-toggle-btn" onclick="toggleSound()" title="Sound on/off">🔊</button>
+        <button class="btn icon-btn small" onclick="showScreen('hub')" title="Back to mission map">⬅</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Submit your score</h2>
+      <p class="muted">Sends your current name, total score, level, gems, and badge count to the shared leaderboard. Submitting again later updates your entry if your score improved.</p>
+      <div class="btn-row">
+        <button class="btn" onclick="submitScore(state.name, state.totalScore, computeLevel(state.gems), state.gems, Object.keys(state.badges).length)">📤 Submit my score (<span id="lb-submit-name1"></span>)</button>
+      </div>
+      <div class="btn-row" id="lb-submit-p2-row" style="display:none;">
+        <button class="btn" onclick="submitScore(state.name2, state.totalScore2, computeLevel(state.gems2), state.gems2, Object.keys(state.badges2).length)">📤 Submit <span id="lb-submit-name2"></span>'s score</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Top scores</h2>
+      <div class="btn-row"><button class="btn secondary" onclick="refreshLeaderboard()">🔄 Refresh</button></div>
+      <p id="lb-status" class="muted"></p>
+      <div id="lb-table"></div>
+    </div>
   </div>
 
   <!-- RETRO ARCADE (FREE PLAY, MISSION #12) -->
@@ -1964,6 +1996,7 @@ function showScreen(name){
   if(name==='certificate') renderCertificate();
   if(name==='topics') renderTopicGrid();
   if(name==='arcade') openArcade();
+  if(name==='leaderboard') openLeaderboardScreen();
 }
 
 function openInstructions(fromScreen){
@@ -2744,6 +2777,77 @@ function playArcadeGame(type){
     }
     showScreen('arcade');
   }, {forceType:type, arcade:true});
+}
+
+/* ---------------- SHARED LEADERBOARD (Google Sheets + Apps Script) ---------------- */
+// Backend: a Google Apps Script Web App backed by a Google Sheet. See project
+// notes for setup. Replace LEADERBOARD_URL if you redeploy your own copy.
+
+const LEADERBOARD_URL = 'https://script.google.com/macros/s/AKfycbwTqHBVKXYt4LsGEFGsmnVVQ7JIYklbsF1OMhkYsE2MxanZwlVd1QAoT6_Y2Rgx9DT-GQ/exec';
+
+function openLeaderboardScreen(){
+  const n1 = document.getElementById('lb-submit-name1');
+  if(n1) n1.textContent = state.name || 'Crew Leader';
+  const p2Row = document.getElementById('lb-submit-p2-row');
+  if(p2Row) p2Row.style.display = (state.mode==='two') ? 'block' : 'none';
+  const n2 = document.getElementById('lb-submit-name2');
+  if(n2) n2.textContent = state.name2 || 'Player 2';
+  refreshLeaderboard();
+}
+
+function refreshLeaderboard(){
+  const statusEl = document.getElementById('lb-status');
+  const tableEl = document.getElementById('lb-table');
+  if(statusEl) statusEl.textContent = 'Loading leaderboard…';
+  fetch(LEADERBOARD_URL)
+    .then(function(res){ return res.json(); })
+    .then(function(data){
+      if(!data || !data.ok){ throw new Error((data && data.error) || 'bad response'); }
+      renderLeaderboardTable(data.leaderboard || []);
+      if(statusEl) statusEl.textContent = '';
+    })
+    .catch(function(err){
+      if(statusEl) statusEl.textContent = 'Could not load the leaderboard right now. Check your connection and try Refresh.';
+      if(tableEl) tableEl.innerHTML = '';
+    });
+}
+
+function renderLeaderboardTable(entries){
+  const tableEl = document.getElementById('lb-table');
+  if(!tableEl) return;
+  if(!entries.length){
+    tableEl.innerHTML = '<p class="muted">No scores yet — be the first to submit!</p>';
+    return;
+  }
+  let html = '<table style="width:100%; border-collapse:collapse;">';
+  html += '<tr style="text-align:left;"><th style="padding:6px 8px;">#</th><th style="padding:6px 8px;">Name</th><th style="padding:6px 8px;">Score</th><th style="padding:6px 8px;">Level</th><th style="padding:6px 8px;">💎</th><th style="padding:6px 8px;">🏅</th></tr>';
+  entries.forEach(function(e, i){
+    const isMe = (e.name===state.name) || (state.mode==='two' && e.name===state.name2);
+    html += `<tr style="border-top:1px solid rgba(255,255,255,0.12); ${isMe ? 'font-weight:bold;' : ''}">
+      <td style="padding:6px 8px;">${i+1}</td>
+      <td style="padding:6px 8px;">${e.name}</td>
+      <td style="padding:6px 8px;">${e.score}</td>
+      <td style="padding:6px 8px;">${e.level}/10</td>
+      <td style="padding:6px 8px;">${e.gems}</td>
+      <td style="padding:6px 8px;">${e.badges}/11</td>
+    </tr>`;
+  });
+  html += '</table>';
+  tableEl.innerHTML = html;
+}
+
+function submitScore(name, score, level, gems, badges){
+  const statusEl = document.getElementById('lb-status');
+  if(!name || !name.trim()){
+    if(statusEl) statusEl.textContent = 'Enter a crew name before submitting.';
+    return;
+  }
+  if(statusEl) statusEl.textContent = 'Submitting…';
+  fetch(LEADERBOARD_URL, {
+    method: 'POST',
+    body: JSON.stringify({ name: name, score: score, level: level, gems: gems, badges: badges })
+  }).catch(function(){ /* fire-and-forget; ignore network errors here */ });
+  setTimeout(refreshLeaderboard, 1200);
 }
 
 const MiniGames = {
