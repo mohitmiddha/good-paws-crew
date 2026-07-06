@@ -1598,11 +1598,13 @@ function nextPrompt(){
 
   const optionsEl = document.getElementById('lane-options');
   optionsEl.innerHTML = '';
-  p.options.forEach((opt, i)=>{
+  const displayOrder = shuffle(p.options.map((_, i)=> i));
+  state.current.displayOrder = displayOrder;
+  displayOrder.forEach(origIndex=>{
     const btn = document.createElement('button');
     btn.className = 'lane-btn';
-    btn.textContent = opt;
-    btn.onclick = ()=> chooseLane(i);
+    btn.textContent = p.options[origIndex];
+    btn.onclick = ()=> chooseLane(origIndex);
     optionsEl.appendChild(btn);
   });
 
@@ -1623,6 +1625,8 @@ function chooseLane(choiceIndex){
   state.current.answered = true;
   const p = state.current.prompts[state.current.idx];
   const buttons = document.getElementById('lane-options').querySelectorAll('.lane-btn');
+  const displayOrder = state.current.displayOrder || [0,1];
+  const posOf = (origIdx)=> displayOrder.indexOf(origIdx);
   buttons.forEach(b=> b.disabled = true);
   const feedback = document.getElementById('race-feedback');
   if(choiceIndex === p.correctIndex){
@@ -1631,13 +1635,16 @@ function chooseLane(choiceIndex){
     SFX.correct();
     feedback.textContent = '✅ Correct! Boost activated.';
     feedback.className = 'race-feedback good';
-    if(buttons[choiceIndex]) buttons[choiceIndex].classList.add('correct');
+    const btn = buttons[posOf(choiceIndex)];
+    if(btn) btn.classList.add('correct');
   } else {
     SFX.wrong();
     feedback.textContent = '❌ Not quite — you keep racing, just no boost.';
     feedback.className = 'race-feedback bad';
-    if(buttons[choiceIndex]) buttons[choiceIndex].classList.add('wrong');
-    if(buttons[p.correctIndex]) buttons[p.correctIndex].classList.add('correct');
+    const wrongBtn = buttons[posOf(choiceIndex)];
+    const correctBtn = buttons[posOf(p.correctIndex)];
+    if(wrongBtn) wrongBtn.classList.add('wrong');
+    if(correctBtn) correctBtn.classList.add('correct');
   }
   document.getElementById('fact-note').textContent = '💡 ' + p.fact;
   advanceAfterDelay();
