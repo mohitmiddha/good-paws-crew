@@ -180,15 +180,28 @@
     letter-spacing:.02em;
   }
 
-  .claude-badge{
-    display:inline-block;
-    margin:14px auto 0;
+  .claude-badge-wrap{
     text-align:center;
-    width:100%;
-    font-size:.78rem;
+    margin-top:14px;
+  }
+  .claude-badge{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    font-size:.8rem;
     font-weight:600;
-    color:#b45309;
-    letter-spacing:.02em;
+    color:#b3532e;
+    background:#fdf3ee;
+    border:1px solid #f3d9cb;
+    padding:6px 14px;
+    border-radius:999px;
+    letter-spacing:.01em;
+  }
+  .claude-badge-icon{
+    width:13px;
+    height:13px;
+    fill:#c9633a;
+    flex-shrink:0;
   }
 
   @media (max-width:480px){
@@ -265,7 +278,14 @@
     </div>
 
     <footer class="note">Progress saves automatically in your browser, separately for each game. Made for a curious Grade 6 crew leader.</footer>
-    <div class="claude-badge">✨ Designed with Claude</div>
+    <div class="claude-badge-wrap">
+      <span class="claude-badge">
+        <svg class="claude-badge-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <path d="M12 1 L13.9 9.2 L21.5 6.5 L15.3 12 L21.5 17.5 L13.9 14.8 L12 23 L10.1 14.8 L2.5 17.5 L8.7 12 L2.5 6.5 L10.1 9.2 Z"/>
+        </svg>
+        Made with Claude
+      </span>
+    </div>
   </div>
 
 <script>
