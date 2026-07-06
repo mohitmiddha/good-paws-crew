@@ -1,0 +1,1751 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fact Racers: Grand Circuit</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --asphalt:#26262e; --asphalt2:#33333d; --checker:#f4f4f4; --orange:#ff7a1a;
+    --teal:#2fd6b0; --red:#ff3b4e; --yellow:#ffd23f; --purple:#8c5cff; --green:#3ac97f;
+    --cream:#fff8ec; --card:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Titillium Web','Segoe UI',sans-serif;
+    background:radial-gradient(circle at 25% 5%, #33333d 0%, #17171c 70%);
+    color:var(--cream);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  #app{ max-width:920px; margin:0 auto; padding:20px 16px 60px; min-height:100vh; }
+  .screen{ display:none; animation:fadeIn .4s ease; }
+  .screen.active{ display:block; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  h1,h2,h3,.btn{ font-family:'Rajdhani',sans-serif; font-weight:700; margin:.2em 0; }
+  h1{ font-size:2rem; text-align:center; color:var(--yellow); text-shadow:2px 2px 0 var(--asphalt2); letter-spacing:.03em; }
+  h2{ font-size:1.4rem; color:var(--teal); }
+  p{ line-height:1.55; }
+
+  .panel{
+    background:linear-gradient(160deg, #33333d, #26262e);
+    border:2px solid var(--orange);
+    border-radius:10px;
+    padding:22px;
+    margin:16px 0;
+    box-shadow:0 6px 0 rgba(0,0,0,.35);
+  }
+
+  .btn{
+    display:inline-block; background:var(--orange); color:#fff; border:none;
+    border-radius:8px; padding:14px 26px; font-size:1.1rem;
+    cursor:pointer; box-shadow:0 5px 0 #b8460a; transition:transform .1s;
+  }
+  .btn:active{ transform:translateY(4px); box-shadow:0 1px 0 #b8460a; }
+  .btn:hover{ filter:brightness(1.08); }
+  .btn.secondary{ background:var(--purple); box-shadow:0 5px 0 #4a34b5; }
+  .btn.teal{ background:var(--teal); box-shadow:0 5px 0 #187c62; color:#04261d; }
+  .btn.small{ padding:8px 16px; font-size:.9rem; box-shadow:0 3px 0 rgba(0,0,0,.35); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn-row{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:18px; }
+
+  input[type=text]{
+    width:100%; padding:12px 14px; border-radius:8px; border:3px solid var(--orange);
+    font-size:1.1rem; font-family:inherit; background:#fff; color:#26262e;
+  }
+
+  .char-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-top:16px; }
+  .char-card{
+    background:var(--asphalt); border:3px solid transparent; border-radius:10px; padding:14px;
+    text-align:center; cursor:pointer; transition:transform .15s, border-color .15s;
+  }
+  .char-card:hover{ transform:translateY(-4px); }
+  .char-card.selected{ border-color:var(--yellow); background:#3d3d48; }
+  .char-emoji{ width:64px; height:64px; margin:0 auto; }
+  .char-emoji svg{ width:100%; height:100%; display:block; }
+  .char-name{ font-weight:bold; color:var(--yellow); margin:.3em 0 0; }
+  .char-role{ font-size:.8rem; color:var(--teal); }
+
+  .instr-step{ display:flex; gap:14px; align-items:flex-start; margin:14px 0; }
+  .instr-emoji{ font-size:1.8rem; flex-shrink:0; }
+  .instr-text b{ color:var(--yellow); display:block; margin-bottom:2px; }
+
+  .hud{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; background:var(--asphalt); border-radius:10px; padding:10px 16px; margin-bottom:16px; font-size:.95rem; }
+  .hud span b{ color:var(--yellow); }
+
+  .track-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:16px; margin-top:18px; }
+  .track-card{
+    background:linear-gradient(160deg, #33333d, #26262e);
+    border:2px solid var(--orange);
+    border-radius:10px;
+    padding:16px; cursor:pointer; transition:transform .15s;
+    text-align:center;
+  }
+  .track-card:hover{ transform:translateY(-5px); }
+  .track-icon{ font-size:2.2rem; }
+  .track-title{ font-weight:bold; color:var(--yellow); margin:.3em 0 2px; font-size:1rem; }
+  .track-lead{ font-size:.78rem; color:var(--teal); margin-bottom:6px; }
+  .track-stars{ font-size:1rem; letter-spacing:2px; }
+
+  .race-track{ position:relative; height:70px; background:repeating-linear-gradient(90deg, var(--asphalt) 0 30px, var(--asphalt2) 30px 60px); border-radius:10px; overflow:hidden; margin-bottom:16px; border:2px solid #444; }
+  .race-track:before{ content:''; position:absolute; top:0; bottom:0; left:0; right:0; background:repeating-linear-gradient(90deg, transparent 0 40px, rgba(255,255,255,.25) 40px 46px); pointer-events:none; }
+  .finish-flag{ position:absolute; right:0; top:0; bottom:0; width:36px; background:repeating-conic-gradient(var(--checker) 0 25%, #222 0 50%) 0 0/16px 16px; }
+  .racer-car{ position:absolute; top:50%; transform:translateY(-50%); left:6px; font-size:2.2rem; transition:left .6s cubic-bezier(.2,.8,.2,1); }
+  .progress-bar{ height:8px; background:var(--asphalt2); border-radius:6px; overflow:hidden; margin-bottom:14px; }
+  .progress-fill{ height:100%; background:linear-gradient(90deg, var(--teal), var(--orange)); width:0%; transition:width .6s ease; }
+
+  .prompt-box{ text-align:center; font-size:1.25rem; margin:10px 0 18px; min-height:2.6em; }
+  .lane-options{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:6px; }
+  .lane-btn{
+    background:var(--asphalt); border:3px solid var(--teal); border-radius:10px; padding:16px 10px;
+    font-size:1.05rem; color:var(--cream); cursor:pointer; font-family:'Titillium Web',sans-serif; font-weight:600;
+    transition:transform .12s, border-color .12s;
+  }
+  .lane-btn:hover{ transform:translateY(-3px); }
+  .lane-btn:disabled{ opacity:.55; cursor:not-allowed; }
+  .lane-btn.correct{ border-color:var(--green); background:#1f3d2c; }
+  .lane-btn.wrong{ border-color:var(--red); background:#3d1f24; }
+
+  .race-feedback{ text-align:center; margin-top:10px; font-size:1rem; min-height:1.4em; }
+  .race-feedback.good{ color:#8fe0b0; }
+  .race-feedback.bad{ color:#ff9fae; }
+  .fact-note{ text-align:center; font-size:.88rem; color:var(--teal); margin-top:8px; min-height:1.3em; }
+
+  .cert-panel{ text-align:center; border-color:var(--yellow); }
+  .cert-badge-big{ font-size:3.5rem; }
+  .cert-name{ font-size:1.6rem; color:var(--yellow); font-weight:bold; margin:.3em 0; }
+  .cert-title{ font-size:1.1rem; letter-spacing:1px; color:var(--teal); }
+
+  .sound-toggle-btn{ position:fixed; top:14px; right:14px; background:var(--asphalt2); border:2px solid var(--yellow); border-radius:50%; width:40px; height:40px; font-size:1.1rem; cursor:pointer; z-index:50; }
+
+  .confetti{ position:fixed; top:-30px; font-size:1.6rem; pointer-events:none; animation:confettiFall linear forwards; z-index:100; }
+  @keyframes confettiFall{ to{ transform:translateY(105vh) rotate(360deg); opacity:.3; } }
+
+  .lb-table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:.95rem; }
+  .lb-table th,.lb-table td{ padding:8px 10px; text-align:left; border-bottom:1px solid var(--asphalt2); }
+  .lb-table th{ color:var(--yellow); }
+  .lb-table tr.me{ background:rgba(255,210,63,.12); }
+  .lb-table td:first-child, .lb-table th:first-child{ width:34px; text-align:center; }
+
+  .footer-note{ text-align:center; font-size:.8rem; color:#a3a3ad; margin-top:30px; }
+  .muted{ color:#a3a3ad; font-size:.85rem; text-align:center; }
+
+  @media (max-width:480px){ .prompt-box{ font-size:1.05rem; } .lane-options{ grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<button class="sound-toggle-btn" onclick="toggleSound()">🔊</button>
+<div id="app">
+
+  <div id="screen-start" class="screen active">
+    <h1>🏁 Fact Racers: Grand Circuit 🏁</h1>
+    <div class="panel">
+      <p><b>Chief Checkered</b> is starting the engines! Race down 11 circuits, picking the correct answer in each two-lane choice to speed your car toward the finish line — covering geography, space, animals, sports, logic, maths, science, language arts, art, design, and Spanish.</p>
+      <p>Pick a nickname, choose your racer, and hit the gas!</p>
+      <label for="player-name" style="font-weight:bold;">Your nickname</label>
+      <input type="text" id="player-name" placeholder="Enter a nickname" maxlength="18" style="margin-top:6px;">
+      <div class="btn-row">
+        <button class="btn" onclick="goToCharSelect()">Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-char" class="screen">
+    <h1>Choose your Racer</h1>
+    <div class="panel">
+      <div class="char-grid" id="char-grid"></div>
+      <div class="btn-row">
+        <button class="btn" id="char-continue-btn" onclick="goToInstructions()" disabled>Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-instructions" class="screen">
+    <h1>How to Race</h1>
+    <div class="panel">
+      <div class="instr-step"><div class="instr-emoji">🏁</div><div class="instr-text"><b>1. Pick any circuit</b>All 11 circuits are open from the start — geography with Terra, space with Astro, animals with Cheetah, sports with Turbo, logic with Riddle, maths with Digit, science with Quantum, language arts with Story, art with Palette, design with Gear, and Spanish with Veloz.</div></div>
+      <div class="instr-step"><div class="instr-emoji">🚦</div><div class="instr-text"><b>2. Pick the correct lane</b>Each race asks 10 quick two-option questions. Tap the option you think is correct to send your car speeding forward.</div></div>
+      <div class="instr-step"><div class="instr-emoji">🏎️</div><div class="instr-text"><b>3. Watch your car move</b>Correct picks boost your car toward the checkered flag. Wrong picks still let you race on, just without the boost.</div></div>
+      <div class="instr-step"><div class="instr-emoji">🔀</div><div class="instr-text"><b>4. Circuits shuffle every time</b>Each circuit has a full pool of questions, so replaying can pull a fresh mix.</div></div>
+      <div class="instr-step"><div class="instr-emoji">🏆</div><div class="instr-text"><b>5. Earn badges & a certificate</b>More correct picks means more trophy stars. Finish all 11 circuits to unlock your Grand Circuit certificate.</div></div>
+      <div class="btn-row">
+        <button class="btn" onclick="showScreen('hub')">Start Racing!</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-hub" class="screen">
+    <h1>🏁 Grand Circuit Map 🏁</h1>
+    <div class="hud" id="hud-stats"></div>
+    <div class="panel">
+      <div class="track-grid" id="track-grid"></div>
+    </div>
+    <div class="panel cert-panel" id="cert-panel" style="display:none;">
+      <p>🏆 Every circuit raced! Your certificate awaits.</p>
+      <div class="btn-row"><button class="btn teal" onclick="showScreen('certificate')">View Certificate</button></div>
+    </div>
+    <div class="panel center">
+      <h2>🏆 Circuit Leaderboard</h2>
+      <p class="muted">Compare scores with everyone who's played on this device.</p>
+      <div class="btn-row"><button class="btn secondary small" onclick="showScreen('leaderboard')">View leaderboard →</button></div>
+    </div>
+    <div class="btn-row"><button class="btn secondary small" onclick="showScreen('instructions')">How to Play</button></div>
+  </div>
+
+  <div id="screen-leaderboard" class="screen">
+    <h1>🏆 Circuit Leaderboard</h1>
+    <div class="panel">
+      <p class="muted">Top scores saved on this device, across everyone who's played Fact Racers here.</p>
+      <div id="lb-table-local"></div>
+      <div class="btn-row"><button class="btn secondary small" onclick="showScreen('hub')">Back to map</button></div>
+    </div>
+  </div>
+
+  <div id="screen-race" class="screen">
+    <h1 id="race-track-title">Circuit</h1>
+    <div class="hud" id="race-hud"></div>
+    <div class="panel">
+      <div class="race-track" id="race-track">
+        <div class="racer-car" id="racer-car">🏎️</div>
+        <div class="finish-flag"></div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" id="progress-fill"></div></div>
+      <div class="prompt-box" id="prompt-box"></div>
+      <div class="lane-options" id="lane-options"></div>
+      <div class="race-feedback" id="race-feedback"></div>
+      <div class="fact-note" id="fact-note"></div>
+      <div class="btn-row"><button class="btn secondary small" onclick="showScreen('hub')">Pit stop (back to map)</button></div>
+    </div>
+  </div>
+
+  <div id="screen-certificate" class="screen">
+    <h1>🏆 Certificate of Achievement 🏆</h1>
+    <div class="panel cert-panel" id="cert-body">
+      <div class="cert-badge-big">🏁</div>
+      <p>🏁 Chief Checkered hereby certifies that</p>
+      <div class="cert-name" id="cert-name"></div>
+      <div class="cert-title">OFFICIAL GRAND CIRCUIT CHAMPION (CERTIFIED)</div>
+      <p style="margin-top:14px;">Every circuit on the Grand Circuit has been raced. Well done, Racer!</p>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="cert-download-btn" onclick="downloadCertificateImage()">⬇️ Download certificate</button>
+      <button class="btn" onclick="showScreen('hub')">Back to map</button>
+    </div>
+  </div>
+
+</div>
+<div class="footer-note" style="text-align:center;">Progress saves automatically in this browser. Built for a curious Grade 6 grand circuit racer.</div>
+
+<script>
+const CHARACTERS = [
+  {
+    "id": "terra",
+    "emoji": "🏁",
+    "name": "Terra Dash",
+    "role": "Geography Racer",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#2c4a3a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#a8f0cf\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🏁</text></svg>"
+  },
+  {
+    "id": "astro",
+    "emoji": "🌌",
+    "name": "Astro Blaze",
+    "role": "Space Racer",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#25366e\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#aecbff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🌌</text></svg>"
+  },
+  {
+    "id": "cheetah",
+    "emoji": "⚡",
+    "name": "Cheetah Comet",
+    "role": "Animals Racer",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#5a4a1f\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffdca3\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">⚡</text></svg>"
+  },
+  {
+    "id": "turbo",
+    "emoji": "⚽",
+    "name": "Turbo Kick",
+    "role": "Sports Racer",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#1f6a3a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#a8f0c8\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">⚽</text></svg>"
+  },
+  {
+    "id": "riddle",
+    "emoji": "🧩",
+    "name": "Riddle Racer",
+    "role": "Thinktank Racer",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#5a3a8a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#dcc9ff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🧩</text></svg>"
+  },
+  {
+    "id": "digit",
+    "emoji": "🔢",
+    "name": "Digit Dash",
+    "role": "Math Racer",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#8a6a1f\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffedbf\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🔢</text></svg>"
+  },
+  {
+    "id": "quantum",
+    "emoji": "🧪",
+    "name": "Quantum Zoom",
+    "role": "Science Racer",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#1f6a8a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#a8e4f5\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🧪</text></svg>"
+  },
+  {
+    "id": "story",
+    "emoji": "📖",
+    "name": "Story Sprinter",
+    "role": "Language Arts Racer",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#6a2f4a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#f5c2d6\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">📖</text></svg>"
+  },
+  {
+    "id": "palette",
+    "emoji": "🎨",
+    "name": "Palette Pacer",
+    "role": "Arts Racer",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#6a1f8a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#e3c2ff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🎨</text></svg>"
+  },
+  {
+    "id": "gear",
+    "emoji": "🛠️",
+    "name": "Gear Grinder",
+    "role": "Design Racer",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#8a4a1f\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffcf9e\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🛠️</text></svg>"
+  },
+  {
+    "id": "veloz",
+    "emoji": "🇪🇸",
+    "name": "Veloz Estrella",
+    "role": "Spanish Racer",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#8a1f3a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffb2c2\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🇪🇸</text></svg>"
+  },
+  {
+    "id": "chief",
+    "emoji": "🏆",
+    "name": "Chief Checkered",
+    "role": "Keeper of the Grand Circuit",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#333a4a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffd35f\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🏆</text></svg>"
+  }
+];
+const TOPICS = [
+  {
+    "id": "geography",
+    "title": "Geography Circuit",
+    "icon": "🏁",
+    "lead": "Terra Dash",
+    "leadId": "terra",
+    "prompts": [
+      {
+        "prompt": "Which mountain is taller?",
+        "options": [
+          "Mount Everest",
+          "Mount Kilimanjaro"
+        ],
+        "correctIndex": 0,
+        "fact": "Mount Everest stands 8,849m tall, far above Kilimanjaro's 5,895m."
+      },
+      {
+        "prompt": "Which country is bigger by area?",
+        "options": [
+          "Russia",
+          "Canada"
+        ],
+        "correctIndex": 0,
+        "fact": "Russia covers about 17.1 million km², the largest country on Earth; Canada is second at 9.98 million km²."
+      },
+      {
+        "prompt": "Which ocean is the largest?",
+        "options": [
+          "Pacific Ocean",
+          "Atlantic Ocean"
+        ],
+        "correctIndex": 0,
+        "fact": "The Pacific Ocean covers about 165 million km², more than the Atlantic's 106 million km²."
+      },
+      {
+        "prompt": "Which desert is larger?",
+        "options": [
+          "Sahara Desert",
+          "Gobi Desert"
+        ],
+        "correctIndex": 0,
+        "fact": "The Sahara spans about 9.2 million km², while the Gobi covers roughly 1.3 million km²."
+      },
+      {
+        "prompt": "Which continent is bigger?",
+        "options": [
+          "Asia",
+          "Europe"
+        ],
+        "correctIndex": 0,
+        "fact": "Asia covers about 44.6 million km², making it the largest continent; Europe covers about 10.2 million km²."
+      },
+      {
+        "prompt": "Which river is longer?",
+        "options": [
+          "Nile River",
+          "Thames River"
+        ],
+        "correctIndex": 0,
+        "fact": "The Nile stretches about 6,650km, while the Thames is only about 346km long."
+      },
+      {
+        "prompt": "Which lake is bigger by area?",
+        "options": [
+          "Caspian Sea",
+          "Lake Superior"
+        ],
+        "correctIndex": 0,
+        "fact": "The Caspian Sea covers about 371,000 km², making it the largest lake on Earth, versus Lake Superior's 82,100 km²."
+      },
+      {
+        "prompt": "Which is colder on average?",
+        "options": [
+          "Antarctica",
+          "the Arctic"
+        ],
+        "correctIndex": 0,
+        "fact": "Antarctica's interior averages about -57°C, colder than the Arctic's winter average near -40°C."
+      },
+      {
+        "prompt": "Which country has more people?",
+        "options": [
+          "India",
+          "Indonesia"
+        ],
+        "correctIndex": 0,
+        "fact": "India has over 1.4 billion people, far more than Indonesia's roughly 280 million."
+      },
+      {
+        "prompt": "Which city's metro area has more people?",
+        "options": [
+          "Tokyo",
+          "New York City"
+        ],
+        "correctIndex": 0,
+        "fact": "Greater Tokyo has around 37 million people, the largest metro area in the world, versus NYC's roughly 20 million."
+      }
+    ]
+  },
+  {
+    "id": "space",
+    "title": "Space Circuit",
+    "icon": "🌌",
+    "lead": "Astro Blaze",
+    "leadId": "astro",
+    "prompts": [
+      {
+        "prompt": "Which planet is bigger?",
+        "options": [
+          "Jupiter",
+          "Earth"
+        ],
+        "correctIndex": 0,
+        "fact": "Jupiter is the largest planet in our solar system, about 11 times wider than Earth."
+      },
+      {
+        "prompt": "Which planet is closer to the Sun?",
+        "options": [
+          "Venus",
+          "Mars"
+        ],
+        "correctIndex": 0,
+        "fact": "Venus is the second planet from the Sun; Mars is the fourth."
+      },
+      {
+        "prompt": "Which planet is hotter?",
+        "options": [
+          "Venus",
+          "Mercury"
+        ],
+        "correctIndex": 0,
+        "fact": "Venus reaches about 462°C thanks to its thick greenhouse atmosphere, hotter than Mercury despite Mercury being closer to the Sun."
+      },
+      {
+        "prompt": "Which moon is bigger?",
+        "options": [
+          "Earth's Moon",
+          "Mars' Phobos"
+        ],
+        "correctIndex": 0,
+        "fact": "Earth's Moon is about 3,475km across, while Phobos is only about 22km wide."
+      },
+      {
+        "prompt": "Which planet takes longer to orbit the Sun?",
+        "options": [
+          "Mars",
+          "Earth"
+        ],
+        "correctIndex": 0,
+        "fact": "Mars takes about 687 days to orbit the Sun, compared to Earth's 365 days."
+      },
+      {
+        "prompt": "Which has more known moons?",
+        "options": [
+          "Saturn",
+          "Earth"
+        ],
+        "correctIndex": 0,
+        "fact": "Saturn has dozens of known moons, while Earth has just one."
+      },
+      {
+        "prompt": "Which is closer to Earth?",
+        "options": [
+          "the Sun",
+          "Proxima Centauri"
+        ],
+        "correctIndex": 0,
+        "fact": "The Sun is about 150 million km away, while Proxima Centauri, the nearest star, is over 4 light-years away."
+      },
+      {
+        "prompt": "Which is bigger?",
+        "options": [
+          "the Sun",
+          "Earth"
+        ],
+        "correctIndex": 0,
+        "fact": "The Sun is about 109 times wider than Earth."
+      },
+      {
+        "prompt": "Which planet is famous for its bright rings?",
+        "options": [
+          "Saturn",
+          "Uranus"
+        ],
+        "correctIndex": 0,
+        "fact": "Saturn's rings are the largest and most visible in the solar system, even though Uranus also has faint rings."
+      },
+      {
+        "prompt": "Which is older?",
+        "options": [
+          "the solar system",
+          "human civilization"
+        ],
+        "correctIndex": 0,
+        "fact": "The solar system formed about 4.6 billion years ago, vastly older than human civilization, which is only thousands of years old."
+      }
+    ]
+  },
+  {
+    "id": "animals",
+    "title": "Animals Circuit",
+    "icon": "⚡",
+    "lead": "Cheetah Comet",
+    "leadId": "cheetah",
+    "prompts": [
+      {
+        "prompt": "Which is the fastest land animal?",
+        "options": [
+          "Cheetah",
+          "Lion"
+        ],
+        "correctIndex": 0,
+        "fact": "Cheetahs can sprint over 100 km/h, much faster than lions."
+      },
+      {
+        "prompt": "Which is bigger?",
+        "options": [
+          "Blue Whale",
+          "Elephant"
+        ],
+        "correctIndex": 0,
+        "fact": "The blue whale is the largest animal ever known, far bigger than an elephant."
+      },
+      {
+        "prompt": "Which typically lives longer?",
+        "options": [
+          "Tortoise",
+          "Dog"
+        ],
+        "correctIndex": 0,
+        "fact": "Giant tortoises can live over 100 years, while dogs typically live 10-13 years."
+      },
+      {
+        "prompt": "Which can fly?",
+        "options": [
+          "Eagle",
+          "Penguin"
+        ],
+        "correctIndex": 0,
+        "fact": "Eagles are powerful fliers; penguins are flightless birds adapted for swimming."
+      },
+      {
+        "prompt": "Which is better adapted for swimming?",
+        "options": [
+          "Dolphin",
+          "Horse"
+        ],
+        "correctIndex": 0,
+        "fact": "Dolphins have streamlined bodies and fins built for swimming, unlike horses."
+      },
+      {
+        "prompt": "Which is nocturnal (active at night)?",
+        "options": [
+          "Owl",
+          "Rooster"
+        ],
+        "correctIndex": 0,
+        "fact": "Owls hunt mainly at night, while roosters are active during the day."
+      },
+      {
+        "prompt": "Which is a carnivore (meat-eater)?",
+        "options": [
+          "Lion",
+          "Panda"
+        ],
+        "correctIndex": 0,
+        "fact": "Lions hunt and eat meat, while giant pandas eat mostly bamboo."
+      },
+      {
+        "prompt": "Which has a longer neck?",
+        "options": [
+          "Giraffe",
+          "Zebra"
+        ],
+        "correctIndex": 0,
+        "fact": "Giraffes have the longest necks of any land animal, much longer than a zebra's."
+      },
+      {
+        "prompt": "Which animal is known as the loudest?",
+        "options": [
+          "Blue Whale",
+          "Elephant"
+        ],
+        "correctIndex": 0,
+        "fact": "The blue whale's calls can reach over 180 decibels, the loudest of any animal."
+      },
+      {
+        "prompt": "Which has a hard protective shell?",
+        "options": [
+          "Turtle",
+          "Frog"
+        ],
+        "correctIndex": 0,
+        "fact": "Turtles carry a hard shell for protection; frogs do not."
+      }
+    ]
+  },
+  {
+    "id": "sports",
+    "title": "Sports Circuit",
+    "icon": "⚽",
+    "lead": "Turbo Kick",
+    "leadId": "turbo",
+    "prompts": [
+      {
+        "prompt": "Which sport uses a racket?",
+        "options": [
+          "Tennis",
+          "Soccer"
+        ],
+        "correctIndex": 0,
+        "fact": "Tennis players use rackets to hit the ball; soccer uses only feet and the body."
+      },
+      {
+        "prompt": "Which sport has more players per team on the field?",
+        "options": [
+          "Soccer (11)",
+          "Basketball (5)"
+        ],
+        "correctIndex": 0,
+        "fact": "A soccer team fields 11 players, compared to 5 for basketball."
+      },
+      {
+        "prompt": "Which is a swimming event?",
+        "options": [
+          "Freestyle",
+          "Marathon"
+        ],
+        "correctIndex": 0,
+        "fact": "Freestyle is a swimming stroke and race event; a marathon is a long-distance running race."
+      },
+      {
+        "prompt": "Which ball is bigger?",
+        "options": [
+          "Basketball",
+          "Golf ball"
+        ],
+        "correctIndex": 0,
+        "fact": "A basketball is about 24cm across, far bigger than a golf ball at about 4cm."
+      },
+      {
+        "prompt": "Which sport is traditionally played on ice?",
+        "options": [
+          "Ice Hockey",
+          "Volleyball"
+        ],
+        "correctIndex": 0,
+        "fact": "Ice hockey is played on an ice rink; volleyball is played on a court."
+      },
+      {
+        "prompt": "Which sport uses a bat?",
+        "options": [
+          "Cricket",
+          "Swimming"
+        ],
+        "correctIndex": 0,
+        "fact": "Cricket players use a bat to hit the ball; swimming uses no equipment like that."
+      },
+      {
+        "prompt": "Which event covers a longer distance?",
+        "options": [
+          "Marathon",
+          "100m Sprint"
+        ],
+        "correctIndex": 0,
+        "fact": "A marathon is 42.2km, vastly longer than a 100m sprint."
+      },
+      {
+        "prompt": "Which sport has a goalkeeper?",
+        "options": [
+          "Soccer",
+          "Tennis"
+        ],
+        "correctIndex": 0,
+        "fact": "Soccer teams have a goalkeeper defending the goal; tennis has no such role."
+      },
+      {
+        "prompt": "Which is a winter sport?",
+        "options": [
+          "Skiing",
+          "Surfing"
+        ],
+        "correctIndex": 0,
+        "fact": "Skiing takes place on snow in winter; surfing takes place on ocean waves."
+      },
+      {
+        "prompt": "Which sport uses a net dividing the court in half?",
+        "options": [
+          "Volleyball",
+          "Baseball"
+        ],
+        "correctIndex": 0,
+        "fact": "Volleyball is played over a net dividing the court; baseball uses a diamond field with no net."
+      }
+    ]
+  },
+  {
+    "id": "thinktank",
+    "title": "Thinktank Circuit",
+    "icon": "🧩",
+    "lead": "Riddle Racer",
+    "leadId": "riddle",
+    "prompts": [
+      {
+        "prompt": "Which number is prime?",
+        "options": [
+          "7",
+          "8"
+        ],
+        "correctIndex": 0,
+        "fact": "7 can only be divided evenly by 1 and itself, making it prime; 8 can be divided by 2 and 4."
+      },
+      {
+        "prompt": "Which shape has more sides?",
+        "options": [
+          "Hexagon",
+          "Triangle"
+        ],
+        "correctIndex": 0,
+        "fact": "A hexagon has 6 sides, while a triangle has only 3."
+      },
+      {
+        "prompt": "Which is an even number?",
+        "options": [
+          "6",
+          "9"
+        ],
+        "correctIndex": 0,
+        "fact": "6 divides evenly by 2, making it even; 9 does not."
+      },
+      {
+        "prompt": "Which sequence is increasing?",
+        "options": [
+          "2, 4, 6, 8",
+          "8, 6, 4, 2"
+        ],
+        "correctIndex": 0,
+        "fact": "The first sequence goes up in value each step; the second goes down."
+      },
+      {
+        "prompt": "Which word is a palindrome?",
+        "options": [
+          "level",
+          "hello"
+        ],
+        "correctIndex": 0,
+        "fact": "\"level\" reads the same forwards and backwards; \"hello\" does not."
+      },
+      {
+        "prompt": "Which shape has more sides?",
+        "options": [
+          "Pentagon",
+          "Square"
+        ],
+        "correctIndex": 0,
+        "fact": "A pentagon has 5 sides, one more than a square's 4."
+      },
+      {
+        "prompt": "Which is a factor of 12?",
+        "options": [
+          "4",
+          "5"
+        ],
+        "correctIndex": 0,
+        "fact": "12 divided by 4 equals 3 exactly, so 4 is a factor; 12 does not divide evenly by 5."
+      },
+      {
+        "prompt": "Which shape has no straight sides?",
+        "options": [
+          "Circle",
+          "Square"
+        ],
+        "correctIndex": 0,
+        "fact": "A circle is made of one continuous curve with no straight sides, unlike a square."
+      },
+      {
+        "prompt": "Which set has more items?",
+        "options": [
+          "{1, 2, 3}",
+          "{1, 2}"
+        ],
+        "correctIndex": 0,
+        "fact": "The first set has 3 items; the second has only 2."
+      },
+      {
+        "prompt": "Which is a larger number?",
+        "options": [
+          "100",
+          "99"
+        ],
+        "correctIndex": 0,
+        "fact": "100 is one more than 99, making it the larger number."
+      }
+    ]
+  },
+  {
+    "id": "math",
+    "title": "Math Circuit",
+    "icon": "🔢",
+    "lead": "Digit Dash",
+    "leadId": "digit",
+    "prompts": [
+      {
+        "prompt": "Which fraction is bigger?",
+        "options": [
+          "3/4",
+          "1/2"
+        ],
+        "correctIndex": 0,
+        "fact": "3/4 (0.75) is greater than 1/2 (0.5)."
+      },
+      {
+        "prompt": "Which decimal is bigger?",
+        "options": [
+          "0.5",
+          "0.25"
+        ],
+        "correctIndex": 0,
+        "fact": "0.5 is twice as large as 0.25."
+      },
+      {
+        "prompt": "Which is a right angle?",
+        "options": [
+          "90°",
+          "45°"
+        ],
+        "correctIndex": 0,
+        "fact": "A right angle measures exactly 90 degrees."
+      },
+      {
+        "prompt": "Which shape's area formula uses pi (π)?",
+        "options": [
+          "Circle",
+          "Square"
+        ],
+        "correctIndex": 0,
+        "fact": "A circle's area is π times its radius squared; a square's area is just side times side."
+      },
+      {
+        "prompt": "Which is the result of 6 × 7?",
+        "options": [
+          "42",
+          "36"
+        ],
+        "correctIndex": 0,
+        "fact": "6 multiplied by 7 equals 42."
+      },
+      {
+        "prompt": "Which is a multiple of 5?",
+        "options": [
+          "25",
+          "22"
+        ],
+        "correctIndex": 0,
+        "fact": "25 divides evenly by 5 (5 × 5 = 25); 22 does not."
+      },
+      {
+        "prompt": "Which value is greater?",
+        "options": [
+          "20% of 100",
+          "10% of 100"
+        ],
+        "correctIndex": 0,
+        "fact": "20% of 100 is 20, which is greater than 10% of 100, which is 10."
+      },
+      {
+        "prompt": "Which is a square number?",
+        "options": [
+          "16",
+          "18"
+        ],
+        "correctIndex": 0,
+        "fact": "16 is 4 × 4, a perfect square; 18 is not."
+      },
+      {
+        "prompt": "Which unit is longer?",
+        "options": [
+          "Kilometer",
+          "Meter"
+        ],
+        "correctIndex": 0,
+        "fact": "A kilometer equals 1,000 meters, so it is much longer than a single meter."
+      },
+      {
+        "prompt": "In \"2 + 3 × 4\", which operation happens first by order of operations?",
+        "options": [
+          "Multiplication",
+          "Addition"
+        ],
+        "correctIndex": 0,
+        "fact": "Order of operations says multiplication happens before addition, so 3 × 4 is calculated first."
+      }
+    ]
+  },
+  {
+    "id": "science",
+    "title": "Science Circuit",
+    "icon": "🧪",
+    "lead": "Quantum Zoom",
+    "leadId": "quantum",
+    "prompts": [
+      {
+        "prompt": "Which state of matter is ice?",
+        "options": [
+          "Solid",
+          "Liquid"
+        ],
+        "correctIndex": 0,
+        "fact": "Ice is water in its solid state, with a fixed shape."
+      },
+      {
+        "prompt": "Which travels faster?",
+        "options": [
+          "Light",
+          "Sound"
+        ],
+        "correctIndex": 0,
+        "fact": "Light travels about 300,000 km per second, far faster than sound at about 343 meters per second."
+      },
+      {
+        "prompt": "Which typically has more mass for the same size?",
+        "options": [
+          "a Rock",
+          "a Feather"
+        ],
+        "correctIndex": 0,
+        "fact": "A rock is much denser than a feather, so it has far more mass for the same size."
+      },
+      {
+        "prompt": "Which conducts electricity better?",
+        "options": [
+          "Copper",
+          "Rubber"
+        ],
+        "correctIndex": 0,
+        "fact": "Copper is a metal and an excellent electrical conductor; rubber is an insulator."
+      },
+      {
+        "prompt": "Which boils at a higher temperature at sea level?",
+        "options": [
+          "Water",
+          "Rubbing Alcohol"
+        ],
+        "correctIndex": 0,
+        "fact": "Water boils at 100°C at sea level, higher than rubbing alcohol's roughly 82-83°C."
+      },
+      {
+        "prompt": "Which is a renewable energy source?",
+        "options": [
+          "Solar Power",
+          "Coal"
+        ],
+        "correctIndex": 0,
+        "fact": "Solar power comes from the sun and never runs out; coal is a fossil fuel that takes millions of years to form."
+      },
+      {
+        "prompt": "Which has a breathable atmosphere for humans?",
+        "options": [
+          "Earth",
+          "the Moon"
+        ],
+        "correctIndex": 0,
+        "fact": "Earth has an oxygen-rich atmosphere; the Moon has essentially no atmosphere."
+      },
+      {
+        "prompt": "Which is denser?",
+        "options": [
+          "Iron",
+          "Wood"
+        ],
+        "correctIndex": 0,
+        "fact": "Iron is much denser than wood, which is why iron sinks in water and most wood floats."
+      },
+      {
+        "prompt": "Which produces its own food through photosynthesis?",
+        "options": [
+          "a Plant",
+          "an Animal"
+        ],
+        "correctIndex": 0,
+        "fact": "Plants make their own food using sunlight through photosynthesis; animals cannot."
+      },
+      {
+        "prompt": "Which gas do plants take in for photosynthesis?",
+        "options": [
+          "Carbon Dioxide",
+          "Nitrogen"
+        ],
+        "correctIndex": 0,
+        "fact": "Plants absorb carbon dioxide from the air to use in photosynthesis."
+      }
+    ]
+  },
+  {
+    "id": "langarts",
+    "title": "Language Arts Circuit",
+    "icon": "📖",
+    "lead": "Story Sprinter",
+    "leadId": "story",
+    "prompts": [
+      {
+        "prompt": "Which word is a verb?",
+        "options": [
+          "Jump",
+          "Chair"
+        ],
+        "correctIndex": 0,
+        "fact": "\"Jump\" describes an action, making it a verb; \"chair\" is a thing, a noun."
+      },
+      {
+        "prompt": "Which word is an adjective?",
+        "options": [
+          "Blue",
+          "Quickly"
+        ],
+        "correctIndex": 0,
+        "fact": "\"Blue\" describes a noun (like \"blue sky\"); \"quickly\" describes a verb, making it an adverb."
+      },
+      {
+        "prompt": "Which is a complete sentence?",
+        "options": [
+          "She runs fast.",
+          "Running fast."
+        ],
+        "correctIndex": 0,
+        "fact": "\"She runs fast.\" has a subject and a verb, forming a complete sentence; \"Running fast.\" does not."
+      },
+      {
+        "prompt": "Which word means the same as \"happy\"?",
+        "options": [
+          "Joyful",
+          "Sad"
+        ],
+        "correctIndex": 0,
+        "fact": "\"Joyful\" is a synonym for \"happy\"; \"sad\" is its opposite."
+      },
+      {
+        "prompt": "Which word means the opposite of \"big\"?",
+        "options": [
+          "Small",
+          "Huge"
+        ],
+        "correctIndex": 0,
+        "fact": "\"Small\" is an antonym of \"big\"; \"huge\" means the same as big."
+      },
+      {
+        "prompt": "Which is a proper noun?",
+        "options": [
+          "Paris",
+          "city"
+        ],
+        "correctIndex": 0,
+        "fact": "\"Paris\" names a specific place and is capitalized as a proper noun; \"city\" is a general common noun."
+      },
+      {
+        "prompt": "Which punctuation ends a question?",
+        "options": [
+          "?",
+          "."
+        ],
+        "correctIndex": 0,
+        "fact": "A question mark (?) is used to end a question."
+      },
+      {
+        "prompt": "Which sentence is a metaphor?",
+        "options": [
+          "Time is a thief.",
+          "Time is like a thief."
+        ],
+        "correctIndex": 0,
+        "fact": "\"Time is a thief\" directly states one thing is another, making it a metaphor; \"like\" makes the second one a simile."
+      },
+      {
+        "prompt": "Which word rhymes with \"cat\"?",
+        "options": [
+          "Hat",
+          "Dog"
+        ],
+        "correctIndex": 0,
+        "fact": "\"Hat\" rhymes with \"cat\" because they share the same ending sound; \"dog\" does not."
+      },
+      {
+        "prompt": "Which word is plural?",
+        "options": [
+          "Books",
+          "Book"
+        ],
+        "correctIndex": 0,
+        "fact": "\"Books\" refers to more than one, making it plural; \"book\" is singular."
+      }
+    ]
+  },
+  {
+    "id": "arts",
+    "title": "Arts Circuit",
+    "icon": "🎨",
+    "lead": "Palette Pacer",
+    "leadId": "palette",
+    "prompts": [
+      {
+        "prompt": "Which is a primary color?",
+        "options": [
+          "Red",
+          "Green"
+        ],
+        "correctIndex": 0,
+        "fact": "Red is one of the three primary colors (red, blue, yellow); green is a secondary color made by mixing."
+      },
+      {
+        "prompt": "Which two colors mix to make green?",
+        "options": [
+          "Blue and Yellow",
+          "Red and White"
+        ],
+        "correctIndex": 0,
+        "fact": "Mixing blue and yellow paint creates green."
+      },
+      {
+        "prompt": "Which is a wind instrument?",
+        "options": [
+          "Flute",
+          "Drum"
+        ],
+        "correctIndex": 0,
+        "fact": "A flute makes sound from blown air, making it a wind instrument; a drum is percussion."
+      },
+      {
+        "prompt": "Which is a percussion instrument?",
+        "options": [
+          "Drum",
+          "Violin"
+        ],
+        "correctIndex": 0,
+        "fact": "A drum is played by striking it, making it percussion; a violin is a string instrument."
+      },
+      {
+        "prompt": "Which art style is famous for tiny dots of color?",
+        "options": [
+          "Pointillism",
+          "Cubism"
+        ],
+        "correctIndex": 0,
+        "fact": "Pointillism uses small distinct dots of color to form an image, a technique pioneered by artists like Georges Seurat."
+      },
+      {
+        "prompt": "Which is a warm color?",
+        "options": [
+          "Orange",
+          "Blue"
+        ],
+        "correctIndex": 0,
+        "fact": "Orange is considered a warm color; blue is considered a cool color."
+      },
+      {
+        "prompt": "Which is a cool color?",
+        "options": [
+          "Blue",
+          "Yellow"
+        ],
+        "correctIndex": 0,
+        "fact": "Blue is considered a cool color; yellow is considered a warm color."
+      },
+      {
+        "prompt": "Which is a 3D artwork?",
+        "options": [
+          "Sculpture",
+          "Painting"
+        ],
+        "correctIndex": 0,
+        "fact": "A sculpture has three-dimensional depth you can walk around; a painting is flat, two-dimensional."
+      },
+      {
+        "prompt": "Which instrument has strings?",
+        "options": [
+          "Guitar",
+          "Trumpet"
+        ],
+        "correctIndex": 0,
+        "fact": "A guitar makes sound using plucked strings; a trumpet is a brass instrument."
+      },
+      {
+        "prompt": "Which lightens a paint color when added?",
+        "options": [
+          "White",
+          "Black"
+        ],
+        "correctIndex": 0,
+        "fact": "Adding white to a paint color creates a lighter tint; adding black creates a darker shade."
+      }
+    ]
+  },
+  {
+    "id": "design",
+    "title": "Design Circuit",
+    "icon": "🛠️",
+    "lead": "Gear Grinder",
+    "leadId": "gear",
+    "prompts": [
+      {
+        "prompt": "Which shape gives more strength in a bridge truss?",
+        "options": [
+          "Triangle",
+          "Square"
+        ],
+        "correctIndex": 0,
+        "fact": "Triangles hold their shape under pressure without bending, which is why engineers use them in bridge trusses."
+      },
+      {
+        "prompt": "Which conducts heat better?",
+        "options": [
+          "Metal",
+          "Wood"
+        ],
+        "correctIndex": 0,
+        "fact": "Metal is a much better heat conductor than wood, which is why pot handles are often wood or plastic."
+      },
+      {
+        "prompt": "Which is lighter for the same size?",
+        "options": [
+          "Aluminum",
+          "Steel"
+        ],
+        "correctIndex": 0,
+        "fact": "Aluminum is roughly three times lighter than steel for the same volume."
+      },
+      {
+        "prompt": "Which tool measures length?",
+        "options": [
+          "Ruler",
+          "Thermometer"
+        ],
+        "correctIndex": 0,
+        "fact": "A ruler measures length or distance; a thermometer measures temperature."
+      },
+      {
+        "prompt": "Which shape rolls easily?",
+        "options": [
+          "Circle",
+          "Square"
+        ],
+        "correctIndex": 0,
+        "fact": "A circle has a smooth curved edge that rolls easily; a square has corners that stop it from rolling."
+      },
+      {
+        "prompt": "Which is a natural material?",
+        "options": [
+          "Wood",
+          "Plastic"
+        ],
+        "correctIndex": 0,
+        "fact": "Wood comes directly from trees, a natural material; plastic is manufactured from chemicals."
+      },
+      {
+        "prompt": "Which structure is typically taller?",
+        "options": [
+          "Skyscraper",
+          "Bungalow"
+        ],
+        "correctIndex": 0,
+        "fact": "A skyscraper is built with many stories reaching great heights, unlike a single-story bungalow."
+      },
+      {
+        "prompt": "Which is used to join pieces of wood?",
+        "options": [
+          "Nail",
+          "Eraser"
+        ],
+        "correctIndex": 0,
+        "fact": "A nail is a fastener used to join wood; an eraser removes pencil marks."
+      },
+      {
+        "prompt": "Which vehicle part reduces friction to help movement?",
+        "options": [
+          "Wheel",
+          "Flat Base"
+        ],
+        "correctIndex": 0,
+        "fact": "A wheel rolls to reduce friction with the ground, making movement easier than dragging a flat base."
+      },
+      {
+        "prompt": "Which comes first in the design process?",
+        "options": [
+          "Planning",
+          "Building"
+        ],
+        "correctIndex": 0,
+        "fact": "Good design starts with planning before any building or construction begins."
+      }
+    ]
+  },
+  {
+    "id": "spanish",
+    "title": "Spanish Circuit",
+    "icon": "🇪🇸",
+    "lead": "Veloz Estrella",
+    "leadId": "veloz",
+    "prompts": [
+      {
+        "prompt": "Which word means \"dog\" in Spanish?",
+        "options": [
+          "Perro",
+          "Gato"
+        ],
+        "correctIndex": 0,
+        "fact": "\"Perro\" means dog in Spanish; \"gato\" means cat."
+      },
+      {
+        "prompt": "Which word means \"hello\"?",
+        "options": [
+          "Hola",
+          "Adiós"
+        ],
+        "correctIndex": 0,
+        "fact": "\"Hola\" means hello; \"adiós\" means goodbye."
+      },
+      {
+        "prompt": "Which word means \"book\"?",
+        "options": [
+          "Libro",
+          "Mesa"
+        ],
+        "correctIndex": 0,
+        "fact": "\"Libro\" means book; \"mesa\" means table."
+      },
+      {
+        "prompt": "Which word means \"red\"?",
+        "options": [
+          "Rojo",
+          "Azul"
+        ],
+        "correctIndex": 0,
+        "fact": "\"Rojo\" means red; \"azul\" means blue."
+      },
+      {
+        "prompt": "Which word means \"water\"?",
+        "options": [
+          "Agua",
+          "Fuego"
+        ],
+        "correctIndex": 0,
+        "fact": "\"Agua\" means water; \"fuego\" means fire."
+      },
+      {
+        "prompt": "Which word means \"friend\"?",
+        "options": [
+          "Amigo",
+          "Enemigo"
+        ],
+        "correctIndex": 0,
+        "fact": "\"Amigo\" means friend; \"enemigo\" means enemy."
+      },
+      {
+        "prompt": "Which word means \"school\"?",
+        "options": [
+          "Escuela",
+          "Casa"
+        ],
+        "correctIndex": 0,
+        "fact": "\"Escuela\" means school; \"casa\" means house."
+      },
+      {
+        "prompt": "Which word means \"thank you\"?",
+        "options": [
+          "Gracias",
+          "Por favor"
+        ],
+        "correctIndex": 0,
+        "fact": "\"Gracias\" means thank you; \"por favor\" means please."
+      },
+      {
+        "prompt": "Which word means \"number\"?",
+        "options": [
+          "Número",
+          "Color"
+        ],
+        "correctIndex": 0,
+        "fact": "\"Número\" means number; \"color\" means color (a near-identical loanword)."
+      },
+      {
+        "prompt": "Which word means \"family\"?",
+        "options": [
+          "Familia",
+          "Trabajo"
+        ],
+        "correctIndex": 0,
+        "fact": "\"Familia\" means family; \"trabajo\" means work."
+      }
+    ]
+  }
+];
+const STORAGE_KEY = 'factRacersSave';
+
+/* ---------------- SOUND EFFECTS (synthesized, no audio files needed) ---------------- */
+let soundEnabled = true;
+try{ const s = localStorage.getItem('goodPawsSoundEnabled'); if(s!==null) soundEnabled = s==='1'; }catch(e){}
+
+const SFX = (function(){
+  let ctx = null;
+  function getCtx(){
+    if(!ctx){ ctx = new (window.AudioContext||window.webkitAudioContext)(); }
+    if(ctx.state==='suspended') ctx.resume();
+    return ctx;
+  }
+  function tone(freq, start, duration, type, vol){
+    if(!soundEnabled) return;
+    try{
+      const c = getCtx();
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      osc.connect(gain); gain.connect(c.destination);
+      const t0 = c.currentTime + start;
+      gain.gain.setValueAtTime(vol||0.15, t0);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0+duration);
+      osc.start(t0);
+      osc.stop(t0+duration+0.03);
+    }catch(e){}
+  }
+  return {
+    click(){ tone(600,0,0.06,'square',0.10); },
+    correct(){ tone(523.25,0,0.12,'sine',0.16); tone(783.99,0.1,0.16,'sine',0.16); },
+    wrong(){ tone(180,0,0.25,'sawtooth',0.13); },
+    badge(){ tone(523.25,0,0.12,'triangle',0.18); tone(659.25,0.12,0.12,'triangle',0.18); tone(783.99,0.24,0.12,'triangle',0.18); tone(1046.5,0.36,0.24,'triangle',0.2); }
+  };
+})();
+function updateSoundButtons(){ document.querySelectorAll('.sound-toggle-btn').forEach(btn=>{ btn.textContent = soundEnabled ? '🔊' : '🔇'; }); }
+function toggleSound(){
+  soundEnabled = !soundEnabled;
+  try{ localStorage.setItem('goodPawsSoundEnabled', soundEnabled ? '1' : '0'); }catch(e){}
+  updateSoundButtons();
+  if(soundEnabled) SFX.click();
+}
+document.addEventListener('click', function(e){
+  const el = e.target.closest('.btn, .track-card, .char-card, .lane-btn');
+  if(el && !el.disabled) SFX.click();
+}, true);
+document.addEventListener('DOMContentLoaded', updateSoundButtons);
+
+function spawnConfettiBurst(count=10){
+  const emojis = ['🎉','⭐','🏆','✨','🏁'];
+  for(let i=0;i<count;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    el.style.left = Math.random()*100 + 'vw';
+    el.style.animationDuration = (2 + Math.random()*1.5) + 's';
+    document.body.appendChild(el);
+    setTimeout(()=> el.remove(), 4000);
+  }
+}
+
+/* ---------------- STATE ---------------- */
+let state = {
+  name:'', character:null,
+  badges:{}, // topicId -> {stars, correct}
+  gems:0, totalScore:0,
+  current:{ topicId:null, prompts:[], idx:0, correctCount:0, score:0, answered:false }
+};
+
+function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) state = Object.assign(state, JSON.parse(raw));
+  }catch(e){}
+}
+
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=> s.classList.remove('active'));
+  const el = document.getElementById('screen-'+name);
+  if(el) el.classList.add('active');
+  if(name==='hub') renderHub();
+  if(name==='leaderboard') renderLeaderboardScreen();
+}
+
+function getCharacter(id){ return CHARACTERS.find(c=>c.id===id); }
+function getTopic(id){ return TOPICS.find(t=>t.id===id); }
+
+function renderCharGrid(){
+  const grid = document.getElementById('char-grid');
+  grid.innerHTML = '';
+  CHARACTERS.forEach(c=>{
+    const card = document.createElement('div');
+    card.className = 'char-card' + (state.character===c.id ? ' selected' : '');
+    card.innerHTML = '<div class="char-emoji">'+c.avatar+'</div><div class="char-name">'+c.name+'</div><div class="char-role">'+c.role+'</div>';
+    card.onclick = ()=>{
+      state.character = c.id;
+      renderCharGrid();
+      document.getElementById('char-continue-btn').disabled = false;
+    };
+    grid.appendChild(card);
+  });
+}
+
+function goToCharSelect(){
+  const nameInput = document.getElementById('player-name');
+  const name = nameInput.value.trim();
+  if(!name){ nameInput.focus(); return; }
+  state.name = name;
+  saveState();
+  renderCharGrid();
+  showScreen('char');
+}
+function goToInstructions(){
+  saveState();
+  showScreen('instructions');
+}
+
+function renderHub(){
+  const hud = document.getElementById('hud-stats');
+  const badgeCount = Object.keys(state.badges).length;
+  hud.innerHTML = '<span>👤 <b>'+(state.name||'Racer')+'</b></span><span>🏆 Badges: <b>'+badgeCount+'/'+TOPICS.length+'</b></span><span>💎 Gems: <b>'+state.gems+'</b></span>';
+
+  const grid = document.getElementById('track-grid');
+  grid.innerHTML = '';
+  TOPICS.forEach(topic=>{
+    const badge = state.badges[topic.id];
+    const card = document.createElement('div');
+    card.className = 'track-card';
+    const stars = badge ? '⭐'.repeat(badge.stars) + '☆'.repeat(3-badge.stars) : '☆☆☆';
+    card.innerHTML = '<div class="track-icon">'+topic.icon+'</div><div class="track-title">'+topic.title+'</div><div class="track-lead">with '+topic.lead+'</div><div class="track-stars">'+stars+'</div>';
+    card.onclick = ()=> startRace(topic.id);
+    grid.appendChild(card);
+  });
+
+  document.getElementById('cert-panel').style.display = (badgeCount===TOPICS.length) ? 'block' : 'none';
+  saveState();
+  upsertLeaderboard();
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function startRace(topicId){
+  const topic = getTopic(topicId);
+  const prompts = shuffle(topic.prompts).slice(0, 10);
+  state.current = { topicId, prompts, idx:0, correctCount:0, score:0, answered:false };
+  document.getElementById('race-track-title').textContent = topic.icon + ' ' + topic.title;
+  showScreen('race');
+  renderRaceHud();
+  nextPrompt();
+}
+
+function renderRaceHud(){
+  const hud = document.getElementById('race-hud');
+  hud.innerHTML = '<span>🏎️ Leg: <b>'+(state.current.idx+1)+'/'+state.current.prompts.length+'</b></span><span>✅ Correct: <b>'+state.current.correctCount+'</b></span><span>⭐ Score: <b>'+state.current.score+'</b></span>';
+}
+
+function nextPrompt(){
+  if(state.current.idx >= state.current.prompts.length){
+    finishRace();
+    return;
+  }
+  const p = state.current.prompts[state.current.idx];
+  document.getElementById('prompt-box').textContent = p.prompt;
+  document.getElementById('race-feedback').textContent = '';
+  document.getElementById('race-feedback').className = 'race-feedback';
+  document.getElementById('fact-note').textContent = '';
+  renderRaceHud();
+
+  const optionsEl = document.getElementById('lane-options');
+  optionsEl.innerHTML = '';
+  p.options.forEach((opt, i)=>{
+    const btn = document.createElement('button');
+    btn.className = 'lane-btn';
+    btn.textContent = opt;
+    btn.onclick = ()=> chooseLane(i);
+    optionsEl.appendChild(btn);
+  });
+
+  state.current.answered = false;
+  updateCarPosition();
+}
+
+function updateCarPosition(){
+  const pct = state.current.prompts.length ? Math.round((state.current.idx / state.current.prompts.length) * 100) : 0;
+  const car = document.getElementById('racer-car');
+  const fill = document.getElementById('progress-fill');
+  if(car) car.style.left = 'calc(' + pct + '% * 0.82 + 6px)';
+  if(fill) fill.style.width = pct + '%';
+}
+
+function chooseLane(choiceIndex){
+  if(state.current.answered) return;
+  state.current.answered = true;
+  const p = state.current.prompts[state.current.idx];
+  const buttons = document.getElementById('lane-options').querySelectorAll('.lane-btn');
+  buttons.forEach(b=> b.disabled = true);
+  const feedback = document.getElementById('race-feedback');
+  if(choiceIndex === p.correctIndex){
+    state.current.correctCount++;
+    state.current.score += 10;
+    SFX.correct();
+    feedback.textContent = '✅ Correct! Boost activated.';
+    feedback.className = 'race-feedback good';
+    if(buttons[choiceIndex]) buttons[choiceIndex].classList.add('correct');
+  } else {
+    SFX.wrong();
+    feedback.textContent = '❌ Not quite — you keep racing, just no boost.';
+    feedback.className = 'race-feedback bad';
+    if(buttons[choiceIndex]) buttons[choiceIndex].classList.add('wrong');
+    if(buttons[p.correctIndex]) buttons[p.correctIndex].classList.add('correct');
+  }
+  document.getElementById('fact-note').textContent = '💡 ' + p.fact;
+  advanceAfterDelay();
+}
+
+function advanceAfterDelay(){
+  renderRaceHud();
+  state.current.idx++;
+  updateCarPosition();
+  setTimeout(()=> nextPrompt(), 1100);
+}
+
+function finishRace(){
+  const topicId = state.current.topicId;
+  const correct = state.current.correctCount;
+  const stars = correct>=9 ? 3 : (correct>=6 ? 2 : 1);
+  const existing = state.badges[topicId];
+  const isNewBadge = !existing;
+  let bonusGems = 2;
+  if(isNewBadge) bonusGems += 3;
+  if(stars===3) bonusGems += 3;
+  if(!existing || stars>existing.stars){
+    state.badges[topicId] = { stars, correct };
+  }
+  state.gems += bonusGems;
+  state.totalScore += state.current.score;
+
+  const allDone = Object.keys(state.badges).length === TOPICS.length;
+  if(allDone) state.gems += 15;
+
+  saveState();
+  SFX.badge();
+  spawnConfettiBurst(14);
+
+  const car = document.getElementById('racer-car');
+  const fill = document.getElementById('progress-fill');
+  if(car) car.style.left = 'calc(100% * 0.82 + 6px)';
+  if(fill) fill.style.width = '100%';
+
+  const feedback = document.getElementById('race-feedback');
+  feedback.textContent = 'Finish line! ' + correct + '/10 correct ' + '⭐'.repeat(stars) + '☆'.repeat(3-stars) + '  (+'+bonusGems+' gems)';
+  feedback.className = 'race-feedback good';
+  document.getElementById('fact-note').textContent = '';
+
+  setTimeout(()=>{ showScreen('hub'); }, 1600);
+}
+
+function renderCertificate(){
+  document.getElementById('cert-name').textContent = state.name;
+}
+
+/* ---------------- ON-DEVICE LEADERBOARD ---------------- */
+const LB_KEY = 'leaderboard_factRacers';
+
+function upsertLeaderboard(){
+  try{
+    if(!state.name) return;
+    const entry = { name: state.name, score: state.totalScore||0, gems: state.gems||0, badges: Object.keys(state.badges||{}).length, total: TOPICS.length, date: new Date().toISOString() };
+    let list = [];
+    try{ list = JSON.parse(localStorage.getItem(LB_KEY)||'[]'); }catch(e){ list=[]; }
+    const idx = list.findIndex(e=> e.name===entry.name);
+    if(idx>=0){ if(entry.score>=list[idx].score) list[idx]=entry; }
+    else list.push(entry);
+    list.sort((a,b)=> b.score-a.score);
+    list = list.slice(0,20);
+    localStorage.setItem(LB_KEY, JSON.stringify(list));
+  }catch(e){}
+}
+
+function renderLeaderboardScreen(){
+  upsertLeaderboard();
+  let list = [];
+  try{ list = JSON.parse(localStorage.getItem(LB_KEY)||'[]'); }catch(e){ list=[]; }
+  const el = document.getElementById('lb-table-local');
+  if(!el) return;
+  if(!list.length){ el.innerHTML = '<p class="muted">No scores yet on this device — race a circuit to be the first!</p>'; return; }
+  el.innerHTML = '<table class="lb-table"><thead><tr><th>#</th><th>Name</th><th>Score</th><th>💎</th><th>Badges</th></tr></thead><tbody>' +
+    list.map((e,i)=> '<tr'+(e.name===state.name?' class="me"':'')+'><td>'+(i+1)+'</td><td>'+e.name+'</td><td>'+e.score+'</td><td>'+e.gems+'</td><td>'+e.badges+'/'+(e.total||TOPICS.length)+'</td></tr>').join('') +
+    '</tbody></table>';
+}
+
+function downloadCertificateImage(){
+  const el = document.getElementById('cert-body');
+  const btn = document.getElementById('cert-download-btn');
+  if(!el || typeof html2canvas==='undefined') return;
+  if(btn){ btn.disabled = true; btn.textContent = 'Preparing…'; }
+  html2canvas(el, { backgroundColor:'#26262e', scale:2 }).then(canvas=>{
+    const link = document.createElement('a');
+    const safeName = (state.name||'racer').replace(/[^a-z0-9]+/gi,'-').toLowerCase();
+    link.download = 'fact-racers-certificate-' + safeName + '.png';
+    link.href = canvas.toDataURL('image/png');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if(btn){ btn.disabled = false; btn.textContent = '⬇️ Download certificate'; }
+  }).catch(()=>{
+    if(btn){ btn.disabled = false; btn.textContent = '⬇️ Download certificate'; }
+    alert('Could not generate the certificate image.');
+  });
+}
+
+/* ---------------- INIT ---------------- */
+loadState();
+if(state.name) document.getElementById('player-name').value = state.name;
+if(state.name && state.character){
+  renderCharGrid();
+  showScreen('hub');
+}
+</script>
+</body>
+</html>

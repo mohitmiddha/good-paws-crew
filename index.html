@@ -89,6 +89,7 @@
   .card.builder{ background:linear-gradient(155deg,#fff3b0,#ffe066); color:#4a3a00; }
   .card.defenders{ background:linear-gradient(155deg,#c2f0e0,#7fe0c0); color:#0d3d2c; }
   .card.wizards{ background:linear-gradient(155deg,#e0cbff,#c19bff); color:#2e0f5c; }
+  .card.racers{ background:linear-gradient(155deg,#ffd7b0,#ff9d5c); color:#4a2200; }
 
   footer.note{
     text-align:center;
@@ -137,7 +138,7 @@
   <div class="wrap">
     <header>
       <h1>Quest Crew Arcade 🎮</h1>
-      <p>Seven games, one brainy crew of explorers — a quiz adventure, a star-map expedition, a history-repair puzzle, a postcard memory match, a theme park to build, an outpost to defend, and a vocabulary quest, all covering geography, space, animals, sports, logic, maths, science, language arts, art, design, and Spanish.</p>
+      <p>Eight games, one brainy crew of explorers — a quiz adventure, a star-map expedition, a history-repair puzzle, a postcard memory match, a theme park to build, an outpost to defend, a vocabulary quest, and a grand circuit race, all covering geography, space, animals, sports, logic, maths, science, language arts, art, design, and Spanish.</p>
     </header>
     <div class="grid">
       <a class="card paws" href="good-paws-crew.html">
@@ -182,10 +183,16 @@
         <p>Vocabulary Quest: tap scrambled letter tiles to restore vocabulary words from their clues across 11 realms, guided by Archmage Lexicon.</p>
         <div class="play">Play →</div>
       </a>
+      <a class="card racers" href="fact-racers.html">
+        <div class="icon">🏁</div>
+        <h2>Fact Racers</h2>
+        <p>Grand Circuit: pick the correct answer to boost your car down 11 circuits of quick two-option questions, guided by Chief Checkered.</p>
+        <div class="play">Play →</div>
+      </a>
     </div>
     <div class="combined-lb">
       <h2>🏆 Combined Leaderboard</h2>
-      <p class="sub">Totals every player's best score across all 5 games, saved on this browser.</p>
+      <p class="sub">Totals every player's best score across all 8 games, saved on this browser.</p>
       <div id="combined-lb-table"></div>
     </div>
 
@@ -200,7 +207,8 @@
     'leaderboard_passportQuest',
     'leaderboard_worldWondersBuilder',
     'leaderboard_factDefenders',
-    'leaderboard_wordWizards'
+    'leaderboard_wordWizards',
+    'leaderboard_factRacers'
   ];
 
   function renderCombinedLeaderboard(){
@@ -222,11 +230,11 @@
     const rows = Object.values(combined).sort((a,b)=> b.totalScore - a.totalScore);
     const el = document.getElementById('combined-lb-table');
     if(!rows.length){
-      el.innerHTML = '<p class="empty-note">No scores yet — play any of the 5 games on this browser to appear here.</p>';
+      el.innerHTML = '<p class="empty-note">No scores yet — play any of the 8 games on this browser to appear here.</p>';
       return;
     }
     el.innerHTML = '<table><thead><tr><th>#</th><th>Name</th><th>Combined score</th><th>Games played</th><th>Total badges</th></tr></thead><tbody>' +
-      rows.map((r,i)=> '<tr'+(i===0?' class="rank1"':'')+'><td>'+(i+1)+'</td><td>'+r.name+'</td><td>'+r.totalScore+'</td><td>'+r.gamesPlayed+'/5</td><td>'+r.totalBadges+'</td></tr>').join('') +
+      rows.map((r,i)=> '<tr'+(i===0?' class="rank1"':'')+'><td>'+(i+1)+'</td><td>'+r.name+'</td><td>'+r.totalScore+'</td><td>'+r.gamesPlayed+'/8</td><td>'+r.totalBadges+'</td></tr>').join('') +
       '</tbody></table>';
   }
 
