@@ -1,0 +1,1054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Good Paws Crew: World Wonders</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<style>
+  :root{
+    --sky1:#8fd3f4;
+    --sky2:#84e3c8;
+    --grass:#5fb85f;
+    --grass-dark:#4a9a4a;
+    --wood:#8a5a3c;
+    --wood-dark:#6b432c;
+    --sun:#ffd93d;
+    --sun-dark:#e8ad1a;
+    --card:#fffdf5;
+    --ink:#2b2416;
+    --space:#5c6bc0;
+    --wildlife:#43a047;
+    --sports:#e5533d;
+    --world:#00897b;
+    --logic:#ab47bc;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Comic Sans MS','Segoe UI',Verdana,sans-serif;
+    background:linear-gradient(160deg,var(--sky1),var(--sky2));
+    color:var(--ink);
+    min-height:100vh;
+  }
+  #app{ max-width:960px; margin:0 auto; padding:18px 14px 50px; }
+  .screen{ display:none; animation:fadeIn .35s ease; }
+  .screen.active{ display:block; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  h1{ text-align:center; font-size:1.8rem; color:#fff; text-shadow:2px 2px 0 var(--wood-dark); margin:.3em 0; }
+  h2{ margin:.2em 0; color:var(--wood-dark); }
+
+  .panel{
+    background:var(--card);
+    border:4px solid var(--wood);
+    border-radius:18px;
+    padding:20px;
+    margin:14px 0;
+    box-shadow:0 6px 0 rgba(0,0,0,.15);
+  }
+
+  input[type=text]{
+    width:100%; padding:12px 14px; border-radius:10px;
+    border:3px solid var(--wood); font-size:1.05rem; font-family:inherit;
+    background:#fff; color:var(--ink); margin-bottom:10px;
+  }
+
+  .btn{
+    background:var(--sun); color:var(--wood-dark); border:none; border-radius:12px;
+    padding:12px 22px; font-size:1rem; font-weight:bold; font-family:inherit;
+    cursor:pointer; box-shadow:0 4px 0 var(--sun-dark);
+  }
+  .btn:active{ transform:translateY(3px); box-shadow:0 1px 0 var(--sun-dark); }
+  .btn.green{ background:var(--grass); color:#fff; box-shadow:0 4px 0 var(--grass-dark); }
+  .btn.blue{ background:var(--space); color:#fff; box-shadow:0 4px 0 #3f4c96; }
+  .btn.small{ padding:6px 14px; font-size:.82rem; box-shadow:0 3px 0 rgba(0,0,0,.2); }
+  .btn.icon-btn{ padding:8px 12px; font-size:1rem; }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn-row{ display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:14px; }
+
+  .hud{
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
+    background:var(--wood); color:#fff; border-radius:14px; padding:10px 16px; margin-bottom:12px;
+    font-size:.88rem;
+  }
+  .hud b{ color:var(--sun); }
+  .hud-right{ display:flex; gap:6px; align-items:center; }
+
+  .zone-tabs{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  .zone-tab{
+    flex:1; min-width:130px; text-align:center; padding:10px; border-radius:10px; cursor:pointer;
+    border:3px solid transparent; font-weight:bold; font-size:.82rem; color:#fff;
+  }
+  .zone-tab .z-crew{ display:block; font-size:.72rem; font-weight:normal; margin-top:2px; opacity:.9; }
+  .zone-tab.space{ background:var(--space); }
+  .zone-tab.wildlife{ background:var(--wildlife); }
+  .zone-tab.sports{ background:var(--sports); }
+  .zone-tab.world{ background:var(--world); }
+  .zone-tab.active{ border-color:var(--wood-dark); }
+
+  .grid-wrap{ background:var(--grass); border:5px solid var(--grass-dark); border-radius:16px; padding:10px; }
+  .grid{ display:grid; grid-template-columns:repeat(6,1fr); gap:6px; }
+  .tile{
+    aspect-ratio:1/1; background:rgba(255,255,255,.18); border:2px dashed rgba(255,255,255,.5);
+    border-radius:10px; display:flex; align-items:center; justify-content:center;
+    font-size:1.6rem; cursor:pointer; position:relative;
+  }
+  .tile.filled{ background:rgba(255,255,255,.85); border-style:solid; border-color:#fff; }
+  .tile:hover{ transform:scale(1.06); }
+  @media (max-width:520px){ .tile{ font-size:1.2rem; } }
+
+  .build-list{ display:flex; flex-direction:column; gap:8px; margin-top:10px; max-height:340px; overflow-y:auto; }
+  .build-item{
+    display:flex; align-items:center; gap:10px; background:#fff; border:2px solid #eee;
+    border-radius:12px; padding:10px 12px;
+  }
+  .build-item .emoji{ font-size:1.8rem; width:36px; text-align:center; }
+  .build-item .info{ flex:1; }
+  .build-item .info b{ display:block; font-size:.92rem; }
+  .build-item .info span{ font-size:.75rem; color:#777; }
+  .build-item.locked{ opacity:.5; }
+
+  .stats-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:10px; margin-top:10px; }
+  .stat-card{ background:#fff; border-radius:12px; padding:10px 12px; text-align:center; border:2px solid #eee; }
+  .stat-card .num{ font-size:1.3rem; font-weight:bold; color:var(--wood-dark); }
+  .stat-card .lbl{ font-size:.75rem; color:#777; }
+
+  .badge-row{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+  .badge-pill{ background:var(--sun); border-radius:30px; padding:6px 14px; font-size:.8rem; font-weight:bold; }
+  .badge-pill.locked{ background:#e8e6df; color:#999; }
+
+  .modal-backdrop{
+    display:none; position:fixed; inset:0; background:rgba(30,20,10,.55);
+    align-items:center; justify-content:center; z-index:200; padding:16px;
+  }
+  .modal-backdrop.active{ display:flex; }
+  .modal{
+    background:var(--card); border-radius:18px; border:4px solid var(--wood); padding:22px;
+    max-width:480px; width:100%; max-height:85vh; overflow-y:auto;
+  }
+  .modal h3{ margin-top:0; color:var(--wood-dark); }
+
+  .host-strip{ display:flex; align-items:center; gap:10px; background:#f4ecdd; border-radius:12px; padding:8px 12px; margin-bottom:10px; }
+  .host-strip .host-emoji{ font-size:1.8rem; animation:bounce 1.6s ease-in-out infinite; }
+  .host-strip .host-text{ font-size:.85rem; }
+  .host-strip .host-text b{ display:block; font-size:.88rem; }
+
+  .q-options{ display:flex; flex-direction:column; gap:8px; margin-top:12px; }
+  .q-opt{ background:#fff; border:2px solid #ddd; border-radius:10px; padding:10px 12px; text-align:left; cursor:pointer; font-family:inherit; font-size:.92rem; font-weight:bold; }
+  .q-opt.correct{ background:#c8f2c8; border-color:#4a9a4a; }
+  .q-opt.wrong{ background:#f7c9c2; border-color:#c9503e; }
+  .q-opt:disabled{ cursor:default; }
+
+  .fact-box{ background:#fff6da; border-left:5px solid var(--sun-dark); padding:12px 14px; border-radius:8px; margin-top:10px; font-size:.9rem; }
+
+  .topic-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin-top:14px; }
+  .topic-chip{
+    display:flex; align-items:center; gap:10px; background:#fff; border:3px solid #ddd; border-radius:14px;
+    padding:12px; cursor:pointer; transition:transform .1s;
+  }
+  .topic-chip.selected{ border-color:var(--grass-dark); background:#eaf7ea; }
+  .topic-chip:hover{ transform:translateY(-2px); }
+  .topic-chip .t-emoji{ font-size:1.7rem; }
+  .topic-chip .t-info b{ display:block; font-size:.92rem; }
+  .topic-chip .t-info span{ font-size:.72rem; color:#777; }
+  .topic-warn{ color:#c9503e; font-size:.85rem; text-align:center; margin-top:8px; display:none; }
+
+  .confetti{ position:fixed; top:-10px; font-size:1.4rem; animation:fall linear forwards; pointer-events:none; z-index:300; }
+  @keyframes fall{ to{ transform:translateY(105vh) rotate(360deg); opacity:.3; } }
+
+  .certificate{
+    background:#fffdf5; border-radius:16px; border:6px double var(--sun-dark);
+    padding:28px; text-align:center;
+  }
+  .certificate .name{ font-size:1.7rem; font-weight:bold; border-bottom:3px solid var(--grass-dark); display:inline-block; padding:0 10px 4px; }
+
+  .muted{ color:#7a7a7a; font-size:.82rem; }
+  .lb-table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:.95rem; }
+  .lb-table th,.lb-table td{ padding:8px 10px; text-align:left; border-bottom:1px solid #ddd; }
+  .lb-table th{ color:var(--sun-dark); }
+  .lb-table tr.me{ background:#fff6da; }
+  .lb-table td:first-child, .lb-table th:first-child{ width:34px; text-align:center; }
+  .center{ text-align:center; }
+  footer.note{ text-align:center; font-size:.72rem; color:#446; margin-top:24px; }
+
+  /* crew strip on start screen */
+  .crew-strip{ display:flex; justify-content:center; gap:14px; flex-wrap:wrap; margin:16px 0; }
+  .crew-mini{ text-align:center; opacity:0; animation:crewIn .5s ease forwards; }
+  .crew-mini:nth-child(1){ animation-delay:.1s; }
+  .crew-mini:nth-child(2){ animation-delay:.25s; }
+  .crew-mini:nth-child(3){ animation-delay:.4s; }
+  .crew-mini:nth-child(4){ animation-delay:.55s; }
+  .crew-mini:nth-child(5){ animation-delay:.7s; }
+  @keyframes crewIn{ from{opacity:0; transform:translateY(14px) scale(.8);} to{opacity:1; transform:translateY(0) scale(1);} }
+  .crew-mini .c-emoji{ font-size:1.9rem; display:inline-block; animation:bounce 2s ease-in-out infinite; }
+  .crew-mini .c-name{ font-size:.68rem; display:block; color:var(--wood-dark); font-weight:bold; }
+  @keyframes bounce{ 0%,100%{ transform:translateY(0);} 50%{ transform:translateY(-6px);} }
+
+  /* instructions page animation */
+  .instr-step{
+    display:flex; gap:14px; align-items:flex-start; background:#fff; border:2px solid #eee; border-radius:14px;
+    padding:14px; margin-bottom:12px; opacity:0; transform:translateX(-24px);
+    animation:slideIn .5s ease forwards;
+  }
+  .instr-step:nth-child(1){ animation-delay:.1s; }
+  .instr-step:nth-child(2){ animation-delay:.3s; }
+  .instr-step:nth-child(3){ animation-delay:.5s; }
+  .instr-step:nth-child(4){ animation-delay:.7s; }
+  .instr-step:nth-child(5){ animation-delay:.9s; }
+  .instr-step:nth-child(6){ animation-delay:1.1s; }
+  @keyframes slideIn{ to{ opacity:1; transform:translateX(0); } }
+  .instr-step .instr-emoji{ font-size:1.9rem; animation:pulse 1.8s ease-in-out infinite; flex-shrink:0; }
+  @keyframes pulse{ 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.15);} }
+  .instr-step .instr-text b{ display:block; margin-bottom:2px; }
+  .instr-title-anim{ text-align:center; opacity:0; animation:dropIn .6s ease forwards; }
+  @keyframes dropIn{ from{opacity:0; transform:translateY(-20px);} to{opacity:1; transform:translateY(0);} }
+
+  @media print{
+    body{ background:#fff; }
+    #app > *:not(#screen-certificate){ display:none !important; }
+    .btn{ display:none !important; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+  <h1>🏗️ Good Paws Crew: World Wonders 🌍</h1>
+  <p class="center muted" style="margin-top:-10px; color:#5a4a36;">Build your dream park with the crew</p>
+
+  <!-- START -->
+  <div class="screen active" id="screen-start">
+    <div class="panel">
+      <h2>Welcome back, Builder!</h2>
+      <p>Your old crew from the Good Paws missions is helping you run a brand-new park with four zones. Each zone has its own crew host, and Vera drops in with Discovery Challenges as you build.</p>
+      <div class="crew-strip" id="start-crew-strip"></div>
+      <p>Your name:</p>
+      <input type="text" id="builder-name" placeholder="Type your name" maxlength="20">
+      <p>Name your park:</p>
+      <input type="text" id="park-name" placeholder="e.g. Aarin's Wonder Park" maxlength="30">
+      <div class="btn-row">
+        <button class="btn green" onclick="goToTopics('start')">Start building →</button>
+        <button class="btn blue" onclick="openInstructions('start')">📖 How to play</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TOPIC SELECTION -->
+  <div class="screen" id="screen-topics">
+    <div class="panel">
+      <h2>Pick your Discovery Challenge topics</h2>
+      <p class="muted">Every 3rd building triggers a quick challenge from Vera Viper. Choose which topics she should quiz you on — you can change this anytime.</p>
+      <div class="topic-grid" id="topic-grid"></div>
+      <p class="topic-warn" id="topic-warn">Pick at least one topic to continue.</p>
+      <div class="btn-row">
+        <button class="btn green" id="topics-confirm-btn" onclick="confirmTopics()">Enter my park →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INSTRUCTIONS -->
+  <div class="screen" id="screen-instructions">
+    <div class="panel">
+      <h2 class="instr-title-anim">How to play 🗺️</h2>
+      <div class="instr-step"><div class="instr-emoji">👆</div><div class="instr-text"><b>1. Tap an empty tile</b>Open the build menu on any empty grass tile in your park.</div></div>
+      <div class="instr-step"><div class="instr-emoji">🏗️</div><div class="instr-text"><b>2. Choose a building</b>Pick from the zone tabs — Space with Coco 🕷️, Wildlife with Delta 🦈, Sports with Ozzy 🐺, or World Wonders with Pep 🐠. Each costs Spark Points.</div></div>
+      <div class="instr-step"><div class="instr-emoji">✨</div><div class="instr-text"><b>3. Earn points automatically</b>Every building generates Spark Points every second, even while you plan your next move.</div></div>
+      <div class="instr-step"><div class="instr-emoji">🐍</div><div class="instr-text"><b>4. Answer Vera's challenges</b>Every 3rd building triggers a Discovery Challenge on your chosen topics. Correct answers earn bonus points.</div></div>
+      <div class="instr-step"><div class="instr-emoji">🏅</div><div class="instr-text"><b>5. Complete zones for badges</b>Build all 5 attractions in a zone to earn that crew member's badge and a big point bonus.</div></div>
+      <div class="instr-step"><div class="instr-emoji">🎓</div><div class="instr-text"><b>6. Unlock your certificate</b>Finish all 4 zones to celebrate your Grand Opening with a printable certificate.</div></div>
+      <div class="btn-row"><button class="btn green" onclick="closeInstructions()">Got it, let's build →</button></div>
+    </div>
+  </div>
+
+  <!-- MAIN GAME -->
+  <div class="screen" id="screen-game">
+    <div class="hud">
+      <div id="hud-park">Park</div>
+      <div>✨ Points: <b id="hud-points">0</b></div>
+      <div>📈 Rate: <b id="hud-rate">0</b>/s</div>
+      <div>🎖️ Rank: <b id="hud-rank">Trainee Builder</b></div>
+      <div class="hud-right">
+        <button class="btn icon-btn small sound-toggle-btn" onclick="toggleSound()" title="Sound on/off">🔊</button>
+        <button class="btn icon-btn small" onclick="openInstructions('game')" title="How to play">❓</button>
+        <button class="btn icon-btn small" onclick="goToTopics('game')" title="Challenge topics">⚙️</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="grid-wrap">
+        <div class="grid" id="park-grid"></div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Zone badges</h2>
+      <div class="badge-row" id="badge-row"></div>
+      <div class="stats-grid" id="stats-grid"></div>
+      <div class="btn-row" id="cert-btn-row" style="display:none;">
+        <button class="btn green" onclick="showScreen('certificate')">🎉 View Grand Opening certificate →</button>
+      </div>
+    </div>
+
+    <div class="panel center">
+      <h2>🏆 Builder Leaderboard</h2>
+      <p class="muted">Compare park scores with everyone who's played on this device.</p>
+      <div class="btn-row"><button class="btn secondary" onclick="showScreen('leaderboard')">View leaderboard →</button></div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="screen" id="screen-leaderboard">
+    <div class="hud">
+      <div>🏆 Builder Leaderboard</div>
+      <div class="hud-right">
+        <button class="btn icon-btn small sound-toggle-btn" onclick="toggleSound()" title="Sound on/off">🔊</button>
+        <button class="btn icon-btn small" onclick="showScreen('game')" title="Back to my park">⬅</button>
+      </div>
+    </div>
+    <div class="panel">
+      <p class="muted">Top parks saved on this device, across everyone who's played here.</p>
+      <div id="lb-table-local"></div>
+      <div class="btn-row"><button class="btn secondary small" onclick="showScreen('game')">Back to my park</button></div>
+    </div>
+  </div>
+
+  <!-- CERTIFICATE -->
+  <div class="screen" id="screen-certificate">
+    <div class="certificate" id="cert-body">
+      <p>🌟 This certifies that</p>
+      <div class="name" id="cert-name">—</div>
+      <p>has completed all four zones (with a little help from Ozzy, Vera, Delta, Coco and Pep) and celebrated the</p>
+      <h2 id="cert-park-name">Grand Opening</h2>
+      <p>Final rank: <b id="cert-rank">—</b></p>
+      <p>Total Spark Points earned: <b id="cert-points">0</b></p>
+      <p class="muted" id="cert-date"></p>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="cert-download-btn" onclick="downloadCertificateImage()">⬇️ Download certificate</button>
+      <button class="btn green" onclick="window.print()">🖨️ Print certificate</button>
+      <button class="btn" onclick="showScreen('game')">Back to my park</button>
+    </div>
+  </div>
+
+  <!-- BUILD MODAL -->
+  <div class="modal-backdrop" id="build-modal">
+    <div class="modal">
+      <h3>What will you build here?</h3>
+      <div class="zone-tabs" id="zone-tabs"></div>
+      <div class="build-list" id="build-list"></div>
+      <div class="btn-row"><button class="btn small" onclick="closeModal('build-modal')">Cancel</button></div>
+    </div>
+  </div>
+
+  <!-- FACT MODAL -->
+  <div class="modal-backdrop" id="fact-modal">
+    <div class="modal center">
+      <h3 id="fact-title">New building!</h3>
+      <div style="font-size:2.4rem;" id="fact-emoji"></div>
+      <div class="fact-box" id="fact-text"></div>
+      <div class="btn-row"><button class="btn green" onclick="closeModal('fact-modal')">Nice! →</button></div>
+    </div>
+  </div>
+
+  <!-- CHALLENGE MODAL -->
+  <div class="modal-backdrop" id="challenge-modal">
+    <div class="modal">
+      <div class="host-strip">
+        <div class="host-emoji">🐍</div>
+        <div class="host-text"><b>Vera Viper's Discovery Challenge</b><span id="challenge-topic-label" class="muted"></span></div>
+      </div>
+      <p id="challenge-q"></p>
+      <div class="q-options" id="challenge-options"></div>
+      <div class="fact-box" id="challenge-feedback" style="display:none;"></div>
+      <div class="btn-row"><button class="btn green" id="challenge-close-btn" style="display:none;" onclick="closeModal('challenge-modal')">Continue building →</button></div>
+    </div>
+  </div>
+
+  <!-- BADGE MODAL -->
+  <div class="modal-backdrop" id="badge-modal">
+    <div class="modal center">
+      <h3 id="badge-title">Zone complete!</h3>
+      <div style="font-size:2.6rem;" id="badge-emoji">🏅</div>
+      <p id="badge-text"></p>
+      <div class="fact-box" id="badge-quote"></div>
+      <div class="btn-row"><button class="btn green" onclick="closeModal('badge-modal')">Keep building →</button></div>
+    </div>
+  </div>
+
+  <footer class="note">Progress saves automatically in this browser.</footer>
+</div>
+
+<script>
+/* ---------------- SOUND EFFECTS (synthesized, no audio files needed) ---------------- */
+
+let soundEnabled = true;
+try{ const s = localStorage.getItem('worldWondersSoundEnabled'); if(s!==null) soundEnabled = s==='1'; }catch(e){}
+
+const SFX = (function(){
+  let ctx = null;
+  function getCtx(){
+    if(!ctx){ ctx = new (window.AudioContext||window.webkitAudioContext)(); }
+    if(ctx.state==='suspended') ctx.resume();
+    return ctx;
+  }
+  function tone(freq, start, duration, type, vol){
+    if(!soundEnabled) return;
+    try{
+      const c = getCtx();
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      osc.connect(gain); gain.connect(c.destination);
+      const t0 = c.currentTime + start;
+      gain.gain.setValueAtTime(vol||0.15, t0);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0+duration);
+      osc.start(t0);
+      osc.stop(t0+duration+0.03);
+    }catch(e){}
+  }
+  return {
+    click(){ tone(600,0,0.06,'square',0.10); },
+    build(){ tone(392,0,0.08,'square',0.12); tone(523.25,0.07,0.1,'square',0.12); },
+    correct(){ tone(523.25,0,0.12,'sine',0.16); tone(783.99,0.1,0.16,'sine',0.16); },
+    wrong(){ tone(180,0,0.25,'sawtooth',0.13); },
+    badge(){ tone(523.25,0,0.12,'triangle',0.18); tone(659.25,0.12,0.12,'triangle',0.18); tone(783.99,0.24,0.12,'triangle',0.18); tone(1046.5,0.36,0.24,'triangle',0.2); }
+  };
+})();
+
+function updateSoundButtons(){
+  document.querySelectorAll('.sound-toggle-btn').forEach(btn=>{ btn.textContent = soundEnabled ? '🔊' : '🔇'; });
+}
+function toggleSound(){
+  soundEnabled = !soundEnabled;
+  try{ localStorage.setItem('worldWondersSoundEnabled', soundEnabled ? '1' : '0'); }catch(e){}
+  updateSoundButtons();
+  if(soundEnabled) SFX.click();
+}
+document.addEventListener('click', function(e){
+  const el = e.target.closest('.btn, .zone-tab, .topic-chip');
+  if(el && !el.disabled) SFX.click();
+}, true);
+document.addEventListener('DOMContentLoaded', updateSoundButtons);
+
+/* ---------------- CREW DATA (tied to the Good Paws Crew) ---------------- */
+
+const CREW = {
+  ozzy:{ emoji:'🐺', name:'Ozzy Wolfson', role:'Sports specialist', zone:'sports',
+    quote:'Now that\'s a championship-worthy sports zone! Great hustle out there.' },
+  vera:{ emoji:'🐍', name:'Vera Viper', role:'Think Tank strategist', zone:null,
+    quote:'Sharp thinking, as always. That\'s how the old crew stayed one step ahead.' },
+  delta:{ emoji:'🦈', name:'Delta Shark', role:'Wildlife scout', zone:'wildlife',
+    quote:'Every habitat is thriving. The wildlife zone is officially a success!' },
+  coco:{ emoji:'🕷️', name:'Coco Tarantula', role:'Space navigator', zone:'space',
+    quote:'Out of this world! The space zone is officially mission-ready.' },
+  pep:{ emoji:'🐠', name:'Pep Piranha', role:'World geography expert', zone:'world',
+    quote:'You\'ve put every corner of the map on show. World zone complete!' }
+};
+const ZONE_TO_CREW = { space:'coco', wildlife:'delta', sports:'ozzy', world:'pep' };
+
+/* ---------------- BUILDING DATA ---------------- */
+
+const ZONES = {
+  space:{ label:'🚀 Space', cls:'space' },
+  wildlife:{ label:'🦁 Wildlife', cls:'wildlife' },
+  sports:{ label:'🏆 Sports', cls:'sports' },
+  world:{ label:'🌍 World Wonders', cls:'world' }
+};
+
+const BUILDINGS = {
+  rocket_pad:{ zone:'space', name:'Rocket Pad', emoji:'🚀', cost:20, income:1, unlockRank:1,
+    fact:'The Saturn V rocket that sent astronauts to the Moon was taller than a 36-storey building.' },
+  observatory:{ zone:'space', name:'Observatory', emoji:'🔭', cost:55, income:3, unlockRank:2,
+    fact:'The largest optical telescopes on Earth sit high on mountains in Hawaii and the Canary Islands, where the air is clearest.' },
+  space_station:{ zone:'space', name:'Space Station', emoji:'🛰️', cost:130, income:6, unlockRank:3,
+    fact:'The International Space Station orbits Earth every 90 minutes — astronauts on board see about 16 sunrises a day.' },
+  moon_base:{ zone:'space', name:'Moon Base', emoji:'🌕', cost:290, income:13, unlockRank:5,
+    fact:'The Moon has no atmosphere, so footprints left by Apollo astronauts could last for millions of years.' },
+  planetarium:{ zone:'space', name:'Planetarium Dome', emoji:'🪐', cost:560, income:26, unlockRank:7,
+    fact:'A planetarium dome can project over 9,000 stars at once — far more than you could ever count by eye.' },
+
+  butterfly_garden:{ zone:'wildlife', name:'Butterfly Garden', emoji:'🦋', cost:20, income:1, unlockRank:1,
+    fact:'Butterflies taste with their feet — they land on a leaf to check if it is the right food plant.' },
+  aquarium:{ zone:'wildlife', name:'Aquarium', emoji:'🐠', cost:55, income:3, unlockRank:2,
+    fact:'A group of jellyfish is called a "smack."' },
+  aviary:{ zone:'wildlife', name:'Aviary', emoji:'🦜', cost:130, income:6, unlockRank:3,
+    fact:'The peregrine falcon is the fastest animal on Earth, diving at over 300 km/h to catch prey.' },
+  elephant_habitat:{ zone:'wildlife', name:'Elephant Habitat', emoji:'🐘', cost:290, income:13, unlockRank:5,
+    fact:'Elephants are one of the few animals that can recognize themselves in a mirror.' },
+  lion_reserve:{ zone:'wildlife', name:'Lion Reserve', emoji:'🦁', cost:560, income:26, unlockRank:7,
+    fact:'A lion\'s roar can be heard from up to 8 km away.' },
+
+  athletics_track:{ zone:'sports', name:'Athletics Track', emoji:'🏃', cost:20, income:1, unlockRank:1,
+    fact:'The men\'s 100m sprint world record is under 9.6 seconds — faster than most cars accelerate off the line.' },
+  basketball_court:{ zone:'sports', name:'Basketball Court', emoji:'🏀', cost:55, income:3, unlockRank:2,
+    fact:'A basketball hoop is exactly 10 feet (3.05m) high everywhere in the world, from school gyms to the NBA.' },
+  cricket_pitch:{ zone:'sports', name:'Cricket Pitch', emoji:'🏏', cost:130, income:6, unlockRank:3,
+    fact:'A cricket pitch is exactly 22 yards long — the same length that has been used since the 1700s.' },
+  swimming_pool:{ zone:'sports', name:'Swimming Pool', emoji:'🏊', cost:290, income:13, unlockRank:5,
+    fact:'Swimmer Michael Phelps has won more Olympic gold medals (23) than most entire countries.' },
+  football_stadium:{ zone:'sports', name:'Football Stadium', emoji:'⚽', cost:560, income:26, unlockRank:7,
+    fact:'The football World Cup trophy is made of solid gold and malachite — no other metals are allowed.' },
+
+  flags_plaza:{ zone:'world', name:'Flags Plaza', emoji:'🚩', cost:20, income:1, unlockRank:1,
+    fact:'Nepal is the only country in the world with a national flag that isn\'t rectangular.' },
+  globe_fountain:{ zone:'world', name:'Globe Fountain', emoji:'⛲', cost:55, income:3, unlockRank:2,
+    fact:'Only about 29% of Earth\'s surface is land — the rest is ocean.' },
+  pyramid_model:{ zone:'world', name:'Pyramid Model', emoji:'🔺', cost:130, income:6, unlockRank:3,
+    fact:'The Great Pyramid of Giza was the tallest human-made structure on Earth for almost 3,800 years.' },
+  great_wall:{ zone:'world', name:'Great Wall Walk', emoji:'🧱', cost:290, income:13, unlockRank:5,
+    fact:'The Great Wall of China is NOT actually visible from space with the naked eye — that\'s a popular myth.' },
+  eiffel_replica:{ zone:'world', name:'Eiffel Tower Replica', emoji:'🗼', cost:560, income:26, unlockRank:7,
+    fact:'The real Eiffel Tower grows about 15cm taller in summer because the iron expands in the heat.' }
+};
+
+/* ---------------- TOPIC-TAGGED QUESTION BANK ---------------- */
+
+const TOPICS = {
+  space:{ label:'Space', emoji:'🚀', crew:'coco' },
+  wildlife:{ label:'Wildlife', emoji:'🦁', crew:'delta' },
+  sports:{ label:'Sports', emoji:'🏆', crew:'ozzy' },
+  geography:{ label:'Geography', emoji:'🌍', crew:'pep' },
+  logic:{ label:'Logic & puzzles', emoji:'🧠', crew:'vera' }
+};
+
+const TOPIC_QUESTIONS = {
+  space:[
+    {q:'Which planet is closest to the Sun?', options:['Venus','Earth','Mercury','Mars'], correct:2, fact:'Mercury is so close to the Sun that a year there lasts only 88 Earth days.'},
+    {q:'Which planet has the shortest day (fastest spin)?', options:['Earth','Jupiter','Mars','Venus'], correct:1, fact:'Jupiter spins so fast it completes a full day in about 10 hours.'},
+    {q:'Jupiter\'s famous giant storm is known as the...', options:['Great Red Spot','Dark Vortex','Ring Storm','Blue Giant'], correct:0, fact:'This storm is bigger than Earth and has been raging for at least 350 years.'},
+    {q:'What force keeps planets in orbit around the Sun?', options:['Magnetism','Gravity','Friction','Air pressure'], correct:1, fact:'Gravity constantly pulls planets toward the Sun while their speed keeps them from falling in.'},
+    {q:'Which spacecraft mission first landed humans on the Moon?', options:['Apollo 11','Gemini 4','Voyager 1','Sputnik 1'], correct:0, fact:'Apollo 11 landed Neil Armstrong and Buzz Aldrin on the Moon in July 1969.'},
+    {q:'How many moons does Earth have?', options:['0','1','2','4'], correct:1, fact:'Earth has just one natural moon — often simply called "the Moon."'},
+    {q:'What do we call a piece of rock from space that survives falling to Earth\'s surface?', options:['Comet','Asteroid belt','Meteorite','Satellite'], correct:2, fact:'It\'s called a meteor while burning through the sky, and a meteorite once it lands.'},
+    {q:'Which planet is often called Earth\'s "twin" because it is a similar size?', options:['Mars','Venus','Saturn','Neptune'], correct:1, fact:'Venus is close to Earth in size, but its thick atmosphere makes it scorching hot.'}
+  ],
+  wildlife:[
+    {q:'What is the tallest land animal in the world?', options:['Elephant','Camel','Giraffe','Moose'], correct:2, fact:'A giraffe can be over 5.5 metres tall — taller than most house ceilings.'},
+    {q:'What is a group of jellyfish called?', options:['A pod','A smack','A herd','A flock'], correct:1, fact:'Other odd group names include a "murder" of crows and a "parliament" of owls.'},
+    {q:'What do we call baby frogs before they grow legs?', options:['Larvae','Tadpoles','Cubs','Nymphs'], correct:1, fact:'Tadpoles breathe through gills, just like fish, before they grow lungs and legs.'},
+    {q:'Which animal is famous for changing color to blend into its surroundings?', options:['Chameleon','Frog','Owl','Otter'], correct:0, fact:'Chameleons change color mainly to communicate mood and temperature, not just to hide.'},
+    {q:'What is a group of lions called?', options:['A pack','A pride','A troop','A colony'], correct:1, fact:'A pride of lions usually includes several related females, their cubs, and a few males.'},
+    {q:'Which sea creature has three hearts?', options:['Dolphin','Shark','Octopus','Seahorse'], correct:2, fact:'Two of an octopus\'s hearts pump blood to the gills, and one pumps it to the rest of the body.'},
+    {q:'What do you call an animal that only eats plants?', options:['Carnivore','Omnivore','Herbivore','Scavenger'], correct:2, fact:'Cows, rabbits, and elephants are all herbivores.'},
+    {q:'Which land animal is the fastest sprinter over short distances?', options:['Lion','Cheetah','Horse','Kangaroo'], correct:1, fact:'A cheetah can reach speeds of about 100–120 km/h in short bursts.'}
+  ],
+  sports:[
+    {q:'In cricket, what is it called when a bowler takes 3 wickets on 3 consecutive balls?', options:['Century','Hat-trick','Golden duck','Maiden over'], correct:1, fact:'A hat-trick is one of the rarest and most celebrated feats in cricket.'},
+    {q:'Which sport is played at Wimbledon?', options:['Badminton','Tennis','Squash','Table tennis'], correct:1, fact:'Wimbledon is the oldest tennis tournament in the world, played since 1877.'},
+    {q:'How long is a standard football (soccer) match, excluding stoppage time?', options:['60 minutes','90 minutes','120 minutes','45 minutes'], correct:1, fact:'A match is split into two 45-minute halves, adding up to 90 minutes.'},
+    {q:'How many players from one basketball team are on the court at once?', options:['5','6','7','9'], correct:0, fact:'Each basketball team has 5 players on court, with substitutes waiting on the bench.'},
+    {q:'In which sport would a player perform a "slam dunk"?', options:['Volleyball','Basketball','Handball','Netball'], correct:1, fact:'A slam dunk is when a player jumps and scores by putting the ball directly through the hoop.'},
+    {q:'What is the maximum possible score in one game of ten-pin bowling?', options:['200','250','300','360'], correct:2, fact:'A perfect game of 12 straight strikes scores exactly 300 points.'},
+    {q:'How many players from one team are on the court in volleyball?', options:['5','6','7','9'], correct:1, fact:'Each volleyball team has 6 players on court, arranged in two rows of three.'},
+    {q:'The Olympic Games are held once every how many years?', options:['2 years','3 years','4 years','5 years'], correct:2, fact:'The Summer and Winter Olympics both follow a 4-year cycle, staggered two years apart.'}
+  ],
+  geography:[
+    {q:'What is the smallest country in the world by area?', options:['Monaco','San Marino','Vatican City','Malta'], correct:2, fact:'Vatican City is just 0.49 sq km — you could walk across it in under 20 minutes.'},
+    {q:'Which ocean is the largest on Earth?', options:['Atlantic','Indian','Pacific','Arctic'], correct:2, fact:'The Pacific Ocean is bigger than all the continents combined.'},
+    {q:'The Sahara, the world\'s largest hot desert, is located on which continent?', options:['Asia','Africa','Australia','South America'], correct:1, fact:'The Sahara is roughly the size of the entire United States.'},
+    {q:'Which Indian city is known as the "Pink City"?', options:['Udaipur','Jodhpur','Jaipur','Agra'], correct:2, fact:'Jaipur\'s old city buildings were painted pink in 1876 to welcome a royal visitor.'},
+    {q:'Which is the longest mountain range in the world?', options:['Himalayas','Rockies','Andes','Alps'], correct:2, fact:'The Andes stretch about 7,000 km along the western edge of South America.'},
+    {q:'Which country is known as the "Land of the Pharaohs"?', options:['Egypt','Sudan','Iraq','Morocco'], correct:0, fact:'Ancient Egypt\'s pyramids and pharaohs still shape how we picture the country today.'},
+    {q:'What is the currency used in Japan?', options:['Won','Yuan','Yen','Ringgit'], correct:2, fact:'The yen has been Japan\'s official currency since 1871.'},
+    {q:'Which country has the most islands in the world?', options:['Indonesia','Philippines','Sweden','Norway'], correct:2, fact:'Sweden has over 267,000 islands, thanks to its long, jagged coastline and inland lakes.'}
+  ],
+  logic:[
+    {q:'A bus leaves every 15 minutes starting at 9:00am. What time does the 5th bus leave?', options:['9:45am','10:00am','10:15am','9:30am'], correct:1, fact:'4 gaps of 15 minutes after the first bus = 60 minutes later = 10:00am.'},
+    {q:'What comes next in this pattern? 3, 6, 12, 24, ?', options:['30','36','48','42'], correct:2, fact:'Each number doubles the one before it: 24 × 2 = 48.'},
+    {q:'If 5 cats catch 5 mice in 5 minutes, how long would it take 10 cats to catch 10 mice?', options:['10 minutes','5 minutes','2.5 minutes','25 minutes'], correct:1, fact:'Each cat still only needs 5 minutes to catch its own mouse — adding more cats doesn\'t change that.'},
+    {q:'I am an odd number. Take away one letter and I become even. What number am I?', options:['Three','Five','Seven','Nine'], correct:2, fact:'Remove the "s" from "seven" and you get "even" — a classic wordplay riddle.'},
+    {q:'What number should replace the question mark? 1, 4, 9, 16, ?', options:['20','24','25','36'], correct:2, fact:'These are square numbers: 1², 2², 3², 4², 5² = 25.'},
+    {q:'You have 3 apples and take away 2. How many apples do you have?', options:['1','2','3','0'], correct:1, fact:'You have the 2 apples you took away — a riddle about "you" not what\'s left behind.'},
+    {q:'If today is Thursday, what day is two days after tomorrow?', options:['Saturday','Sunday','Friday','Monday'], correct:1, fact:'Tomorrow is Friday, and two days after that is Sunday.'},
+    {q:'A is taller than B. C is shorter than B. Who is the shortest?', options:['A','B','C','Cannot be determined'], correct:2, fact:'Since A > B and B > C, C must be the shortest of the three.'}
+  ]
+};
+
+const RANK_THRESHOLDS = [0,100,300,700,1500,3000,6000,12000,24000];
+const RANK_TITLES = ['Trainee Builder','Assistant Architect','Park Planner','Site Engineer','Master Builder','Park Director','World-Class Architect','Legendary Park Creator','World Wonder Architect'];
+
+const GRID_SIZE = 24;
+const STORAGE_KEY = 'worldWondersBuilderSave';
+
+/* ---------------- STATE ---------------- */
+
+let state = {
+  builderName:'', parkName:'',
+  points:60, lifetimeEarned:60,
+  grid:new Array(GRID_SIZE).fill(null),
+  factsShown:[],
+  zoneSets:{space:[], wildlife:[], sports:[], world:[]},
+  zoneBadges:{space:false, wildlife:false, sports:false, world:false},
+  buildCount:0,
+  selectedTopics:Object.keys(TOPICS),
+  challengeDeck:[],
+  pendingTile:null,
+  activeZoneTab:'space',
+  gameStarted:false
+};
+let topicsReturnTo = 'start';
+let instructionsReturnTo = 'start';
+
+function computeRank(){
+  let rank = 1;
+  for(let i=1;i<RANK_THRESHOLDS.length;i++){
+    if(state.lifetimeEarned >= RANK_THRESHOLDS[i]) rank = i+1;
+  }
+  return rank;
+}
+
+function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return false;
+    const d = JSON.parse(raw);
+    state = Object.assign(state, d);
+    if(!state.selectedTopics || state.selectedTopics.length===0) state.selectedTopics = Object.keys(TOPICS);
+    if(!state.challengeDeck) state.challengeDeck = [];
+    return true;
+  }catch(e){ return false; }
+}
+
+/* ---------------- NAVIGATION ---------------- */
+
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  if(window.scrollTo) window.scrollTo({top:0, behavior:'smooth'});
+  if(name==='certificate') renderCertificate();
+  if(name==='leaderboard') renderLeaderboardScreen();
+}
+
+/* ---------------- ON-DEVICE LEADERBOARD ---------------- */
+const LB_KEY = 'leaderboard_worldWondersBuilder';
+
+function upsertLeaderboard(){
+  try{
+    if(!state.builderName) return;
+    const zonesDone = Object.values(state.zoneBadges||{}).filter(v=>v).length;
+    const entry = { name: state.builderName, score: Math.floor(state.lifetimeEarned||0), gems: 0, badges: zonesDone, total: 4, date: new Date().toISOString() };
+    let list = [];
+    try{ list = JSON.parse(localStorage.getItem(LB_KEY)||'[]'); }catch(e){ list=[]; }
+    const idx = list.findIndex(e=> e.name===entry.name);
+    if(idx>=0){ if(entry.score>=list[idx].score) list[idx]=entry; }
+    else list.push(entry);
+    list.sort((a,b)=> b.score-a.score);
+    list = list.slice(0,20);
+    localStorage.setItem(LB_KEY, JSON.stringify(list));
+  }catch(e){}
+}
+
+function renderLeaderboardScreen(){
+  upsertLeaderboard();
+  let list = [];
+  try{ list = JSON.parse(localStorage.getItem(LB_KEY)||'[]'); }catch(e){ list=[]; }
+  const el = document.getElementById('lb-table-local');
+  if(!el) return;
+  if(!list.length){ el.innerHTML = '<p class="muted">No scores yet on this device — play a round to be the first!</p>'; return; }
+  el.innerHTML = '<table class="lb-table"><thead><tr><th>#</th><th>Name</th><th>Points</th><th>Zones</th></tr></thead><tbody>' +
+    list.map((e,i)=> '<tr'+(e.name===state.builderName?' class="me"':'')+'><td>'+(i+1)+'</td><td>'+e.name+'</td><td>'+e.score+'</td><td>'+e.badges+'/'+(e.total||4)+'</td></tr>').join('') +
+    '</tbody></table>';
+}
+
+function openModal(id){ document.getElementById(id).classList.add('active'); }
+function closeModal(id){ document.getElementById(id).classList.remove('active'); }
+
+function openInstructions(fromScreen){
+  instructionsReturnTo = fromScreen;
+  document.querySelectorAll('#screen-instructions .instr-step, #screen-instructions .instr-title-anim').forEach(el=>{
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = '';
+  });
+  showScreen('instructions');
+}
+function closeInstructions(){
+  showScreen(instructionsReturnTo === 'game' ? 'game' : 'start');
+}
+
+/* ---------------- CREW STRIP (start screen) ---------------- */
+
+function renderStartCrewStrip(){
+  const wrap = document.getElementById('start-crew-strip');
+  wrap.innerHTML = '';
+  Object.values(CREW).forEach(c=>{
+    const div = document.createElement('div');
+    div.className = 'crew-mini';
+    div.innerHTML = `<span class="c-emoji">${c.emoji}</span><span class="c-name">${c.name.split(' ')[0]}</span>`;
+    wrap.appendChild(div);
+  });
+}
+renderStartCrewStrip();
+
+/* ---------------- TOPIC SELECTION ---------------- */
+
+function goToTopics(fromScreen){
+  if(fromScreen==='start'){
+    const nameInput = document.getElementById('builder-name').value.trim();
+    const parkInput = document.getElementById('park-name').value.trim();
+    state.builderName = nameInput || 'Builder';
+    state.parkName = parkInput || (state.builderName + "'s Wonder Park");
+  }
+  topicsReturnTo = fromScreen;
+  renderTopicGrid();
+  document.getElementById('topics-confirm-btn').textContent = fromScreen==='game' ? 'Save & return to my park →' : 'Enter my park →';
+  document.getElementById('topic-warn').style.display = 'none';
+  showScreen('topics');
+}
+
+function renderTopicGrid(){
+  const grid = document.getElementById('topic-grid');
+  grid.innerHTML = '';
+  Object.entries(TOPICS).forEach(([key,t])=>{
+    const crewMember = CREW[t.crew];
+    const selected = state.selectedTopics.includes(key);
+    const div = document.createElement('div');
+    div.className = 'topic-chip' + (selected ? ' selected' : '');
+    div.innerHTML = `
+      <div class="t-emoji">${t.emoji}</div>
+      <div class="t-info"><b>${t.label}</b><span>with ${crewMember.emoji} ${crewMember.name}</span></div>
+    `;
+    div.onclick = ()=>{
+      const idx = state.selectedTopics.indexOf(key);
+      if(idx>=0) state.selectedTopics.splice(idx,1);
+      else state.selectedTopics.push(key);
+      renderTopicGrid();
+    };
+    grid.appendChild(div);
+  });
+}
+
+function confirmTopics(){
+  if(state.selectedTopics.length===0){
+    document.getElementById('topic-warn').style.display = 'block';
+    return;
+  }
+  state.challengeDeck = []; // rebuild deck with new topic mix
+  state.gameStarted = true;
+  saveState();
+  renderAll();
+  showScreen('game');
+  startIncomeLoop();
+}
+
+/* ---------------- GRID / BUILD ---------------- */
+
+function renderGrid(){
+  const grid = document.getElementById('park-grid');
+  grid.innerHTML = '';
+  state.grid.forEach((buildingId, idx)=>{
+    const tile = document.createElement('div');
+    tile.className = 'tile' + (buildingId ? ' filled' : '');
+    tile.textContent = buildingId ? BUILDINGS[buildingId].emoji : '+';
+    tile.onclick = ()=> buildingId ? showBuildingInfo(buildingId) : openBuildModal(idx);
+    grid.appendChild(tile);
+  });
+}
+
+function openBuildModal(tileIdx){
+  state.pendingTile = tileIdx;
+  renderZoneTabs();
+  renderBuildList();
+  openModal('build-modal');
+}
+
+function renderZoneTabs(){
+  const wrap = document.getElementById('zone-tabs');
+  wrap.innerHTML = '';
+  Object.keys(ZONES).forEach(z=>{
+    const crewMember = CREW[ZONE_TO_CREW[z]];
+    const div = document.createElement('div');
+    div.className = 'zone-tab ' + ZONES[z].cls + (state.activeZoneTab===z ? ' active' : '');
+    div.innerHTML = `${ZONES[z].label}<span class="z-crew">${crewMember.emoji} ${crewMember.name.split(' ')[0]}</span>`;
+    div.onclick = ()=>{ state.activeZoneTab = z; renderZoneTabs(); renderBuildList(); };
+    wrap.appendChild(div);
+  });
+}
+
+function renderBuildList(){
+  const list = document.getElementById('build-list');
+  list.innerHTML = '';
+  const rank = computeRank();
+  Object.entries(BUILDINGS).filter(([id,b])=>b.zone===state.activeZoneTab).forEach(([id,b])=>{
+    const unlocked = rank >= b.unlockRank;
+    const affordable = state.points >= b.cost;
+    const div = document.createElement('div');
+    div.className = 'build-item' + (unlocked ? '' : ' locked');
+    div.innerHTML = `
+      <div class="emoji">${unlocked ? b.emoji : '🔒'}</div>
+      <div class="info">
+        <b>${b.name}</b>
+        <span>${unlocked ? `Cost ${b.cost} pts · +${b.income}/s` : `Unlocks at rank ${b.unlockRank} (${RANK_TITLES[b.unlockRank-1]})`}</span>
+      </div>
+      <button class="btn small" ${(unlocked && affordable) ? '' : 'disabled'} onclick="placeBuilding('${id}')">${unlocked ? 'Build' : 'Locked'}</button>
+    `;
+    list.appendChild(div);
+  });
+}
+
+function placeBuilding(buildingId){
+  const b = BUILDINGS[buildingId];
+  if(state.points < b.cost) return;
+  state.points -= b.cost;
+  state.grid[state.pendingTile] = buildingId;
+  state.buildCount++;
+  SFX.build();
+
+  if(!state.zoneSets[b.zone].includes(buildingId)){
+    state.zoneSets[b.zone].push(buildingId);
+  }
+
+  closeModal('build-modal');
+
+  const isFirstTime = !state.factsShown.includes(buildingId);
+  if(isFirstTime){
+    state.factsShown.push(buildingId);
+  }
+
+  saveState();
+  renderAll();
+
+  if(isFirstTime){
+    document.getElementById('fact-title').textContent = 'New building: ' + b.name;
+    document.getElementById('fact-emoji').textContent = b.emoji;
+    document.getElementById('fact-text').textContent = '💡 Did you know? ' + b.fact;
+    openModal('fact-modal');
+  }
+
+  checkZoneCompletion(b.zone);
+
+  if(state.buildCount % 3 === 0){
+    setTimeout(()=>{
+      const waitClose = setInterval(()=>{
+        if(!document.getElementById('fact-modal').classList.contains('active') && !document.getElementById('badge-modal').classList.contains('active')){
+          clearInterval(waitClose);
+          launchChallenge();
+        }
+      },300);
+    }, 400);
+  }
+}
+
+function showBuildingInfo(buildingId){
+  const b = BUILDINGS[buildingId];
+  document.getElementById('fact-title').textContent = b.name;
+  document.getElementById('fact-emoji').textContent = b.emoji;
+  document.getElementById('fact-text').textContent = `+${b.income} pts/sec · 💡 ${b.fact}`;
+  openModal('fact-modal');
+}
+
+/* ---------------- ZONE BADGES ---------------- */
+
+function checkZoneCompletion(zone){
+  if(state.zoneBadges[zone]) return;
+  const total = Object.values(BUILDINGS).filter(b=>b.zone===zone).length;
+  if(state.zoneSets[zone].length >= total){
+    state.zoneBadges[zone] = true;
+    state.points += 200;
+    state.lifetimeEarned += 200;
+    saveState();
+    renderAll();
+    const crewMember = CREW[ZONE_TO_CREW[zone]];
+    document.getElementById('badge-title').textContent = ZONES[zone].label + ' zone complete!';
+    document.getElementById('badge-text').textContent = `You built every attraction in this zone! +200 bonus Spark Points.`;
+    document.getElementById('badge-quote').textContent = `${crewMember.emoji} ${crewMember.name}: "${crewMember.quote}"`;
+    openModal('badge-modal');
+    spawnConfettiBurst(20);
+    SFX.badge();
+    checkAllZonesDone();
+  }
+}
+
+function checkAllZonesDone(){
+  const done = Object.values(state.zoneBadges).every(v=>v);
+  document.getElementById('cert-btn-row').style.display = done ? 'block' : 'none';
+}
+
+/* ---------------- CHALLENGES (topic-filtered, shuffled, no-repeat deck) ---------------- */
+
+function buildChallengeDeck(){
+  let pool = [];
+  Object.keys(TOPIC_QUESTIONS).forEach(topic=>{
+    if(state.selectedTopics.includes(topic)){
+      TOPIC_QUESTIONS[topic].forEach(q=> pool.push(Object.assign({topic}, q)));
+    }
+  });
+  for(let i=pool.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [pool[i],pool[j]] = [pool[j],pool[i]];
+  }
+  return pool;
+}
+
+function launchChallenge(){
+  if(!state.challengeDeck || state.challengeDeck.length===0){
+    state.challengeDeck = buildChallengeDeck();
+  }
+  if(state.challengeDeck.length===0) return; // no topics selected safeguard
+  const q = state.challengeDeck.shift();
+  saveState();
+
+  const t = TOPICS[q.topic];
+  document.getElementById('challenge-topic-label').textContent = `${t.emoji} ${t.label} challenge`;
+  document.getElementById('challenge-q').textContent = q.q;
+  document.getElementById('challenge-feedback').style.display = 'none';
+  document.getElementById('challenge-close-btn').style.display = 'none';
+  const optsDiv = document.getElementById('challenge-options');
+  optsDiv.innerHTML = '';
+  q.options.forEach((opt, idx)=>{
+    const btn = document.createElement('button');
+    btn.className = 'q-opt';
+    btn.textContent = opt;
+    btn.onclick = ()=> answerChallenge(idx, q);
+    optsDiv.appendChild(btn);
+  });
+  openModal('challenge-modal');
+}
+
+function answerChallenge(idx, q){
+  const opts = document.querySelectorAll('#challenge-options .q-opt');
+  opts.forEach((btn,i)=>{
+    btn.disabled = true;
+    if(i===q.correct) btn.classList.add('correct');
+    else if(i===idx) btn.classList.add('wrong');
+  });
+  const feedback = document.getElementById('challenge-feedback');
+  feedback.style.display = 'block';
+  if(idx===q.correct){
+    state.points += 15;
+    state.lifetimeEarned += 15;
+    feedback.textContent = '✅ Correct! +15 bonus Spark Points. ' + q.fact;
+    spawnConfettiBurst(8);
+    SFX.correct();
+  } else {
+    feedback.textContent = '❌ Not quite. ' + q.fact;
+    SFX.wrong();
+  }
+  saveState();
+  renderAll();
+  document.getElementById('challenge-close-btn').style.display = 'inline-block';
+}
+
+/* ---------------- INCOME LOOP ---------------- */
+
+let incomeInterval = null;
+function totalIncome(){
+  return state.grid.reduce((sum, id)=> sum + (id ? BUILDINGS[id].income : 0), 0);
+}
+function startIncomeLoop(){
+  clearInterval(incomeInterval);
+  incomeInterval = setInterval(()=>{
+    const inc = totalIncome();
+    if(inc>0){
+      state.points += inc;
+      state.lifetimeEarned += inc;
+      saveState();
+      updateHud();
+    }
+  }, 1000);
+}
+
+/* ---------------- RENDER ---------------- */
+
+function updateHud(){
+  document.getElementById('hud-park').textContent = '🏞️ ' + state.parkName;
+  document.getElementById('hud-points').textContent = Math.floor(state.points);
+  document.getElementById('hud-rate').textContent = totalIncome();
+  document.getElementById('hud-rank').textContent = RANK_TITLES[computeRank()-1];
+}
+
+function renderBadges(){
+  const row = document.getElementById('badge-row');
+  row.innerHTML = '';
+  Object.keys(ZONES).forEach(z=>{
+    const earned = state.zoneBadges[z];
+    const crewMember = CREW[ZONE_TO_CREW[z]];
+    const pill = document.createElement('div');
+    pill.className = 'badge-pill' + (earned ? '' : ' locked');
+    pill.textContent = (earned ? '🏅 ' : '🔒 ') + ZONES[z].label + ' (' + crewMember.name.split(' ')[0] + ')';
+    row.appendChild(pill);
+  });
+}
+
+function renderStats(){
+  const grid = document.getElementById('stats-grid');
+  const buildingsPlaced = state.grid.filter(x=>x).length;
+  const zonesDone = Object.values(state.zoneBadges).filter(v=>v).length;
+  grid.innerHTML = `
+    <div class="stat-card"><div class="num">${buildingsPlaced}</div><div class="lbl">Buildings placed</div></div>
+    <div class="stat-card"><div class="num">${zonesDone}/4</div><div class="lbl">Zones completed</div></div>
+    <div class="stat-card"><div class="num">${Math.floor(state.lifetimeEarned)}</div><div class="lbl">Lifetime points</div></div>
+    <div class="stat-card"><div class="num">${computeRank()}/9</div><div class="lbl">Builder rank</div></div>
+  `;
+  upsertLeaderboard();
+}
+
+function renderAll(){
+  updateHud();
+  renderGrid();
+  renderBadges();
+  renderStats();
+  checkAllZonesDone();
+}
+
+function renderCertificate(){
+  document.getElementById('cert-name').textContent = state.builderName;
+  document.getElementById('cert-park-name').textContent = state.parkName + ' — Grand Opening';
+  document.getElementById('cert-rank').textContent = RANK_TITLES[computeRank()-1];
+  document.getElementById('cert-points').textContent = Math.floor(state.lifetimeEarned);
+  document.getElementById('cert-date').textContent = 'Awarded on ' + new Date().toLocaleDateString('en-IN', {year:'numeric', month:'long', day:'numeric'});
+}
+
+function downloadCertificateImage(){
+  const el = document.getElementById('cert-body');
+  const btn = document.getElementById('cert-download-btn');
+  if(!el || typeof html2canvas==='undefined') return;
+  if(btn){ btn.disabled = true; btn.textContent = 'Preparing…'; }
+  html2canvas(el, { backgroundColor:'#fffdf5', scale:2 }).then(canvas=>{
+    const link = document.createElement('a');
+    const safeName = (state.builderName||'builder').replace(/[^a-z0-9]+/gi,'-').toLowerCase();
+    link.download = 'world-wonders-builder-certificate-' + safeName + '.png';
+    link.href = canvas.toDataURL('image/png');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if(btn){ btn.disabled = false; btn.textContent = '⬇️ Download certificate'; }
+  }).catch(()=>{
+    if(btn){ btn.disabled = false; btn.textContent = '⬇️ Download certificate'; }
+    alert('Could not generate the certificate image. Try the Print option instead.');
+  });
+}
+
+/* ---------------- CONFETTI ---------------- */
+
+function spawnConfettiBurst(count=10){
+  const emojis = ['🎉','⭐','🏅','✨','🎊'];
+  for(let i=0;i<count;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    el.style.left = Math.random()*100 + 'vw';
+    el.style.animationDuration = (2 + Math.random()*1.5) + 's';
+    document.body.appendChild(el);
+    setTimeout(()=> el.remove(), 4000);
+  }
+}
+
+/* ---------------- INIT ---------------- */
+
+const hasSave = loadState();
+if(hasSave && state.builderName && state.gameStarted){
+  renderAll();
+  showScreen('game');
+  startIncomeLoop();
+} else if(hasSave && state.builderName){
+  document.getElementById('builder-name').value = state.builderName;
+  document.getElementById('park-name').value = state.parkName;
+}
+</script>
+</body>
+</html>

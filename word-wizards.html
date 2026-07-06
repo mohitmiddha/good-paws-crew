@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Word Wizards: Vocabulary Quest</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Quicksand:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#241a3a; --navy2:#33244f; --yellow:#f0c94e; --orange:#e08a3c;
+    --teal:#4ecbb0; --pink:#e06fa8; --purple:#9a6fd6; --green:#5abf7a;
+    --cream:#fdf6ff; --card:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Quicksand','Segoe UI',sans-serif;
+    background:radial-gradient(circle at 25% 5%, #33244f 0%, #150e26 70%);
+    color:var(--cream);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  #app{ max-width:920px; margin:0 auto; padding:20px 16px 60px; min-height:100vh; }
+  .screen{ display:none; animation:fadeIn .4s ease; }
+  .screen.active{ display:block; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  h1,h2,h3,.btn{ font-family:'Cinzel',serif; font-weight:700; margin:.2em 0; }
+  h1{ font-size:1.9rem; text-align:center; color:var(--yellow); text-shadow:2px 2px 0 var(--navy2); }
+  h2{ font-size:1.3rem; color:var(--teal); }
+  p{ line-height:1.55; }
+
+  .panel{
+    background:linear-gradient(160deg, #33244f, #241a3a);
+    border:2px solid var(--purple);
+    border-radius:16px;
+    padding:22px;
+    margin:16px 0;
+    box-shadow:0 6px 0 rgba(0,0,0,.35);
+  }
+
+  .btn{
+    display:inline-block; background:var(--orange); color:#fff; border:none;
+    border-radius:14px; padding:14px 26px; font-size:1.05rem;
+    cursor:pointer; box-shadow:0 5px 0 #a85f22; transition:transform .1s;
+  }
+  .btn:active{ transform:translateY(4px); box-shadow:0 1px 0 #a85f22; }
+  .btn:hover{ filter:brightness(1.08); }
+  .btn.secondary{ background:var(--purple); box-shadow:0 5px 0 #6a4aa0; }
+  .btn.teal{ background:var(--teal); box-shadow:0 5px 0 #2c8a74; color:#04261d; }
+  .btn.small{ padding:8px 16px; font-size:.9rem; box-shadow:0 3px 0 rgba(0,0,0,.35); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn-row{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:18px; }
+
+  input[type=text]{
+    width:100%; padding:12px 14px; border-radius:14px; border:3px solid var(--teal);
+    font-size:1.1rem; font-family:inherit; background:#fff; color:#241a3a;
+  }
+
+  .char-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-top:16px; }
+  .char-card{
+    background:var(--navy); border:3px solid transparent; border-radius:14px; padding:14px;
+    text-align:center; cursor:pointer; transition:transform .15s, border-color .15s;
+  }
+  .char-card:hover{ transform:translateY(-4px); }
+  .char-card.selected{ border-color:var(--yellow); background:#3d2c5e; }
+  .char-emoji{ width:64px; height:64px; margin:0 auto; }
+  .char-emoji svg{ width:100%; height:100%; display:block; }
+  .char-name{ font-weight:bold; color:var(--yellow); margin:.3em 0 0; }
+  .char-role{ font-size:.8rem; color:var(--teal); }
+
+  .instr-step{ display:flex; gap:14px; align-items:flex-start; margin:14px 0; }
+  .instr-emoji{ font-size:1.8rem; flex-shrink:0; }
+  .instr-text b{ color:var(--yellow); display:block; margin-bottom:2px; }
+
+  .hud{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; background:var(--navy); border-radius:14px; padding:10px 16px; margin-bottom:16px; font-size:.95rem; }
+  .hud span b{ color:var(--yellow); }
+
+  .realm-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:16px; margin-top:18px; }
+  .realm-card{
+    background:linear-gradient(160deg, #33244f, #241a3a);
+    border:2px solid var(--purple);
+    border-radius:16px;
+    padding:16px; cursor:pointer; transition:transform .15s;
+    text-align:center;
+  }
+  .realm-card:hover{ transform:translateY(-5px); }
+  .realm-icon{ font-size:2.2rem; }
+  .realm-title{ font-weight:bold; color:var(--yellow); margin:.3em 0 2px; font-size:1rem; }
+  .realm-lead{ font-size:.78rem; color:var(--teal); margin-bottom:6px; }
+  .realm-stars{ font-size:1rem; letter-spacing:2px; }
+
+  .clue-box{ text-align:center; font-size:1.1rem; margin-bottom:16px; min-height:2.4em; }
+  .answer-slot{ display:flex; gap:6px; justify-content:center; flex-wrap:wrap; min-height:52px; margin-bottom:16px; }
+  .answer-slot .slot-tile{
+    width:44px; height:44px; border-radius:8px; border:2px dashed var(--purple);
+    display:flex; align-items:center; justify-content:center; font-size:1.3rem; font-weight:bold; color:var(--yellow);
+    background:var(--navy);
+  }
+  .answer-slot .slot-tile.filled{ border-style:solid; border-color:var(--yellow); }
+  .letter-bank{ display:flex; gap:8px; justify-content:center; flex-wrap:wrap; margin-bottom:16px; }
+  .letter-tile{
+    width:44px; height:44px; border-radius:8px; border:2px solid var(--teal);
+    background:var(--cream); color:#241a3a; font-weight:bold; font-size:1.3rem;
+    cursor:pointer; transition:transform .15s, opacity .15s;
+  }
+  .letter-tile:hover{ transform:translateY(-3px); }
+  .letter-tile.used{ opacity:.25; cursor:not-allowed; pointer-events:none; }
+  .word-feedback{ text-align:center; margin-top:6px; font-size:1rem; min-height:1.4em; }
+  .word-feedback.good{ color:#a8e8c0; }
+  .word-feedback.bad{ color:#ffb0c8; }
+  .fact-note{ text-align:center; font-size:.88rem; color:var(--teal); margin-top:8px; min-height:1.3em; }
+
+  .cert-panel{ text-align:center; border-color:var(--yellow); }
+  .cert-badge-big{ font-size:3.5rem; }
+  .cert-name{ font-size:1.6rem; color:var(--yellow); font-weight:bold; margin:.3em 0; }
+  .cert-title{ font-size:1.1rem; letter-spacing:1px; color:var(--teal); }
+
+  .sound-toggle-btn{ position:fixed; top:14px; right:14px; background:var(--navy2); border:2px solid var(--yellow); border-radius:50%; width:40px; height:40px; font-size:1.1rem; cursor:pointer; z-index:50; }
+
+  .confetti{ position:fixed; top:-30px; font-size:1.6rem; pointer-events:none; animation:confettiFall linear forwards; z-index:100; }
+  @keyframes confettiFall{ to{ transform:translateY(105vh) rotate(360deg); opacity:.3; } }
+
+  .lb-table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:.95rem; }
+  .lb-table th,.lb-table td{ padding:8px 10px; text-align:left; border-bottom:1px solid var(--navy2); }
+  .lb-table th{ color:var(--yellow); }
+  .lb-table tr.me{ background:rgba(240,201,78,.12); }
+  .lb-table td:first-child, .lb-table th:first-child{ width:34px; text-align:center; }
+
+  .footer-note{ text-align:center; font-size:.8rem; color:#b6a4d6; margin-top:30px; }
+  .muted{ color:#b6a4d6; font-size:.85rem; text-align:center; }
+</style>
+</head>
+<body>
+<button class="sound-toggle-btn" onclick="toggleSound()">🔊</button>
+<div id="app">
+
+  <div id="screen-start" class="screen active">
+    <h1>📚 Word Wizards: Vocabulary Quest 📚</h1>
+    <div class="panel">
+      <p><b>Archmage Lexicon</b> guards the Vocabulary Realm, where words have been scattered into scrambled letters. Tap the letter tiles in order to restore each word from its clue — across 11 realms covering geography, space, animals, sports, logic, maths, science, language arts, art, design, and Spanish.</p>
+      <p>Pick a nickname, choose your wordsmith, and start restoring the realm!</p>
+      <label for="player-name" style="font-weight:bold;">Your nickname</label>
+      <input type="text" id="player-name" placeholder="Enter a nickname" maxlength="18" style="margin-top:6px;">
+      <div class="btn-row">
+        <button class="btn" onclick="goToCharSelect()">Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-char" class="screen">
+    <h1>Choose your Wordsmith</h1>
+    <div class="panel">
+      <div class="char-grid" id="char-grid"></div>
+      <div class="btn-row">
+        <button class="btn" id="char-continue-btn" onclick="goToInstructions()" disabled>Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-instructions" class="screen">
+    <h1>How to Play</h1>
+    <div class="panel">
+      <div class="instr-step"><div class="instr-emoji">📚</div><div class="instr-text"><b>1. Pick any realm</b>All 11 realms are open from the start — geography with Compass, space with Astra, animals with Bramble, sports with Blaze, logic with Zin, maths with Numeria, science with Fizzle, language arts with Willow, art with Chroma, design with Cogg, and Spanish with Flores.</div></div>
+      <div class="instr-step"><div class="instr-emoji">🔤</div><div class="instr-text"><b>2. Read the clue</b>Each round gives you a clue and a bank of scrambled letters. Tap letters in order to spell the word the clue describes.</div></div>
+      <div class="instr-step"><div class="instr-emoji">↩️</div><div class="instr-text"><b>3. Fix mistakes</b>Tap a filled slot to remove that letter and try again — no penalty for adjusting.</div></div>
+      <div class="instr-step"><div class="instr-emoji">🔀</div><div class="instr-text"><b>4. Rounds shuffle every time</b>Each realm has a bigger word pool than one round uses, so replaying pulls a fresh mix.</div></div>
+      <div class="instr-step"><div class="instr-emoji">🏅</div><div class="instr-text"><b>5. Earn badges & a certificate</b>Spell more words correctly for more badges. Restore all 11 realms to unlock your Archmage certificate.</div></div>
+      <div class="btn-row">
+        <button class="btn" onclick="showScreen('hub')">Start Casting!</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-hub" class="screen">
+    <h1>📖 The Vocabulary Realm Map 📖</h1>
+    <div class="hud" id="hud-stats"></div>
+    <div class="panel">
+      <div class="realm-grid" id="realm-grid"></div>
+    </div>
+    <div class="panel cert-panel" id="cert-panel" style="display:none;">
+      <p>🏅 Every realm restored! Your certificate awaits.</p>
+      <div class="btn-row"><button class="btn teal" onclick="showScreen('certificate')">View Certificate</button></div>
+    </div>
+    <div class="panel center">
+      <h2>🏆 Wizard Leaderboard</h2>
+      <p class="muted">Compare scores with everyone who's played on this device.</p>
+      <div class="btn-row"><button class="btn secondary small" onclick="showScreen('leaderboard')">View leaderboard →</button></div>
+    </div>
+    <div class="btn-row"><button class="btn secondary small" onclick="showScreen('instructions')">How to Play</button></div>
+  </div>
+
+  <div id="screen-leaderboard" class="screen">
+    <h1>🏆 Wizard Leaderboard</h1>
+    <div class="panel">
+      <p class="muted">Top scores saved on this device, across everyone who's played Word Wizards here.</p>
+      <div id="lb-table-local"></div>
+      <div class="btn-row"><button class="btn secondary small" onclick="showScreen('hub')">Back to map</button></div>
+    </div>
+  </div>
+
+  <div id="screen-round" class="screen">
+    <h1 id="round-realm-title">Realm</h1>
+    <div class="hud" id="round-hud"></div>
+    <div class="panel">
+      <div class="clue-box" id="clue-box"></div>
+      <div class="answer-slot" id="answer-slot"></div>
+      <div class="letter-bank" id="letter-bank"></div>
+      <div class="btn-row">
+        <button class="btn secondary small" onclick="clearAnswer()">↩️ Clear</button>
+        <button class="btn" onclick="submitWord()">Submit</button>
+      </div>
+      <div class="word-feedback" id="word-feedback"></div>
+      <div class="fact-note" id="fact-note"></div>
+      <div class="btn-row"><button class="btn secondary small" onclick="showScreen('hub')">Back to realm map</button></div>
+    </div>
+  </div>
+
+  <div id="screen-certificate" class="screen">
+    <h1>🏅 Certificate of Achievement 🏅</h1>
+    <div class="panel cert-panel" id="cert-body">
+      <div class="cert-badge-big">📚</div>
+      <p>📚 Archmage Lexicon hereby certifies that</p>
+      <div class="cert-name" id="cert-name"></div>
+      <div class="cert-title">OFFICIAL WORD WIZARD (CERTIFIED)</div>
+      <p style="margin-top:14px;">Every realm of vocabulary has been restored. Well done, Wizard!</p>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="cert-download-btn" onclick="downloadCertificateImage()">⬇️ Download certificate</button>
+      <button class="btn" onclick="showScreen('hub')">Back to map</button>
+    </div>
+  </div>
+
+</div>
+<div class="footer-note" style="text-align:center;">Progress saves automatically in this browser. Cast for a curious Grade 6 word wizard.</div>
+
+<script>
+const CHARACTERS = [
+  {
+    "id": "compass",
+    "emoji": "🧭",
+    "name": "Compass Quill",
+    "role": "Geography Wordsmith",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#2c4a3a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#a8f0cf\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🧭</text></svg>"
+  },
+  {
+    "id": "astra",
+    "emoji": "🌌",
+    "name": "Astra Lumen",
+    "role": "Space Wordsmith",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#25366e\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#aecbff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🌌</text></svg>"
+  },
+  {
+    "id": "bramble",
+    "emoji": "🦉",
+    "name": "Bramble Sage",
+    "role": "Animals Wordsmith",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#5a4a1f\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffdca3\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🦉</text></svg>"
+  },
+  {
+    "id": "blaze",
+    "emoji": "⚽",
+    "name": "Blaze Fletcher",
+    "role": "Sports Wordsmith",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#1f6a3a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#a8f0c8\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">⚽</text></svg>"
+  },
+  {
+    "id": "zin",
+    "emoji": "🧩",
+    "name": "Puzzlewright Zin",
+    "role": "Thinktank Wordsmith",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#5a3a8a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#dcc9ff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🧩</text></svg>"
+  },
+  {
+    "id": "numeria",
+    "emoji": "🔢",
+    "name": "Numeria Vex",
+    "role": "Math Wordsmith",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#8a6a1f\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffedbf\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🔢</text></svg>"
+  },
+  {
+    "id": "fizzle",
+    "emoji": "🧪",
+    "name": "Professor Fizzle",
+    "role": "Science Wordsmith",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#1f6a8a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#a8e4f5\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🧪</text></svg>"
+  },
+  {
+    "id": "willow",
+    "emoji": "📜",
+    "name": "Scribe Willow",
+    "role": "Language Arts Wordsmith",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#6a2f4a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#f5c2d6\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">📜</text></svg>"
+  },
+  {
+    "id": "chroma",
+    "emoji": "🎨",
+    "name": "Chroma Muse",
+    "role": "Arts Wordsmith",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#6a1f8a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#e3c2ff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🎨</text></svg>"
+  },
+  {
+    "id": "cogg",
+    "emoji": "🛠️",
+    "name": "Tinker Cogg",
+    "role": "Design Wordsmith",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#8a4a1f\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffcf9e\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🛠️</text></svg>"
+  },
+  {
+    "id": "flores",
+    "emoji": "🇪🇸",
+    "name": "Letra Flores",
+    "role": "Spanish Wordsmith",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#8a1f3a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffb2c2\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🇪🇸</text></svg>"
+  },
+  {
+    "id": "lexicon",
+    "emoji": "📚",
+    "name": "Archmage Lexicon",
+    "role": "Keeper of the Vocabulary Realm",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#333a4a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#5fe1ff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">📚</text></svg>"
+  }
+];
+const TOPICS = [
+  {
+    "id": "geography",
+    "title": "Geography Realm",
+    "icon": "🧭",
+    "lead": "Compass Quill",
+    "leadId": "compass",
+    "words": [
+      {
+        "word": "MOUNTAIN",
+        "clue": "A very tall natural landform that rises above the surrounding land."
+      },
+      {
+        "word": "DESERT",
+        "clue": "A dry region that receives very little rainfall."
+      },
+      {
+        "word": "CONTINENT",
+        "clue": "One of Earth's seven major landmasses."
+      },
+      {
+        "word": "RIVER",
+        "clue": "A large natural stream of water flowing to the sea."
+      },
+      {
+        "word": "VOLCANO",
+        "clue": "A mountain that can erupt with lava."
+      },
+      {
+        "word": "ISLAND",
+        "clue": "A piece of land completely surrounded by water."
+      },
+      {
+        "word": "EQUATOR",
+        "clue": "The imaginary line around the middle of the Earth."
+      },
+      {
+        "word": "GLACIER",
+        "clue": "A slow-moving mass of ice."
+      },
+      {
+        "word": "PENINSULA",
+        "clue": "Land surrounded by water on three sides."
+      },
+      {
+        "word": "CANYON",
+        "clue": "A deep valley with steep sides, often carved by a river."
+      }
+    ]
+  },
+  {
+    "id": "space",
+    "title": "Space Realm",
+    "icon": "🌌",
+    "lead": "Astra Lumen",
+    "leadId": "astra",
+    "words": [
+      {
+        "word": "PLANET",
+        "clue": "A large body that orbits a star."
+      },
+      {
+        "word": "GALAXY",
+        "clue": "A huge collection of stars, like the Milky Way."
+      },
+      {
+        "word": "COMET",
+        "clue": "An icy object that develops a tail near the Sun."
+      },
+      {
+        "word": "ASTEROID",
+        "clue": "A small rocky object orbiting the Sun."
+      },
+      {
+        "word": "ORBIT",
+        "clue": "The curved path an object takes around another in space."
+      },
+      {
+        "word": "GRAVITY",
+        "clue": "The force that pulls objects toward each other."
+      },
+      {
+        "word": "TELESCOPE",
+        "clue": "A tool used to see distant objects in space."
+      },
+      {
+        "word": "ECLIPSE",
+        "clue": "When one celestial body blocks the light of another."
+      },
+      {
+        "word": "SATELLITE",
+        "clue": "An object that orbits a planet, natural or man-made."
+      },
+      {
+        "word": "NEBULA",
+        "clue": "A giant cloud of dust and gas in space."
+      }
+    ]
+  },
+  {
+    "id": "animals",
+    "title": "Animals Realm",
+    "icon": "🦉",
+    "lead": "Bramble Sage",
+    "leadId": "bramble",
+    "words": [
+      {
+        "word": "MAMMAL",
+        "clue": "A warm-blooded animal that usually has fur and feeds milk to its young."
+      },
+      {
+        "word": "REPTILE",
+        "clue": "A cold-blooded animal with scales, like a snake or lizard."
+      },
+      {
+        "word": "HABITAT",
+        "clue": "The natural home of a plant or animal."
+      },
+      {
+        "word": "PREDATOR",
+        "clue": "An animal that hunts other animals for food."
+      },
+      {
+        "word": "CAMOUFLAGE",
+        "clue": "Coloring that helps an animal blend into its surroundings."
+      },
+      {
+        "word": "AMPHIBIAN",
+        "clue": "An animal that lives both in water and on land, like a frog."
+      },
+      {
+        "word": "MIGRATION",
+        "clue": "The seasonal movement of animals from one place to another."
+      },
+      {
+        "word": "CARNIVORE",
+        "clue": "An animal that only eats meat."
+      },
+      {
+        "word": "HERBIVORE",
+        "clue": "An animal that only eats plants."
+      },
+      {
+        "word": "NOCTURNAL",
+        "clue": "Active mainly during the night."
+      }
+    ]
+  },
+  {
+    "id": "sports",
+    "title": "Sports Realm",
+    "icon": "⚽",
+    "lead": "Blaze Fletcher",
+    "leadId": "blaze",
+    "words": [
+      {
+        "word": "REFEREE",
+        "clue": "The official who enforces the rules during a game."
+      },
+      {
+        "word": "STADIUM",
+        "clue": "A large venue where sports events are held."
+      },
+      {
+        "word": "CHAMPION",
+        "clue": "The winner of a competition."
+      },
+      {
+        "word": "DEFENSE",
+        "clue": "The team or players trying to stop the other side from scoring."
+      },
+      {
+        "word": "MARATHON",
+        "clue": "A long-distance running race of 26.2 miles."
+      },
+      {
+        "word": "OLYMPICS",
+        "clue": "A major international sports competition held every four years."
+      },
+      {
+        "word": "TOURNAMENT",
+        "clue": "A series of contests to decide an overall winner."
+      },
+      {
+        "word": "GOALKEEPER",
+        "clue": "The player who guards the goal in sports like soccer."
+      },
+      {
+        "word": "ATHLETE",
+        "clue": "A person who competes in sports."
+      },
+      {
+        "word": "VICTORY",
+        "clue": "The act of winning a game or contest."
+      }
+    ]
+  },
+  {
+    "id": "thinktank",
+    "title": "Thinktank Realm",
+    "icon": "🧩",
+    "lead": "Puzzlewright Zin",
+    "leadId": "zin",
+    "words": [
+      {
+        "word": "RIDDLE",
+        "clue": "A puzzling question designed to test cleverness."
+      },
+      {
+        "word": "PATTERN",
+        "clue": "A repeated or regular way something happens."
+      },
+      {
+        "word": "LOGIC",
+        "clue": "Careful, step-by-step reasoning."
+      },
+      {
+        "word": "SEQUENCE",
+        "clue": "A set of things arranged in a particular order."
+      },
+      {
+        "word": "PUZZLE",
+        "clue": "A game or problem that tests ingenuity."
+      },
+      {
+        "word": "STRATEGY",
+        "clue": "A careful plan to achieve a goal."
+      },
+      {
+        "word": "SYMMETRY",
+        "clue": "When two halves match each other exactly."
+      },
+      {
+        "word": "HYPOTHESIS",
+        "clue": "An educated guess used as a starting point for testing."
+      },
+      {
+        "word": "DEDUCTION",
+        "clue": "Reasoning from general facts to a specific conclusion."
+      },
+      {
+        "word": "PARADOX",
+        "clue": "A statement that seems to contradict itself but may be true."
+      }
+    ]
+  },
+  {
+    "id": "math",
+    "title": "Math Realm",
+    "icon": "🔢",
+    "lead": "Numeria Vex",
+    "leadId": "numeria",
+    "words": [
+      {
+        "word": "FRACTION",
+        "clue": "A part of a whole, like one half."
+      },
+      {
+        "word": "EQUATION",
+        "clue": "A mathematical statement that two things are equal."
+      },
+      {
+        "word": "GEOMETRY",
+        "clue": "The branch of math dealing with shapes and space."
+      },
+      {
+        "word": "PERIMETER",
+        "clue": "The distance around the outside of a shape."
+      },
+      {
+        "word": "DECIMAL",
+        "clue": "A number written using a point to show parts of a whole."
+      },
+      {
+        "word": "VARIABLE",
+        "clue": "A letter or symbol that stands for an unknown number."
+      },
+      {
+        "word": "MULTIPLY",
+        "clue": "To add a number to itself a certain number of times."
+      },
+      {
+        "word": "DIVISION",
+        "clue": "Splitting a number into equal parts."
+      },
+      {
+        "word": "ANGLE",
+        "clue": "The space between two lines that meet at a point."
+      },
+      {
+        "word": "AVERAGE",
+        "clue": "The typical or middle value of a set of numbers."
+      }
+    ]
+  },
+  {
+    "id": "science",
+    "title": "Science Realm",
+    "icon": "🧪",
+    "lead": "Professor Fizzle",
+    "leadId": "fizzle",
+    "words": [
+      {
+        "word": "ENERGY",
+        "clue": "The ability to do work or cause change."
+      },
+      {
+        "word": "MOLECULE",
+        "clue": "A group of atoms bonded together."
+      },
+      {
+        "word": "ECOSYSTEM",
+        "clue": "A community of living things and their environment."
+      },
+      {
+        "word": "EVAPORATION",
+        "clue": "When liquid turns into vapor or gas."
+      },
+      {
+        "word": "MAGNET",
+        "clue": "An object that attracts iron and other metals."
+      },
+      {
+        "word": "FRICTION",
+        "clue": "A force that resists motion between surfaces."
+      },
+      {
+        "word": "OXYGEN",
+        "clue": "A gas that humans and animals need to breathe."
+      },
+      {
+        "word": "EXPERIMENT",
+        "clue": "A test done to discover or prove something."
+      },
+      {
+        "word": "BACTERIA",
+        "clue": "Tiny single-celled living things."
+      },
+      {
+        "word": "PHOTOSYNTHESIS",
+        "clue": "The process plants use to make food from sunlight."
+      }
+    ]
+  },
+  {
+    "id": "langarts",
+    "title": "Language Arts Realm",
+    "icon": "📜",
+    "lead": "Scribe Willow",
+    "leadId": "willow",
+    "words": [
+      {
+        "word": "METAPHOR",
+        "clue": "A comparison between two things without using 'like' or 'as'."
+      },
+      {
+        "word": "ADJECTIVE",
+        "clue": "A word that describes a noun."
+      },
+      {
+        "word": "PARAGRAPH",
+        "clue": "A group of sentences about one main idea."
+      },
+      {
+        "word": "SYLLABLE",
+        "clue": "A unit of sound in a word."
+      },
+      {
+        "word": "NARRATIVE",
+        "clue": "A story or account of events."
+      },
+      {
+        "word": "VOCABULARY",
+        "clue": "The words known and used by a person."
+      },
+      {
+        "word": "GRAMMAR",
+        "clue": "The rules for how words are used in a language."
+      },
+      {
+        "word": "DIALOGUE",
+        "clue": "Conversation written between characters."
+      },
+      {
+        "word": "PLOT",
+        "clue": "The main sequence of events in a story."
+      },
+      {
+        "word": "AUTHOR",
+        "clue": "The writer of a book or piece of text."
+      }
+    ]
+  },
+  {
+    "id": "arts",
+    "title": "Arts Realm",
+    "icon": "🎨",
+    "lead": "Chroma Muse",
+    "leadId": "chroma",
+    "words": [
+      {
+        "word": "PALETTE",
+        "clue": "A board or surface used to mix paint colors."
+      },
+      {
+        "word": "SCULPTURE",
+        "clue": "A three-dimensional work of art."
+      },
+      {
+        "word": "CANVAS",
+        "clue": "A surface used for painting."
+      },
+      {
+        "word": "RHYTHM",
+        "clue": "A regular repeated pattern of sound or movement."
+      },
+      {
+        "word": "MELODY",
+        "clue": "A sequence of musical notes that is pleasing to hear."
+      },
+      {
+        "word": "PORTRAIT",
+        "clue": "A piece of art that shows a person's likeness."
+      },
+      {
+        "word": "GALLERY",
+        "clue": "A room or building for showing art."
+      },
+      {
+        "word": "TEXTURE",
+        "clue": "The way a surface feels or looks like it would feel."
+      },
+      {
+        "word": "HARMONY",
+        "clue": "A pleasing combination of musical notes played together."
+      },
+      {
+        "word": "MOSAIC",
+        "clue": "A picture made from small pieces of colored material."
+      }
+    ]
+  },
+  {
+    "id": "design",
+    "title": "Design Realm",
+    "icon": "🛠️",
+    "lead": "Tinker Cogg",
+    "leadId": "cogg",
+    "words": [
+      {
+        "word": "BLUEPRINT",
+        "clue": "A detailed technical plan or drawing."
+      },
+      {
+        "word": "PROTOTYPE",
+        "clue": "An early sample or model of a product."
+      },
+      {
+        "word": "STRUCTURE",
+        "clue": "The way something is built or organized."
+      },
+      {
+        "word": "INVENTION",
+        "clue": "Something new that has been designed or created."
+      },
+      {
+        "word": "MATERIAL",
+        "clue": "The substance something is made from."
+      },
+      {
+        "word": "MECHANISM",
+        "clue": "A system of parts that work together in a machine."
+      },
+      {
+        "word": "CIRCUIT",
+        "clue": "A path that electricity can flow through."
+      },
+      {
+        "word": "FOUNDATION",
+        "clue": "The base that supports a building."
+      },
+      {
+        "word": "ENGINEER",
+        "clue": "A person who designs and builds structures or machines."
+      },
+      {
+        "word": "INNOVATION",
+        "clue": "A new idea, method, or invention."
+      }
+    ]
+  },
+  {
+    "id": "spanish",
+    "title": "Spanish Realm",
+    "icon": "🇪🇸",
+    "lead": "Letra Flores",
+    "leadId": "flores",
+    "words": [
+      {
+        "word": "AMIGO",
+        "clue": "Friend, in Spanish."
+      },
+      {
+        "word": "ESCUELA",
+        "clue": "School, in Spanish."
+      },
+      {
+        "word": "FAMILIA",
+        "clue": "Family, in Spanish."
+      },
+      {
+        "word": "GRACIAS",
+        "clue": "Thank you, in Spanish."
+      },
+      {
+        "word": "LIBRO",
+        "clue": "Book, in Spanish."
+      },
+      {
+        "word": "PERRO",
+        "clue": "Dog, in Spanish."
+      },
+      {
+        "word": "CIUDAD",
+        "clue": "City, in Spanish."
+      },
+      {
+        "word": "COMIDA",
+        "clue": "Food, in Spanish."
+      },
+      {
+        "word": "TIEMPO",
+        "clue": "Time or weather, in Spanish."
+      },
+      {
+        "word": "NUMERO",
+        "clue": "Number, in Spanish."
+      }
+    ]
+  }
+];
+const STORAGE_KEY = 'wordWizardsSave';
+
+/* ---------------- SOUND EFFECTS (synthesized, no audio files needed) ---------------- */
+let soundEnabled = true;
+try{ const s = localStorage.getItem('goodPawsSoundEnabled'); if(s!==null) soundEnabled = s==='1'; }catch(e){}
+
+const SFX = (function(){
+  let ctx = null;
+  function getCtx(){
+    if(!ctx){ ctx = new (window.AudioContext||window.webkitAudioContext)(); }
+    if(ctx.state==='suspended') ctx.resume();
+    return ctx;
+  }
+  function tone(freq, start, duration, type, vol){
+    if(!soundEnabled) return;
+    try{
+      const c = getCtx();
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      osc.connect(gain); gain.connect(c.destination);
+      const t0 = c.currentTime + start;
+      gain.gain.setValueAtTime(vol||0.15, t0);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0+duration);
+      osc.start(t0);
+      osc.stop(t0+duration+0.03);
+    }catch(e){}
+  }
+  return {
+    click(){ tone(600,0,0.06,'square',0.10); },
+    correct(){ tone(523.25,0,0.12,'sine',0.16); tone(783.99,0.1,0.16,'sine',0.16); },
+    wrong(){ tone(180,0,0.25,'sawtooth',0.13); },
+    badge(){ tone(523.25,0,0.12,'triangle',0.18); tone(659.25,0.12,0.12,'triangle',0.18); tone(783.99,0.24,0.12,'triangle',0.18); tone(1046.5,0.36,0.24,'triangle',0.2); }
+  };
+})();
+function updateSoundButtons(){ document.querySelectorAll('.sound-toggle-btn').forEach(btn=>{ btn.textContent = soundEnabled ? '🔊' : '🔇'; }); }
+function toggleSound(){
+  soundEnabled = !soundEnabled;
+  try{ localStorage.setItem('goodPawsSoundEnabled', soundEnabled ? '1' : '0'); }catch(e){}
+  updateSoundButtons();
+  if(soundEnabled) SFX.click();
+}
+document.addEventListener('click', function(e){
+  const el = e.target.closest('.btn, .realm-card, .char-card, .letter-tile');
+  if(el && !el.disabled) SFX.click();
+}, true);
+document.addEventListener('DOMContentLoaded', updateSoundButtons);
+
+function spawnConfettiBurst(count=10){
+  const emojis = ['🎉','⭐','🏅','✨','📚'];
+  for(let i=0;i<count;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    el.style.left = Math.random()*100 + 'vw';
+    el.style.animationDuration = (2 + Math.random()*1.5) + 's';
+    document.body.appendChild(el);
+    setTimeout(()=> el.remove(), 4000);
+  }
+}
+
+/* ---------------- STATE ---------------- */
+let state = {
+  name:'', character:null,
+  badges:{}, // topicId -> {stars, correct}
+  gems:0, totalScore:0,
+  current:{ topicId:null, words:[], idx:0, correctCount:0, score:0, letters:[], answer:[], solved:false }
+};
+
+function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) state = Object.assign(state, JSON.parse(raw));
+  }catch(e){}
+}
+
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=> s.classList.remove('active'));
+  const el = document.getElementById('screen-'+name);
+  if(el) el.classList.add('active');
+  if(name==='hub') renderHub();
+  if(name==='leaderboard') renderLeaderboardScreen();
+}
+
+function getCharacter(id){ return CHARACTERS.find(c=>c.id===id); }
+function getTopic(id){ return TOPICS.find(t=>t.id===id); }
+
+function renderCharGrid(){
+  const grid = document.getElementById('char-grid');
+  grid.innerHTML = '';
+  CHARACTERS.forEach(c=>{
+    const card = document.createElement('div');
+    card.className = 'char-card' + (state.character===c.id ? ' selected' : '');
+    card.innerHTML = '<div class="char-emoji">'+c.avatar+'</div><div class="char-name">'+c.name+'</div><div class="char-role">'+c.role+'</div>';
+    card.onclick = ()=>{
+      state.character = c.id;
+      renderCharGrid();
+      document.getElementById('char-continue-btn').disabled = false;
+    };
+    grid.appendChild(card);
+  });
+}
+
+function goToCharSelect(){
+  const nameInput = document.getElementById('player-name');
+  const name = nameInput.value.trim();
+  if(!name){ nameInput.focus(); return; }
+  state.name = name;
+  saveState();
+  renderCharGrid();
+  showScreen('char');
+}
+function goToInstructions(){
+  saveState();
+  showScreen('instructions');
+}
+
+function renderHub(){
+  const hud = document.getElementById('hud-stats');
+  const badgeCount = Object.keys(state.badges).length;
+  hud.innerHTML = '<span>👤 <b>'+(state.name||'Wizard')+'</b></span><span>🏅 Badges: <b>'+badgeCount+'/'+TOPICS.length+'</b></span><span>💎 Gems: <b>'+state.gems+'</b></span>';
+
+  const grid = document.getElementById('realm-grid');
+  grid.innerHTML = '';
+  TOPICS.forEach(topic=>{
+    const badge = state.badges[topic.id];
+    const card = document.createElement('div');
+    card.className = 'realm-card';
+    const stars = badge ? '⭐'.repeat(badge.stars) + '☆'.repeat(3-badge.stars) : '☆☆☆';
+    card.innerHTML = '<div class="realm-icon">'+topic.icon+'</div><div class="realm-title">'+topic.title+'</div><div class="realm-lead">with '+topic.lead+'</div><div class="realm-stars">'+stars+'</div>';
+    card.onclick = ()=> startRound(topic.id);
+    grid.appendChild(card);
+  });
+
+  document.getElementById('cert-panel').style.display = (badgeCount===TOPICS.length) ? 'block' : 'none';
+  saveState();
+  upsertLeaderboard();
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function startRound(topicId){
+  const topic = getTopic(topicId);
+  const words = shuffle(topic.words).slice(0, 6);
+  state.current = { topicId, words, idx:0, correctCount:0, score:0, letters:[], answer:[], solved:false };
+  document.getElementById('round-realm-title').textContent = topic.icon + ' ' + topic.title;
+  showScreen('round');
+  renderRoundHud();
+  loadWord();
+}
+
+function renderRoundHud(){
+  const hud = document.getElementById('round-hud');
+  hud.innerHTML = '<span>🔤 Word: <b>'+(state.current.idx+1)+'/'+state.current.words.length+'</b></span><span>✅ Correct: <b>'+state.current.correctCount+'</b></span><span>⭐ Score: <b>'+state.current.score+'</b></span>';
+}
+
+function loadWord(){
+  if(state.current.idx >= state.current.words.length){
+    finishRound();
+    return;
+  }
+  const w = state.current.words[state.current.idx];
+  document.getElementById('clue-box').textContent = w.clue;
+  document.getElementById('word-feedback').textContent = '';
+  document.getElementById('word-feedback').className = 'word-feedback';
+  document.getElementById('fact-note').textContent = '';
+  state.current.letters = shuffle(w.word.split(''));
+  state.current.answer = [];
+  state.current.solved = false;
+  renderRoundHud();
+  renderRound();
+}
+
+function renderRound(){
+  const w = state.current.words[state.current.idx];
+  const slotEl = document.getElementById('answer-slot');
+  slotEl.innerHTML = '';
+  for(let i=0;i<w.word.length;i++){
+    const tile = document.createElement('div');
+    tile.className = 'slot-tile' + (state.current.answer[i] ? ' filled' : '');
+    tile.textContent = state.current.answer[i] ? state.current.answer[i].letter.toUpperCase() : '';
+    const capturedIndex = i;
+    tile.onclick = ()=> removeAnswerLetter(capturedIndex);
+    slotEl.appendChild(tile);
+  }
+
+  const bankEl = document.getElementById('letter-bank');
+  bankEl.innerHTML = '';
+  state.current.letters.forEach((letter, idx)=>{
+    const isUsed = state.current.answer.some(a=> a && a.bankIndex===idx);
+    const tile = document.createElement('div');
+    tile.className = 'letter-tile' + (isUsed ? ' used' : '');
+    tile.textContent = letter.toUpperCase();
+    tile.onclick = ()=> pickLetter(idx);
+    bankEl.appendChild(tile);
+  });
+}
+
+function pickLetter(bankIndex){
+  if(state.current.solved) return;
+  const w = state.current.words[state.current.idx];
+  if(state.current.answer.filter(a=>a).length >= w.word.length) return;
+  const alreadyUsed = state.current.answer.some(a=> a && a.bankIndex===bankIndex);
+  if(alreadyUsed) return;
+  const letter = state.current.letters[bankIndex];
+  const nextSlot = state.current.answer.length;
+  state.current.answer[nextSlot] = { letter, bankIndex };
+  renderRound();
+}
+
+function removeAnswerLetter(slotIndex){
+  if(state.current.solved) return;
+  if(!state.current.answer[slotIndex]) return;
+  state.current.answer.splice(slotIndex, 1);
+  renderRound();
+}
+
+function clearAnswer(){
+  if(state.current.solved) return;
+  state.current.answer = [];
+  renderRound();
+}
+
+function submitWord(){
+  if(state.current.solved) return;
+  const w = state.current.words[state.current.idx];
+  const built = state.current.answer.map(a=> a ? a.letter : '').join('').toLowerCase();
+  const feedback = document.getElementById('word-feedback');
+  if(built.length < w.word.length){
+    feedback.textContent = 'Fill in all the letters first!';
+    feedback.className = 'word-feedback bad';
+    return;
+  }
+  if(built === w.word.toLowerCase()){
+    state.current.solved = true;
+    state.current.correctCount++;
+    state.current.score += 10;
+    SFX.correct();
+    feedback.textContent = '✅ Correct! "' + w.word.toUpperCase() + '"';
+    feedback.className = 'word-feedback good';
+    document.getElementById('fact-note').textContent = '💡 ' + w.clue;
+    renderRoundHud();
+    setTimeout(()=>{ state.current.idx++; loadWord(); }, 1100);
+  } else {
+    SFX.wrong();
+    feedback.textContent = '❌ Not quite — try rearranging the letters.';
+    feedback.className = 'word-feedback bad';
+  }
+}
+
+function finishRound(){
+  const topicId = state.current.topicId;
+  const correct = state.current.correctCount;
+  const stars = correct>=5 ? 3 : (correct>=3 ? 2 : 1);
+  const existing = state.badges[topicId];
+  const isNewBadge = !existing;
+  let bonusGems = 2;
+  if(isNewBadge) bonusGems += 3;
+  if(stars===3) bonusGems += 3;
+  if(!existing || stars>existing.stars){
+    state.badges[topicId] = { stars, correct };
+  }
+  state.gems += bonusGems;
+  state.totalScore += state.current.score;
+
+  const allDone = Object.keys(state.badges).length === TOPICS.length;
+  if(allDone) state.gems += 15;
+
+  saveState();
+  SFX.badge();
+  spawnConfettiBurst(14);
+
+  document.getElementById('clue-box').textContent = '';
+  document.getElementById('answer-slot').innerHTML = '';
+  document.getElementById('letter-bank').innerHTML = '';
+  const feedback = document.getElementById('word-feedback');
+  feedback.textContent = 'Realm cleared! ' + correct + '/6 correct ' + '⭐'.repeat(stars) + '☆'.repeat(3-stars) + '  (+'+bonusGems+' gems)';
+  feedback.className = 'word-feedback good';
+  document.getElementById('fact-note').textContent = '';
+
+  setTimeout(()=>{ showScreen('hub'); }, 1600);
+}
+
+function renderCertificate(){
+  document.getElementById('cert-name').textContent = state.name;
+}
+
+/* ---------------- ON-DEVICE LEADERBOARD ---------------- */
+const LB_KEY = 'leaderboard_wordWizards';
+
+function upsertLeaderboard(){
+  try{
+    if(!state.name) return;
+    const entry = { name: state.name, score: state.totalScore||0, gems: state.gems||0, badges: Object.keys(state.badges||{}).length, total: TOPICS.length, date: new Date().toISOString() };
+    let list = [];
+    try{ list = JSON.parse(localStorage.getItem(LB_KEY)||'[]'); }catch(e){ list=[]; }
+    const idx = list.findIndex(e=> e.name===entry.name);
+    if(idx>=0){ if(entry.score>=list[idx].score) list[idx]=entry; }
+    else list.push(entry);
+    list.sort((a,b)=> b.score-a.score);
+    list = list.slice(0,20);
+    localStorage.setItem(LB_KEY, JSON.stringify(list));
+  }catch(e){}
+}
+
+function renderLeaderboardScreen(){
+  upsertLeaderboard();
+  let list = [];
+  try{ list = JSON.parse(localStorage.getItem(LB_KEY)||'[]'); }catch(e){ list=[]; }
+  const el = document.getElementById('lb-table-local');
+  if(!el) return;
+  if(!list.length){ el.innerHTML = '<p class="muted">No scores yet on this device — play a round to be the first!</p>'; return; }
+  el.innerHTML = '<table class="lb-table"><thead><tr><th>#</th><th>Name</th><th>Score</th><th>💎</th><th>Badges</th></tr></thead><tbody>' +
+    list.map((e,i)=> '<tr'+(e.name===state.name?' class="me"':'')+'><td>'+(i+1)+'</td><td>'+e.name+'</td><td>'+e.score+'</td><td>'+e.gems+'</td><td>'+e.badges+'/'+(e.total||TOPICS.length)+'</td></tr>').join('') +
+    '</tbody></table>';
+}
+
+function downloadCertificateImage(){
+  const el = document.getElementById('cert-body');
+  const btn = document.getElementById('cert-download-btn');
+  if(!el || typeof html2canvas==='undefined') return;
+  if(btn){ btn.disabled = true; btn.textContent = 'Preparing…'; }
+  html2canvas(el, { backgroundColor:'#33244f', scale:2 }).then(canvas=>{
+    const link = document.createElement('a');
+    const safeName = (state.name||'wizard').replace(/[^a-z0-9]+/gi,'-').toLowerCase();
+    link.download = 'word-wizards-certificate-' + safeName + '.png';
+    link.href = canvas.toDataURL('image/png');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if(btn){ btn.disabled = false; btn.textContent = '⬇️ Download certificate'; }
+  }).catch(()=>{
+    if(btn){ btn.disabled = false; btn.textContent = '⬇️ Download certificate'; }
+    alert('Could not generate the certificate image.');
+  });
+}
+
+/* ---------------- INIT ---------------- */
+loadState();
+if(state.name) document.getElementById('player-name').value = state.name;
+if(state.name && state.character){
+  renderCharGrid();
+  showScreen('hub');
+}
+</script>
+</body>
+</html>

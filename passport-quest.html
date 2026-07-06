@@ -1,0 +1,1083 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Passport Quest: Postcards from Everywhere</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#122619; --navy2:#1c3a26; --yellow:#ffcf56; --orange:#ff7b4d;
+    --teal:#2fbfa0; --pink:#ff6f91; --purple:#8a6fd6; --green:#4fbf6a;
+    --cream:#fff8ec; --card:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Nunito','Segoe UI',sans-serif;
+    background:radial-gradient(circle at 25% 0%, #1c3a26 0%, #0d1f15 65%);
+    color:var(--cream);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  #app{ max-width:920px; margin:0 auto; padding:20px 16px 60px; min-height:100vh; }
+  .screen{ display:none; animation:fadeIn .4s ease; }
+  .screen.active{ display:block; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  h1,h2,h3,.btn{ font-family:'Baloo 2',cursive; margin:.2em 0; }
+  h1{ font-size:1.9rem; text-align:center; color:var(--yellow); text-shadow:2px 2px 0 var(--navy2); }
+  h2{ font-size:1.4rem; color:var(--teal); }
+  p{ line-height:1.55; }
+
+  .panel{
+    background:var(--navy2);
+    border:3px dashed var(--yellow);
+    border-radius:24px;
+    padding:22px;
+    margin:16px 0;
+    box-shadow:0 6px 0 rgba(0,0,0,.3);
+    position:relative;
+  }
+  .panel::before{ content:''; position:absolute; top:-9px; left:26px; width:16px; height:16px; border-radius:50%; background:#0d1f15; border:3px dashed var(--yellow); }
+
+  .btn{
+    display:inline-block; background:var(--orange); color:#fff; border:none;
+    border-radius:26px; padding:14px 26px; font-size:1.05rem; font-weight:bold;
+    cursor:pointer; box-shadow:0 5px 0 #b8451f; transition:transform .1s;
+  }
+  .btn:active{ transform:translateY(4px); box-shadow:0 1px 0 #b8451f; }
+  .btn:hover{ filter:brightness(1.08); }
+  .btn.secondary{ background:var(--purple); box-shadow:0 5px 0 #5a35b5; }
+  .btn.teal{ background:var(--teal); box-shadow:0 5px 0 #1c8c81; color:#053d38; }
+  .btn.small{ padding:8px 16px; font-size:.85rem; box-shadow:0 3px 0 rgba(0,0,0,.35); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn-row{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:18px; }
+
+  input[type=text]{
+    width:100%; padding:12px 14px; border-radius:20px; border:3px solid var(--teal);
+    font-size:1.1rem; font-family:inherit; background:#fff; color:#0d1f15;
+  }
+
+  .char-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-top:16px; }
+  .char-card{
+    background:var(--navy); border:3px solid transparent; border-radius:18px; padding:14px;
+    text-align:center; cursor:pointer; transition:transform .15s, border-color .15s;
+  }
+  .char-card:hover{ transform:translateY(-4px); }
+  .char-card.selected{ border-color:var(--yellow); background:#22452e; }
+  .char-emoji{ width:64px; height:64px; margin:0 auto; }
+  .char-emoji svg{ width:100%; height:100%; display:block; }
+  .char-name{ font-weight:bold; color:var(--yellow); margin:.3em 0 0; }
+  .char-role{ font-size:.8rem; color:var(--teal); }
+
+  .instr-step{ display:flex; gap:14px; align-items:flex-start; margin:14px 0; }
+  .instr-emoji{ font-size:1.8rem; flex-shrink:0; }
+  .instr-text b{ color:var(--yellow); display:block; margin-bottom:2px; }
+
+  .hud{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; background:var(--navy); border-radius:20px; padding:10px 16px; margin-bottom:16px; font-size:.95rem; }
+  .hud span b{ color:var(--yellow); }
+
+  .stop-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:16px; margin-top:18px; }
+  .stop-card{
+    background:var(--navy); border:3px dashed var(--yellow); border-radius:20px;
+    padding:16px; cursor:pointer; transition:transform .15s; text-align:center;
+  }
+  .stop-card:hover{ transform:translateY(-5px); }
+  .stop-icon{ font-size:2.2rem; }
+  .stop-title{ font-weight:bold; color:var(--yellow); margin:.3em 0 2px; font-size:1rem; }
+  .stop-lead{ font-size:.78rem; color:var(--teal); margin-bottom:6px; }
+  .stop-stars{ font-size:1rem; letter-spacing:2px; }
+
+  .match-board{
+    display:grid;
+    grid-template-columns:repeat(4, 1fr);
+    gap:10px;
+    max-width:560px;
+    margin:0 auto;
+  }
+  .match-card{
+    aspect-ratio:3/4;
+    border-radius:14px;
+    background:linear-gradient(160deg, var(--teal), #1c8c81);
+    border:3px solid var(--yellow);
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer;
+    font-size:1.7rem;
+    text-align:center;
+    padding:6px;
+    transition:transform .25s;
+    user-select:none;
+  }
+  .match-card .face-back{ font-size:1.9rem; }
+  .match-card .face-front{ display:none; font-size:.82rem; font-weight:bold; color:#0d1f15; line-height:1.2; }
+  .match-card.flipped{ background:var(--cream); }
+  .match-card.flipped .face-back{ display:none; }
+  .match-card.flipped .face-front{ display:block; }
+  .match-card.matched{ background:var(--green); border-color:#fff; opacity:.55; cursor:default; }
+  .match-card.matched .face-front{ display:block; color:#0d1f15; }
+  .match-card.matched .face-back{ display:none; }
+  .match-card.wrong-flash{ animation:wrongFlash .4s; }
+  @keyframes wrongFlash{ 0%,100%{ border-color:var(--yellow); } 50%{ border-color:var(--pink); } }
+
+  .match-feedback{ text-align:center; margin-top:16px; font-size:1.05rem; min-height:1.4em; }
+  .match-feedback.good{ color:#8fe0b0; }
+
+  .fact-box{ margin-top:14px; text-align:center; font-size:.92rem; color:var(--teal); min-height:1.4em; }
+
+  .cert-panel{ text-align:center; border-color:var(--yellow); }
+  .cert-badge-big{ font-size:3.5rem; }
+  .cert-name{ font-size:1.6rem; color:var(--yellow); font-weight:bold; margin:.3em 0; }
+  .cert-title{ font-size:1.1rem; letter-spacing:1px; color:var(--teal); }
+
+  .sound-toggle-btn{ position:fixed; top:14px; right:14px; background:var(--navy2); border:2px solid var(--yellow); border-radius:50%; width:40px; height:40px; font-size:1.1rem; cursor:pointer; z-index:50; }
+
+  .confetti{ position:fixed; top:-30px; font-size:1.6rem; pointer-events:none; animation:confettiFall linear forwards; z-index:100; }
+  @keyframes confettiFall{ to{ transform:translateY(105vh) rotate(360deg); opacity:.3; } }
+
+  .footer-note{ text-align:center; font-size:.8rem; color:#a8c9b6; margin-top:30px; }
+  .muted-note{ font-size:.85rem; color:#a8c9b6; text-align:center; }
+  .lb-table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:.95rem; }
+  .lb-table th,.lb-table td{ padding:8px 10px; text-align:left; border-bottom:1px solid #1c3a26; }
+  .lb-table th{ color:var(--yellow); }
+  .lb-table tr.me{ background:rgba(255,207,86,.15); }
+  .lb-table td:first-child, .lb-table th:first-child{ width:34px; text-align:center; }
+
+  @media (max-width:480px){
+    .match-board{ grid-template-columns:repeat(3,1fr); }
+    .match-card{ font-size:1.3rem; }
+    .match-card .face-front{ font-size:.68rem; }
+  }
+</style>
+</head>
+<body>
+<button class="sound-toggle-btn" onclick="toggleSound()">🔊</button>
+<div id="app">
+
+  <div id="screen-start" class="screen active">
+    <h1>🧳 Passport Quest: Postcards from Everywhere 🧳</h1>
+    <div class="panel">
+      <p><b>Dame Adventuria</b> has scattered a deck of postcard pairs across 11 famous stops around the globe — geography, space, animals, sports, logic, maths, science, language arts, art, design, and Spanish. Flip cards two at a time to match each postcard with its fact, fill your passport with stamps, and become an Official Globetrotter.</p>
+      <label for="player-name" style="font-weight:bold;">Your nickname</label>
+      <input type="text" id="player-name" placeholder="Enter a nickname" maxlength="18" style="margin-top:6px;">
+      <div class="btn-row">
+        <button class="btn" onclick="goToCharSelect()">Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-char" class="screen">
+    <h1>Choose your Globetrotter</h1>
+    <div class="panel">
+      <div class="char-grid" id="char-grid"></div>
+      <div class="btn-row">
+        <button class="btn" id="char-continue-btn" onclick="goToInstructions()" disabled>Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-instructions" class="screen">
+    <h1>How to Play</h1>
+    <div class="panel">
+      <div class="instr-step"><div class="instr-emoji">🧳</div><div class="instr-text"><b>1. Pick any stop</b>All 11 stops are open from the start — geography with Compass, space with Skye, animals with Safari, sports with Rio, logic with Sphinx, maths with Pyramid, science with Reef, language arts with Story, art with Palette, design with Brix, and Spanish with Flor.</div></div>
+      <div class="instr-step"><div class="instr-emoji">🃏</div><div class="instr-text"><b>2. Flip and match</b>Each stop has 12 cards (6 pairs). Flip two cards at a time — if they match, they stay face-up with a fun fact. If not, they flip back.</div></div>
+      <div class="instr-step"><div class="instr-emoji">⭐</div><div class="instr-text"><b>3. Fewer flips = more stamps</b>Match all 6 pairs in as few tries as you can for up to 3 passport stamps.</div></div>
+      <div class="instr-step"><div class="instr-emoji">🔀</div><div class="instr-text"><b>4. Boards shuffle every time</b>Replay a stop for a freshly shuffled layout and a shot at a better score.</div></div>
+      <div class="instr-step"><div class="instr-emoji">🎫</div><div class="instr-text"><b>5. Earn a certificate</b>Collect all 11 passport stamps to unlock your Official Globetrotter certificate.</div></div>
+      <div class="btn-row">
+        <button class="btn" onclick="showScreen('hub')">Start Exploring!</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-hub" class="screen">
+    <h1>🧭 Your Passport Map 🧭</h1>
+    <div class="hud" id="hud-stats"></div>
+    <div class="panel">
+      <div class="stop-grid" id="stop-grid"></div>
+    </div>
+    <div class="panel cert-panel" id="cert-panel" style="display:none;">
+      <p>🎫 Every stop stamped! Your certificate awaits.</p>
+      <div class="btn-row"><button class="btn teal" onclick="showScreen('certificate')">View Certificate</button></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn secondary small" onclick="showScreen('instructions')">How to Play</button>
+      <button class="btn teal small" onclick="showScreen('leaderboard')">🏆 Leaderboard</button>
+    </div>
+  </div>
+
+  <div id="screen-leaderboard" class="screen">
+    <h1>🏆 Passport Leaderboard</h1>
+    <div class="panel">
+      <p class="muted-note">Top scores saved on this device, across everyone who's played Passport Quest here.</p>
+      <div id="lb-table-local"></div>
+      <div class="btn-row"><button class="btn secondary small" onclick="showScreen('hub')">Back to Map</button></div>
+    </div>
+  </div>
+
+  <div id="screen-match" class="screen">
+    <h1 id="match-stop-title">Stop</h1>
+    <div class="hud" id="match-hud"></div>
+    <div class="panel">
+      <div class="match-board" id="match-board"></div>
+      <div class="fact-box" id="fact-box"></div>
+      <div class="match-feedback" id="match-feedback"></div>
+      <div class="btn-row">
+        <button class="btn secondary small" onclick="showScreen('hub')">Back to Map</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-certificate" class="screen">
+    <h1>🎫 Certificate of Achievement 🎫</h1>
+    <div class="panel cert-panel" id="cert-body">
+      <div class="cert-badge-big">🧭</div>
+      <p>🧭 Dame Adventuria hereby certifies that</p>
+      <div class="cert-name" id="cert-name"></div>
+      <div class="cert-title">OFFICIAL GLOBETROTTER (CERTIFIED)</div>
+      <p style="margin-top:14px;">Every stop's postcards have been matched. Well done, Globetrotter!</p>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="cert-download-btn" onclick="downloadCertificateImage()">⬇️ Download certificate</button>
+      <button class="btn" onclick="showScreen('hub')">Back to Map</button>
+    </div>
+  </div>
+
+</div>
+<div class="footer-note" style="text-align:center;">Progress saves automatically in this browser. Stamped for a curious Grade 6 globetrotter.</div>
+
+<script>
+const CHARACTERS = [
+  {
+    "id": "compass",
+    "emoji": "🧭",
+    "name": "Compass Reyes",
+    "role": "Master Navigator",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#1f6a4a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#a8f0cf\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🧭</text></svg>"
+  },
+  {
+    "id": "skye",
+    "emoji": "🌌",
+    "name": "Skye Higharch",
+    "role": "Stargazing guide",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#2e4d8a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#aecbff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🌌</text></svg>"
+  },
+  {
+    "id": "safari",
+    "emoji": "🦓",
+    "name": "Safari Jones",
+    "role": "Wildlife tracker",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#b8752a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffdca3\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🦓</text></svg>"
+  },
+  {
+    "id": "rio",
+    "emoji": "⚽",
+    "name": "Rio Santos",
+    "role": "World Games champion",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#1f9e5a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#a8f0c8\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">⚽</text></svg>"
+  },
+  {
+    "id": "sphinx",
+    "emoji": "🐫",
+    "name": "Sphinx Nabil",
+    "role": "Riddle Keeper of the desert",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#a0762a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffe3ba\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🐫</text></svg>"
+  },
+  {
+    "id": "pyramid",
+    "emoji": "🔺",
+    "name": "Pyramid Amara",
+    "role": "Ancient Numbers guide",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#c2932a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffedbf\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🔺</text></svg>"
+  },
+  {
+    "id": "reef",
+    "emoji": "🐠",
+    "name": "Reef Marina",
+    "role": "Ocean Science officer",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#1f7f9e\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#a8e4f5\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🐠</text></svg>"
+  },
+  {
+    "id": "story",
+    "emoji": "📖",
+    "name": "Story Osei",
+    "role": "World Tales griot",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#8a3f5a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#f5c2d6\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">📖</text></svg>"
+  },
+  {
+    "id": "palette",
+    "emoji": "🎭",
+    "name": "Palette Dubois",
+    "role": "World Art curator",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#7a4fd6\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#dcc9ff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🎭</text></svg>"
+  },
+  {
+    "id": "brix",
+    "emoji": "🏗️",
+    "name": "Brix Tanaka",
+    "role": "Wonders Architect",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#c07a1f\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffdca3\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🏗️</text></svg>"
+  },
+  {
+    "id": "flor",
+    "emoji": "💃",
+    "name": "Flor Salamanca",
+    "role": "Spanish-speaking world guide",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#c2385a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffc2d6\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">💃</text></svg>"
+  },
+  {
+    "id": "gogo",
+    "emoji": "🌐",
+    "name": "Gogo Globus",
+    "role": "Globe Arcade keeper",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#3d3d55\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#5fe1ff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🌐</text></svg>"
+  }
+];
+const STOPS = [
+  {
+    "id": "geography",
+    "title": "Landmarks of the World",
+    "icon": "🗺️",
+    "lead": "Compass Reyes",
+    "leadId": "compass",
+    "pairs": [
+      {
+        "a": "Eiffel Tower",
+        "b": "France",
+        "fact": "Built in 1889 for the World's Fair in Paris."
+      },
+      {
+        "a": "Great Wall",
+        "b": "China",
+        "fact": "Stretches over 13,000 miles across northern China."
+      },
+      {
+        "a": "Pyramids of Giza",
+        "b": "Egypt",
+        "fact": "The Great Pyramid was the tallest structure for over 3,800 years."
+      },
+      {
+        "a": "Colosseum",
+        "b": "Italy",
+        "fact": "An ancient Roman amphitheater that held up to 80,000 spectators."
+      },
+      {
+        "a": "Christ the Redeemer",
+        "b": "Brazil",
+        "fact": "Stands atop Corcovado mountain overlooking Rio de Janeiro."
+      },
+      {
+        "a": "Sydney Opera House",
+        "b": "Australia",
+        "fact": "Its sail-shaped roof took over a decade to build."
+      }
+    ]
+  },
+  {
+    "id": "space",
+    "title": "Postcards from Space",
+    "icon": "🌌",
+    "lead": "Skye Higharch",
+    "leadId": "skye",
+    "pairs": [
+      {
+        "a": "Mercury",
+        "b": "Smallest planet",
+        "fact": "Mercury is only slightly larger than Earth's Moon."
+      },
+      {
+        "a": "Venus",
+        "b": "Hottest planet",
+        "fact": "Its thick atmosphere traps heat, hotter than Mercury despite being farther from the Sun."
+      },
+      {
+        "a": "Mars",
+        "b": "The Red Planet",
+        "fact": "Iron oxide (rust) on its surface gives Mars its color."
+      },
+      {
+        "a": "Jupiter",
+        "b": "Largest planet",
+        "fact": "Jupiter is so big that all other planets could fit inside it."
+      },
+      {
+        "a": "Saturn",
+        "b": "Has the biggest rings",
+        "fact": "Its rings are made of ice and rock chunks."
+      },
+      {
+        "a": "Earth",
+        "b": "Only known planet with life",
+        "fact": "Earth's distance from the Sun keeps water liquid on its surface."
+      }
+    ]
+  },
+  {
+    "id": "animals",
+    "title": "Wildlife Postcards",
+    "icon": "🦓",
+    "lead": "Safari Jones",
+    "leadId": "safari",
+    "pairs": [
+      {
+        "a": "Cheetah",
+        "b": "Fastest land animal",
+        "fact": "Cheetahs can reach speeds over 100 km/h in short bursts."
+      },
+      {
+        "a": "Blue whale",
+        "b": "Largest animal on Earth",
+        "fact": "A blue whale's heart alone can weigh as much as a car."
+      },
+      {
+        "a": "Giraffe",
+        "b": "Tallest land animal",
+        "fact": "A giraffe's neck alone can be over 6 feet long."
+      },
+      {
+        "a": "Chameleon",
+        "b": "Changes color",
+        "fact": "Chameleons shift color to communicate and regulate temperature."
+      },
+      {
+        "a": "Octopus",
+        "b": "Has three hearts",
+        "fact": "Two pump blood to the gills, one to the rest of the body."
+      },
+      {
+        "a": "Elephant",
+        "b": "Never forgets",
+        "fact": "Elephants have excellent long-term memory."
+      }
+    ]
+  },
+  {
+    "id": "sports",
+    "title": "Games Around the Globe",
+    "icon": "⚽",
+    "lead": "Rio Santos",
+    "leadId": "rio",
+    "pairs": [
+      {
+        "a": "Soccer",
+        "b": "Played with a round ball and goal",
+        "fact": "The world's most popular sport, known as football outside the US."
+      },
+      {
+        "a": "Basketball",
+        "b": "Played with a hoop",
+        "fact": "Invented in 1891 by James Naismith."
+      },
+      {
+        "a": "Tennis",
+        "b": "Played with a racket",
+        "fact": "Matches are scored in points, games, and sets."
+      },
+      {
+        "a": "Swimming",
+        "b": "Played in a pool",
+        "fact": "One of the oldest Olympic sports."
+      },
+      {
+        "a": "Golf",
+        "b": "Played with clubs",
+        "fact": "The goal is to hit a ball into a hole in as few strokes as possible."
+      },
+      {
+        "a": "Volleyball",
+        "b": "Played over a net",
+        "fact": "Teams try to ground the ball on the opponent's side of the court."
+      }
+    ]
+  },
+  {
+    "id": "thinktank",
+    "title": "Riddles of the Desert",
+    "icon": "🐫",
+    "lead": "Sphinx Nabil",
+    "leadId": "sphinx",
+    "pairs": [
+      {
+        "a": "Palindrome",
+        "b": "Reads the same forwards and backwards",
+        "fact": "Example: \"level\" or \"racecar\"."
+      },
+      {
+        "a": "Even number",
+        "b": "Divisible by 2",
+        "fact": "Examples include 2, 4, 6, and 8."
+      },
+      {
+        "a": "Prime number",
+        "b": "Only divisible by 1 and itself",
+        "fact": "Examples include 2, 3, 5, and 7."
+      },
+      {
+        "a": "Symmetry",
+        "b": "Same on both sides",
+        "fact": "A butterfly's wings are a common example."
+      },
+      {
+        "a": "Pattern",
+        "b": "A repeating sequence",
+        "fact": "Patterns can be found in numbers, shapes, and music."
+      },
+      {
+        "a": "Logic",
+        "b": "Reasoning step by step",
+        "fact": "Used to solve puzzles and riddles."
+      }
+    ]
+  },
+  {
+    "id": "math",
+    "title": "Shapes Across Cultures",
+    "icon": "🔺",
+    "lead": "Pyramid Amara",
+    "leadId": "pyramid",
+    "pairs": [
+      {
+        "a": "Triangle",
+        "b": "3 sides",
+        "fact": "The simplest polygon."
+      },
+      {
+        "a": "Square",
+        "b": "4 sides",
+        "fact": "All sides and angles are equal."
+      },
+      {
+        "a": "Pentagon",
+        "b": "5 sides",
+        "fact": "The U.S. Department of Defense building is shaped like one."
+      },
+      {
+        "a": "Hexagon",
+        "b": "6 sides",
+        "fact": "Honeycomb cells are shaped like hexagons."
+      },
+      {
+        "a": "Heptagon",
+        "b": "7 sides",
+        "fact": "A rare shape, sometimes seen in coins."
+      },
+      {
+        "a": "Octagon",
+        "b": "8 sides",
+        "fact": "Stop signs are shaped like octagons."
+      }
+    ]
+  },
+  {
+    "id": "science",
+    "title": "Science Around the World",
+    "icon": "🐠",
+    "lead": "Reef Marina",
+    "leadId": "reef",
+    "pairs": [
+      {
+        "a": "Photosynthesis",
+        "b": "Plants making food from sunlight",
+        "fact": "Plants use sunlight, water, and CO2 to make their own energy."
+      },
+      {
+        "a": "Gravity",
+        "b": "Force that pulls objects together",
+        "fact": "Keeps our feet on the ground and planets in orbit."
+      },
+      {
+        "a": "Evaporation",
+        "b": "Liquid turning into gas",
+        "fact": "Part of the water cycle, driven by heat."
+      },
+      {
+        "a": "Friction",
+        "b": "Force that resists motion",
+        "fact": "Rubbing your hands together creates heat from friction."
+      },
+      {
+        "a": "Ecosystem",
+        "b": "Living things and environment together",
+        "fact": "Includes plants, animals, and their surroundings."
+      },
+      {
+        "a": "Magnetism",
+        "b": "Force between magnets",
+        "fact": "Magnets attract certain metals like iron."
+      }
+    ]
+  },
+  {
+    "id": "langarts",
+    "title": "Tales & Words",
+    "icon": "📖",
+    "lead": "Story Osei",
+    "leadId": "story",
+    "pairs": [
+      {
+        "a": "Run",
+        "b": "Verb",
+        "fact": "A word that describes an action."
+      },
+      {
+        "a": "Happy",
+        "b": "Adjective",
+        "fact": "A word that describes a noun."
+      },
+      {
+        "a": "Quickly",
+        "b": "Adverb",
+        "fact": "A word that describes a verb, often ending in -ly."
+      },
+      {
+        "a": "Dog",
+        "b": "Noun",
+        "fact": "A word for a person, place, thing, or idea."
+      },
+      {
+        "a": "Metaphor",
+        "b": "Comparison without like or as",
+        "fact": "Example: \"Time is a thief.\""
+      },
+      {
+        "a": "Simile",
+        "b": "Comparison using like or as",
+        "fact": "Example: \"Brave as a lion.\""
+      }
+    ]
+  },
+  {
+    "id": "arts",
+    "title": "Masterpieces of the World",
+    "icon": "🎭",
+    "lead": "Palette Dubois",
+    "leadId": "palette",
+    "pairs": [
+      {
+        "a": "Van Gogh",
+        "b": "Painted Starry Night",
+        "fact": "A Dutch post-impressionist painter."
+      },
+      {
+        "a": "Leonardo da Vinci",
+        "b": "Painted the Mona Lisa",
+        "fact": "Also a scientist and inventor of the Renaissance."
+      },
+      {
+        "a": "Picasso",
+        "b": "Founded Cubism",
+        "fact": "A Spanish artist known for abstract, geometric styles."
+      },
+      {
+        "a": "Monet",
+        "b": "Famous for Impressionism",
+        "fact": "Known for paintings of water lilies and gardens."
+      },
+      {
+        "a": "Primary colors",
+        "b": "Red, blue, and yellow",
+        "fact": "Colors that can't be made by mixing others."
+      },
+      {
+        "a": "Secondary colors",
+        "b": "Made by mixing two primary colors",
+        "fact": "Examples include green, orange, and purple."
+      }
+    ]
+  },
+  {
+    "id": "design",
+    "title": "World-Changing Inventions",
+    "icon": "🏗️",
+    "lead": "Brix Tanaka",
+    "leadId": "brix",
+    "pairs": [
+      {
+        "a": "Light bulb",
+        "b": "Thomas Edison",
+        "fact": "Patented a practical, long-lasting light bulb in 1879."
+      },
+      {
+        "a": "Telephone",
+        "b": "Alexander Graham Bell",
+        "fact": "Patented the telephone in 1876."
+      },
+      {
+        "a": "Airplane",
+        "b": "Wright Brothers",
+        "fact": "Flew the first powered airplane in 1903."
+      },
+      {
+        "a": "Printing press",
+        "b": "Johannes Gutenberg",
+        "fact": "Introduced movable-type printing to Europe around 1440."
+      },
+      {
+        "a": "World Wide Web",
+        "b": "Tim Berners-Lee",
+        "fact": "Invented the Web in 1989."
+      },
+      {
+        "a": "Steam engine",
+        "b": "James Watt",
+        "fact": "Greatly improved the steam engine's efficiency in the 1770s."
+      }
+    ]
+  },
+  {
+    "id": "spanish",
+    "title": "Words from Spanish-Speaking Lands",
+    "icon": "💃",
+    "lead": "Flor Salamanca",
+    "leadId": "flor",
+    "pairs": [
+      {
+        "a": "Hola",
+        "b": "Hello",
+        "fact": "A common greeting in Spanish."
+      },
+      {
+        "a": "Gracias",
+        "b": "Thank you",
+        "fact": "Used to express gratitude."
+      },
+      {
+        "a": "Amigo",
+        "b": "Friend",
+        "fact": "Amiga is the feminine form."
+      },
+      {
+        "a": "Familia",
+        "b": "Family",
+        "fact": "A key part of Spanish-speaking cultures."
+      },
+      {
+        "a": "Escuela",
+        "b": "School",
+        "fact": "Where students go to learn."
+      },
+      {
+        "a": "Libro",
+        "b": "Book",
+        "fact": "Something you read to learn or enjoy a story."
+      }
+    ]
+  }
+];
+const STORAGE_KEY = 'passportQuestSave';
+
+/* ---------------- SOUND EFFECTS (synthesized, no audio files needed) ---------------- */
+let soundEnabled = true;
+try{ const s = localStorage.getItem('goodPawsSoundEnabled'); if(s!==null) soundEnabled = s==='1'; }catch(e){}
+
+const SFX = (function(){
+  let ctx = null;
+  function getCtx(){
+    if(!ctx){ ctx = new (window.AudioContext||window.webkitAudioContext)(); }
+    if(ctx.state==='suspended') ctx.resume();
+    return ctx;
+  }
+  function tone(freq, start, duration, type, vol){
+    if(!soundEnabled) return;
+    try{
+      const c = getCtx();
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      osc.connect(gain); gain.connect(c.destination);
+      const t0 = c.currentTime + start;
+      gain.gain.setValueAtTime(vol||0.15, t0);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0+duration);
+      osc.start(t0);
+      osc.stop(t0+duration+0.03);
+    }catch(e){}
+  }
+  return {
+    click(){ tone(600,0,0.06,'square',0.10); },
+    correct(){ tone(523.25,0,0.12,'sine',0.16); tone(783.99,0.1,0.16,'sine',0.16); },
+    wrong(){ tone(180,0,0.25,'sawtooth',0.13); },
+    badge(){ tone(523.25,0,0.12,'triangle',0.18); tone(659.25,0.12,0.12,'triangle',0.18); tone(783.99,0.24,0.12,'triangle',0.18); tone(1046.5,0.36,0.24,'triangle',0.2); }
+  };
+})();
+function updateSoundButtons(){ document.querySelectorAll('.sound-toggle-btn').forEach(btn=>{ btn.textContent = soundEnabled ? '🔊' : '🔇'; }); }
+function toggleSound(){
+  soundEnabled = !soundEnabled;
+  try{ localStorage.setItem('goodPawsSoundEnabled', soundEnabled ? '1' : '0'); }catch(e){}
+  updateSoundButtons();
+  if(soundEnabled) SFX.click();
+}
+document.addEventListener('click', function(e){
+  const el = e.target.closest('.btn, .stop-card, .char-card');
+  if(el && !el.disabled) SFX.click();
+}, true);
+document.addEventListener('DOMContentLoaded', updateSoundButtons);
+
+function spawnConfettiBurst(count=10){
+  const emojis = ['🎉','⭐','🎫','✨','🧳'];
+  for(let i=0;i<count;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    el.style.left = Math.random()*100 + 'vw';
+    el.style.animationDuration = (2 + Math.random()*1.5) + 's';
+    document.body.appendChild(el);
+    setTimeout(()=> el.remove(), 4000);
+  }
+}
+
+/* ---------------- STATE ---------------- */
+let state = {
+  name:'', character:null,
+  badges:{}, // stopId -> {stars, flips}
+  gems:0, totalScore:0,
+  current:{ stopId:null, cards:[], flippedIdx:[], matchedCount:0, flips:0, lockBoard:false }
+};
+
+function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) state = Object.assign(state, JSON.parse(raw));
+  }catch(e){}
+}
+
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=> s.classList.remove('active'));
+  const el = document.getElementById('screen-'+name);
+  if(el) el.classList.add('active');
+  if(name==='hub') renderHub();
+  if(name==='leaderboard') renderLeaderboardScreen();
+}
+
+/* ---------------- ON-DEVICE LEADERBOARD ---------------- */
+const LB_KEY = 'leaderboard_passportQuest';
+
+function upsertLeaderboard(){
+  try{
+    if(!state.name) return;
+    const entry = { name: state.name, score: state.totalScore||0, gems: state.gems||0, badges: Object.keys(state.badges||{}).length, total: STOPS.length, date: new Date().toISOString() };
+    let list = [];
+    try{ list = JSON.parse(localStorage.getItem(LB_KEY)||'[]'); }catch(e){ list=[]; }
+    const idx = list.findIndex(e=> e.name===entry.name);
+    if(idx>=0){ if(entry.score>=list[idx].score) list[idx]=entry; }
+    else list.push(entry);
+    list.sort((a,b)=> b.score-a.score);
+    list = list.slice(0,20);
+    localStorage.setItem(LB_KEY, JSON.stringify(list));
+  }catch(e){}
+}
+
+function renderLeaderboardScreen(){
+  upsertLeaderboard();
+  let list = [];
+  try{ list = JSON.parse(localStorage.getItem(LB_KEY)||'[]'); }catch(e){ list=[]; }
+  const el = document.getElementById('lb-table-local');
+  if(!el) return;
+  if(!list.length){ el.innerHTML = '<p class="muted-note">No scores yet on this device — play a round to be the first!</p>'; return; }
+  el.innerHTML = '<table class="lb-table"><thead><tr><th>#</th><th>Name</th><th>Score</th><th>💎</th><th>Stamps</th></tr></thead><tbody>' +
+    list.map((e,i)=> '<tr'+(e.name===state.name?' class="me"':'')+'><td>'+(i+1)+'</td><td>'+e.name+'</td><td>'+e.score+'</td><td>'+e.gems+'</td><td>'+e.badges+'/'+(e.total||STOPS.length)+'</td></tr>').join('') +
+    '</tbody></table>';
+}
+
+function getCharacter(id){ return CHARACTERS.find(c=>c.id===id); }
+function getStop(id){ return STOPS.find(s=>s.id===id); }
+
+function renderCharGrid(){
+  const grid = document.getElementById('char-grid');
+  grid.innerHTML = '';
+  CHARACTERS.forEach(c=>{
+    const card = document.createElement('div');
+    card.className = 'char-card' + (state.character===c.id ? ' selected' : '');
+    card.innerHTML = '<div class="char-emoji">'+c.avatar+'</div><div class="char-name">'+c.name+'</div><div class="char-role">'+c.role+'</div>';
+    card.onclick = ()=>{
+      state.character = c.id;
+      renderCharGrid();
+      document.getElementById('char-continue-btn').disabled = false;
+    };
+    grid.appendChild(card);
+  });
+}
+
+function goToCharSelect(){
+  const nameInput = document.getElementById('player-name');
+  const name = nameInput.value.trim();
+  if(!name){ nameInput.focus(); return; }
+  state.name = name;
+  saveState();
+  renderCharGrid();
+  showScreen('char');
+}
+function goToInstructions(){
+  saveState();
+  showScreen('instructions');
+}
+
+function renderHub(){
+  const hud = document.getElementById('hud-stats');
+  const badgeCount = Object.keys(state.badges).length;
+  hud.innerHTML = '<span>👤 <b>'+(state.name||'Globetrotter')+'</b></span><span>🎫 Stamps: <b>'+badgeCount+'/'+STOPS.length+'</b></span><span>💎 Gems: <b>'+state.gems+'</b></span>';
+
+  const grid = document.getElementById('stop-grid');
+  grid.innerHTML = '';
+  STOPS.forEach(stop=>{
+    const badge = state.badges[stop.id];
+    const card = document.createElement('div');
+    card.className = 'stop-card';
+    const stars = badge ? '⭐'.repeat(badge.stars) + '☆'.repeat(3-badge.stars) : '☆☆☆';
+    card.innerHTML = '<div class="stop-icon">'+stop.icon+'</div><div class="stop-title">'+stop.title+'</div><div class="stop-lead">with '+stop.lead+'</div><div class="stop-stars">'+stars+'</div>';
+    card.onclick = ()=> startMatch(stop.id);
+    grid.appendChild(card);
+  });
+
+  document.getElementById('cert-panel').style.display = (badgeCount===STOPS.length) ? 'block' : 'none';
+  saveState();
+  upsertLeaderboard();
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function startMatch(stopId){
+  const stop = getStop(stopId);
+  let cards = [];
+  stop.pairs.forEach((pair, pairIdx)=>{
+    cards.push({ pairIdx, text: pair.a, fact: pair.fact });
+    cards.push({ pairIdx, text: pair.b, fact: pair.fact });
+  });
+  cards = shuffle(cards);
+
+  state.current = { stopId, cards, flippedIdx:[], matchedCount:0, flips:0, lockBoard:false };
+  document.getElementById('match-stop-title').textContent = stop.icon+' '+stop.title;
+  document.getElementById('fact-box').textContent = '';
+  document.getElementById('match-feedback').textContent = '';
+  document.getElementById('match-feedback').className = 'match-feedback';
+  renderMatchHud();
+  renderMatchBoard();
+  showScreen('match');
+}
+
+function renderMatchHud(){
+  const hud = document.getElementById('match-hud');
+  hud.innerHTML = '<span>🔁 Flips: <b>'+state.current.flips+'</b></span><span>🧩 Matched: <b>'+state.current.matchedCount+'/6</b></span>';
+}
+
+function renderMatchBoard(){
+  const board = document.getElementById('match-board');
+  board.innerHTML = '';
+  state.current.cards.forEach((card, idx)=>{
+    const el = document.createElement('div');
+    const isFlipped = state.current.flippedIdx.includes(idx);
+    const isMatched = !!card.matched;
+    el.className = 'match-card' + (isFlipped||isMatched ? ' flipped' : '') + (isMatched ? ' matched' : '');
+    el.innerHTML = '<span class="face-back">🎴</span><span class="face-front">'+card.text+'</span>';
+    el.onclick = ()=> flipCard(idx);
+    board.appendChild(el);
+  });
+}
+
+function flipCard(idx){
+  const cur = state.current;
+  if(cur.lockBoard) return;
+  const card = cur.cards[idx];
+  if(card.matched || cur.flippedIdx.includes(idx)) return;
+  if(cur.flippedIdx.length>=2) return;
+
+  cur.flippedIdx.push(idx);
+  renderMatchBoard();
+
+  if(cur.flippedIdx.length===2){
+    cur.flips++;
+    renderMatchHud();
+    const [i1,i2] = cur.flippedIdx;
+    const c1 = cur.cards[i1], c2 = cur.cards[i2];
+    if(c1.pairIdx===c2.pairIdx){
+      c1.matched = true; c2.matched = true;
+      cur.matchedCount++;
+      cur.flippedIdx = [];
+      SFX.correct();
+      document.getElementById('fact-box').textContent = '💡 ' + c1.fact;
+      renderMatchBoard();
+      renderMatchHud();
+      if(cur.matchedCount===6){
+        finishMatch();
+      }
+    } else {
+      cur.lockBoard = true;
+      SFX.wrong();
+      setTimeout(()=>{
+        cur.flippedIdx = [];
+        cur.lockBoard = false;
+        renderMatchBoard();
+      }, 900);
+    }
+  }
+}
+
+function finishMatch(){
+  const stopId = state.current.stopId;
+  const flips = state.current.flips;
+  const stars = flips<=6 ? 3 : (flips<=9 ? 2 : 1);
+  const existing = state.badges[stopId];
+  const isNewBadge = !existing;
+  let bonusGems = 2;
+  if(isNewBadge) bonusGems += 3;
+  if(stars===3) bonusGems += 3;
+  if(!existing || stars>existing.stars){
+    state.badges[stopId] = { stars, flips };
+  }
+  state.gems += bonusGems;
+  state.totalScore += stars*10;
+
+  const allDone = Object.keys(state.badges).length === STOPS.length;
+  if(allDone) state.gems += 15;
+
+  saveState();
+  SFX.badge();
+  spawnConfettiBurst(14);
+
+  const feedback = document.getElementById('match-feedback');
+  feedback.textContent = 'All matched in '+flips+' flips! ' + '⭐'.repeat(stars) + '☆'.repeat(3-stars) + '  (+'+bonusGems+' gems)';
+  feedback.className = 'match-feedback good';
+
+  setTimeout(()=>{ showScreen('hub'); }, 1600);
+}
+
+function downloadCertificateImage(){
+  const el = document.getElementById('cert-body');
+  const btn = document.getElementById('cert-download-btn');
+  if(!el || typeof html2canvas==='undefined') return;
+  if(btn){ btn.disabled = true; btn.textContent = 'Preparing…'; }
+  html2canvas(el, { backgroundColor:'#1c3a26', scale:2 }).then(canvas=>{
+    const link = document.createElement('a');
+    const safeName = (state.name||'globetrotter').replace(/[^a-z0-9]+/gi,'-').toLowerCase();
+    link.download = 'passport-quest-certificate-' + safeName + '.png';
+    link.href = canvas.toDataURL('image/png');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if(btn){ btn.disabled = false; btn.textContent = '⬇️ Download certificate'; }
+  }).catch(()=>{
+    if(btn){ btn.disabled = false; btn.textContent = '⬇️ Download certificate'; }
+    alert('Could not generate the certificate image.');
+  });
+}
+
+/* ---------------- INIT ---------------- */
+loadState();
+if(state.name) document.getElementById('player-name').value = state.name;
+if(state.name && state.character){
+  renderCharGrid();
+  showScreen('hub');
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Trekkers: History Quest</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;800&family=EB+Garamond:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#2b1f14; --navy2:#3c2c1c; --yellow:#e8c169; --orange:#c96b35;
+    --teal:#4f8f7d; --pink:#b56b6b; --purple:#8a6aa8; --green:#6f9e5a;
+    --cream:#fff8ec; --card:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'EB Garamond',Georgia,serif;
+    background:radial-gradient(circle at 30% 8%, #4a3420 0%, #241a12 72%);
+    color:var(--cream);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  #app{ max-width:900px; margin:0 auto; padding:20px 16px 60px; min-height:100vh; }
+  .screen{ display:none; animation:fadeIn .4s ease; }
+  .screen.active{ display:block; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  h1,h2,h3,.btn{ font-family:'Playfair Display',Georgia,serif; margin:.2em 0; }
+  h1{ font-size:1.9rem; text-align:center; color:var(--yellow); text-shadow:2px 2px 0 var(--navy2); }
+  h2{ font-size:1.4rem; color:var(--teal); }
+  p{ line-height:1.55; }
+
+  .panel{
+    background:linear-gradient(160deg, #3c2c1c, #2b1f14);
+    border:2px solid #c9a24a;
+    border-radius:2px;
+    clip-path:polygon(0 8px, 8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px));
+    padding:22px;
+    margin:16px 0;
+    box-shadow:0 8px 0 rgba(0,0,0,.35), inset 0 0 30px rgba(0,0,0,.2);
+  }
+
+  .btn{
+    display:inline-block; background:var(--orange); color:#fff; border:none;
+    border-radius:2px; padding:14px 26px; font-size:1.05rem; font-weight:bold;
+    cursor:pointer; box-shadow:0 5px 0 #8a3d1a; transition:transform .1s;
+  }
+  .btn:active{ transform:translateY(4px); box-shadow:0 1px 0 #8a3d1a; }
+  .btn:hover{ filter:brightness(1.08); }
+  .btn.secondary{ background:var(--purple); box-shadow:0 5px 0 #5a4478; }
+  .btn.teal{ background:var(--teal); box-shadow:0 5px 0 #2c5c4e; color:#052a22; }
+  .btn.small{ padding:8px 16px; font-size:.85rem; box-shadow:0 3px 0 rgba(0,0,0,.35); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn-row{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:18px; }
+
+  input[type=text]{
+    width:100%; padding:12px 14px; border-radius:2px; border:3px solid var(--teal);
+    font-size:1.1rem; font-family:inherit; background:#fff8ec; color:#2b1f14;
+  }
+
+  .char-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-top:16px; }
+  .char-card{
+    background:var(--navy); border:3px solid transparent; border-radius:2px; padding:14px;
+    text-align:center; cursor:pointer; transition:transform .15s, border-color .15s;
+  }
+  .char-card:hover{ transform:translateY(-4px); }
+  .char-card.selected{ border-color:var(--yellow); background:#4a3420; }
+  .char-emoji{ width:64px; height:64px; margin:0 auto; }
+  .char-emoji svg{ width:100%; height:100%; display:block; }
+  .char-name{ font-weight:bold; color:var(--yellow); margin:.3em 0 0; }
+  .char-role{ font-size:.8rem; color:var(--teal); }
+  .lead-avatar{ width:26px; height:26px; display:inline-block; vertical-align:middle; margin-right:5px; }
+  .lead-avatar svg{ width:100%; height:100%; display:block; }
+
+  .instr-step{ display:flex; gap:14px; align-items:flex-start; margin:14px 0; }
+  .instr-emoji{ font-size:1.8rem; flex-shrink:0; }
+  .instr-text b{ color:var(--yellow); display:block; margin-bottom:2px; }
+
+  .hud{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; background:var(--navy); border-radius:2px; padding:10px 16px; margin-bottom:16px; font-size:.95rem; }
+  .hud span b{ color:var(--yellow); }
+
+  .era-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:16px; margin-top:18px; }
+  .era-card{
+    background:linear-gradient(160deg, #3c2c1c, #2b1f14);
+    border:2px solid #c9a24a;
+    clip-path:polygon(0 6px, 6px 0, calc(100% - 6px) 0, 100% 6px, 100% calc(100% - 6px), calc(100% - 6px) 100%, 6px 100%, 0 calc(100% - 6px));
+    padding:16px; cursor:pointer; transition:transform .15s;
+    text-align:center;
+  }
+  .era-card:hover{ transform:translateY(-5px); }
+  .era-icon{ font-size:2.2rem; }
+  .era-title{ font-weight:bold; color:var(--yellow); margin:.3em 0 2px; font-size:1rem; }
+  .era-lead{ font-size:.78rem; color:var(--teal); margin-bottom:6px; }
+  .era-stars{ font-size:1rem; letter-spacing:2px; }
+
+  .puzzle-prompt{ font-size:1.15rem; text-align:center; margin-bottom:18px; color:var(--cream); }
+  .item-list{ display:flex; flex-direction:column; gap:10px; max-width:520px; margin:0 auto; }
+  .item-card{
+    background:var(--cream); color:#2b1f14; border:2px solid var(--yellow);
+    border-radius:2px; padding:14px 16px; display:flex; align-items:center; gap:12px;
+    font-size:1.05rem; cursor:grab; user-select:none; transition:transform .15s, box-shadow .15s;
+    box-shadow:0 3px 0 rgba(0,0,0,.25);
+  }
+  .item-card.dragging{ opacity:.4; }
+  .item-card.shake{ animation:shakeIt .4s; border-color:var(--pink); }
+  @keyframes shakeIt{ 0%,100%{transform:translateX(0);} 25%{transform:translateX(-8px);} 75%{transform:translateX(8px);} }
+  .item-card .drag-handle{ font-size:1.2rem; color:#a08050; }
+  .item-card .item-text{ flex:1; }
+  .item-move-btns{ display:flex; flex-direction:column; gap:3px; }
+  .item-move-btns button{
+    background:var(--navy2); color:var(--yellow); border:1px solid var(--yellow);
+    border-radius:2px; width:26px; height:22px; font-size:.75rem; cursor:pointer;
+  }
+  .item-move-btns button:disabled{ opacity:.25; cursor:not-allowed; }
+  .puzzle-feedback{ text-align:center; margin-top:16px; font-size:1.05rem; min-height:1.4em; }
+  .puzzle-feedback.good{ color:#8fd6a8; }
+  .puzzle-feedback.bad{ color:#e89a9a; }
+
+  .cert-panel{ text-align:center; border-color:var(--yellow); }
+  .cert-badge-big{ font-size:3.5rem; }
+  .cert-name{ font-size:1.6rem; color:var(--yellow); font-weight:bold; margin:.3em 0; }
+  .cert-title{ font-size:1.1rem; letter-spacing:1px; color:var(--teal); }
+
+  .sound-toggle-btn{ position:fixed; top:14px; right:14px; background:var(--navy2); border:2px solid var(--yellow); border-radius:50%; width:40px; height:40px; font-size:1.1rem; cursor:pointer; z-index:50; }
+
+  .confetti{ position:fixed; top:-30px; font-size:1.6rem; pointer-events:none; animation:confettiFall linear forwards; z-index:100; }
+  @keyframes confettiFall{ to{ transform:translateY(105vh) rotate(360deg); opacity:.3; } }
+
+  .footer-note{ text-align:center; font-size:.8rem; color:#c9a889; margin-top:30px; }
+  .muted-note{ font-size:.85rem; color:#c9a889; text-align:center; }
+  .lb-table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:.95rem; }
+  .lb-table th,.lb-table td{ padding:8px 10px; text-align:left; border-bottom:1px solid #4a3420; }
+  .lb-table th{ color:var(--yellow); }
+  .lb-table tr.me{ background:rgba(232,193,105,.15); }
+  .lb-table td:first-child, .lb-table th:first-child{ width:34px; text-align:center; }
+
+  @media (max-width:480px){ .item-card{ font-size:.95rem; padding:12px; } }
+</style>
+</head>
+<body>
+<button class="sound-toggle-btn" onclick="toggleSound()">🔊</button>
+<div id="app">
+
+  <div id="screen-start" class="screen active">
+    <h1>⏳ Time Trekkers: History Quest ⏳</h1>
+    <div class="panel">
+      <p>A mysterious <b>Time Fog</b> has scrambled history across 11 ancient eras — the order of events, steps, and facts has come completely undone. <b>Chrono-Keeper Vex</b> has recruited you to fix the timeline by putting each era's scrambled sequence back in the right order, covering geography, space, animals, sports, logic, maths, science, language arts, art, design, and Spanish.</p>
+      <p>Pick a nickname, choose your trekker, and start repairing history!</p>
+      <label for="player-name" style="font-weight:bold;">Your nickname</label>
+      <input type="text" id="player-name" placeholder="Enter a nickname" maxlength="18" style="margin-top:6px;">
+      <div class="btn-row">
+        <button class="btn" onclick="goToCharSelect()">Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-char" class="screen">
+    <h1>Choose your Trekker</h1>
+    <div class="panel">
+      <div class="char-grid" id="char-grid"></div>
+      <div class="btn-row">
+        <button class="btn" id="char-continue-btn" onclick="goToInstructions()" disabled>Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-instructions" class="screen">
+    <h1>How to Trek</h1>
+    <div class="panel">
+      <div class="instr-step"><div class="instr-emoji">⏳</div><div class="instr-text"><b>1. Pick any era</b>All 11 eras are open from the start — geography with Atlas, space with Celeste, animals with Fossil, sports with Olympia, logic with Riddle, maths with Euclid, science with Dr. Sparks, language arts with Quill, art with Muse, design with Gearhart, and Spanish with Isabela.</div></div>
+      <div class="instr-step"><div class="instr-emoji">🧩</div><div class="instr-text"><b>2. Unscramble the sequence</b>Each era gives you 4 scrambled items. Drag them (or use the ▲▼ buttons) into the correct order, then tap Check Order.</div></div>
+      <div class="instr-step"><div class="instr-emoji">🔀</div><div class="instr-text"><b>3. Puzzles shuffle every time</b>Each era has 3 different sequencing puzzles — replay for a fresh one and to earn better relics.</div></div>
+      <div class="instr-step"><div class="instr-emoji">📜</div><div class="instr-text"><b>4. Earn relics & a certificate</b>Solve it in fewer tries for more relics (up to 3). Repair all 11 eras to unlock your Time Trekker certificate.</div></div>
+      <div class="instr-step"><div class="instr-emoji">💎</div><div class="instr-text"><b>5. Collect gems</b>Every solved era earns gems, with bonus gems for a first-try solve and for finishing every era.</div></div>
+      <div class="btn-row">
+        <button class="btn" onclick="showScreen('hub')">Start Trekking!</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-hub" class="screen">
+    <h1>⏳ The Scrambled Timeline ⏳</h1>
+    <div class="hud" id="hud-stats"></div>
+    <div class="panel">
+      <div class="era-grid" id="era-grid"></div>
+    </div>
+    <div class="panel cert-panel" id="cert-panel" style="display:none;">
+      <p>🏺 Every era repaired! Your certificate awaits.</p>
+      <div class="btn-row"><button class="btn teal" onclick="showScreen('certificate')">View Certificate</button></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn secondary small" onclick="showScreen('instructions')">How to Play</button>
+      <button class="btn teal small" onclick="showScreen('leaderboard')">🏆 Leaderboard</button>
+    </div>
+  </div>
+
+  <div id="screen-leaderboard" class="screen">
+    <h1>🏆 Timeline Leaderboard</h1>
+    <div class="panel">
+      <p class="muted-note">Top scores saved on this device, across everyone who's played Time Trekkers here.</p>
+      <div id="lb-table-local"></div>
+      <div class="btn-row"><button class="btn secondary small" onclick="showScreen('hub')">Back to Timeline</button></div>
+    </div>
+  </div>
+
+  <div id="screen-puzzle" class="screen">
+    <h1 id="puzzle-era-title">Era</h1>
+    <div class="panel">
+      <div class="puzzle-prompt" id="puzzle-prompt"></div>
+      <div class="item-list" id="item-list"></div>
+      <div class="puzzle-feedback" id="puzzle-feedback"></div>
+      <div class="btn-row">
+        <button class="btn" id="check-order-btn" onclick="checkOrder()">Check Order</button>
+        <button class="btn secondary small" onclick="showScreen('hub')">Back to Timeline</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-certificate" class="screen">
+    <h1>🏺 Certificate of Achievement 🏺</h1>
+    <div class="panel cert-panel" id="cert-body">
+      <div class="cert-badge-big">📜</div>
+      <p>⏳ Chrono-Keeper Vex hereby certifies that</p>
+      <div class="cert-name" id="cert-name"></div>
+      <div class="cert-title">OFFICIAL TIME TREKKER (CERTIFIED)</div>
+      <p style="margin-top:14px;">Every era of history has been repaired. Well done, Trekker!</p>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="cert-download-btn" onclick="downloadCertificateImage()">⬇️ Download certificate</button>
+      <button class="btn" onclick="showScreen('hub')">Back to Timeline</button>
+    </div>
+  </div>
+
+</div>
+<div class="footer-note" style="text-align:center;">Progress saves automatically in this browser. Chronicled for a curious Grade 6 time trekker.</div>
+
+<script>
+const CHARACTERS = [
+  {
+    "id": "atlas",
+    "emoji": "🗺️",
+    "name": "Atlas Marlow",
+    "role": "Ancient Cartography guide",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#8a5a2c\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#f0d9a8\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🗺️</text></svg>"
+  },
+  {
+    "id": "celeste",
+    "emoji": "🔭",
+    "name": "Celeste Starwatch",
+    "role": "Historic Astronomer",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#2e4d8a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#aecbff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🔭</text></svg>"
+  },
+  {
+    "id": "fossil",
+    "emoji": "🦴",
+    "name": "Fossil Finch",
+    "role": "Ancient Creatures expert",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#7a6a3f\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#e8dcb8\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🦴</text></svg>"
+  },
+  {
+    "id": "olympia",
+    "emoji": "🏺",
+    "name": "Olympia Swift",
+    "role": "Historic Games champion",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#b8562f\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffd0ab\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🏺</text></svg>"
+  },
+  {
+    "id": "riddle",
+    "emoji": "🗝️",
+    "name": "Riddle Thorne",
+    "role": "Riddle Vault keeper",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#5a3d7a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#d6bfff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🗝️</text></svg>"
+  },
+  {
+    "id": "euclid",
+    "emoji": "📐",
+    "name": "Euclid Numbers",
+    "role": "Numbers Across Time scholar",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#1f7a5a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#a8f0d6\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">📐</text></svg>"
+  },
+  {
+    "id": "sparks",
+    "emoji": "🔬",
+    "name": "Dr. Ada Sparks",
+    "role": "Inventions Lab historian",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#2e7a7a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#a8e8e8\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🔬</text></svg>"
+  },
+  {
+    "id": "quill",
+    "emoji": "✒️",
+    "name": "Quill Pagewright",
+    "role": "Great Library keeper",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#8a3f5a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#f5c2d6\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">✒️</text></svg>"
+  },
+  {
+    "id": "muse",
+    "emoji": "🖼️",
+    "name": "Muse Delacroix",
+    "role": "Museum of Wonders curator",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#6a3fa0\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#dcc9ff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🖼️</text></svg>"
+  },
+  {
+    "id": "gearhart",
+    "emoji": "⚙️",
+    "name": "Gearhart Cogsworth",
+    "role": "The Workshop chief",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#a06a1f\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffdca3\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">⚙️</text></svg>"
+  },
+  {
+    "id": "isabela",
+    "emoji": "📜",
+    "name": "Isabela Cortez",
+    "role": "Spanish Through the Ages guide",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#b0762a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffe3ba\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">📜</text></svg>"
+  },
+  {
+    "id": "tock",
+    "emoji": "⏰",
+    "name": "Tock Chrono",
+    "role": "Time Arcade keeper",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#3d3d55\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffd166\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">⏰</text></svg>"
+  }
+];
+const ERAS = [
+  {
+    "id": "geography",
+    "title": "Map the Ancient World",
+    "icon": "🗺️",
+    "lead": "Atlas Marlow",
+    "leadId": "atlas",
+    "puzzles": [
+      {
+        "prompt": "Order these from smallest to largest land area:",
+        "items": [
+          "Australia",
+          "Europe",
+          "South America",
+          "Asia"
+        ]
+      },
+      {
+        "prompt": "Order these from closest to the North Pole to closest to the Equator:",
+        "items": [
+          "Arctic Circle",
+          "United Kingdom",
+          "Egypt",
+          "Ecuador"
+        ]
+      },
+      {
+        "prompt": "Order these oceans from smallest to largest:",
+        "items": [
+          "Arctic Ocean",
+          "Southern Ocean",
+          "Indian Ocean",
+          "Pacific Ocean"
+        ]
+      },
+      {
+        "prompt": "Order these mountain ranges from lowest to highest peak:",
+        "items": [
+          "Appalachian Mountains",
+          "Rocky Mountains",
+          "Alps",
+          "Himalayas"
+        ]
+      },
+      {
+        "prompt": "Order these countries from smallest to largest land area:",
+        "items": [
+          "Vatican City",
+          "Monaco",
+          "Singapore",
+          "Japan"
+        ]
+      },
+      {
+        "prompt": "Order these cities from westernmost to easternmost:",
+        "items": [
+          "Los Angeles",
+          "New York",
+          "London",
+          "Tokyo"
+        ]
+      },
+      {
+        "prompt": "Order these rivers from shortest to longest:",
+        "items": [
+          "Thames",
+          "Danube",
+          "Amazon",
+          "Nile"
+        ]
+      },
+      {
+        "prompt": "Order these from lowest to highest elevation on Earth:",
+        "items": [
+          "Dead Sea shoreline",
+          "Sea level",
+          "Denali summit",
+          "Mount Everest summit"
+        ]
+      },
+      {
+        "prompt": "Order these cities from southernmost to northernmost:",
+        "items": [
+          "Sydney",
+          "Cairo",
+          "London",
+          "Reykjavik"
+        ]
+      },
+      {
+        "prompt": "Order these deserts from smallest to largest area:",
+        "items": [
+          "Kalahari Desert",
+          "Gobi Desert",
+          "Arabian Desert",
+          "Sahara Desert"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "space",
+    "title": "Astronomers of the Past",
+    "icon": "🔭",
+    "lead": "Celeste Starwatch",
+    "leadId": "celeste",
+    "puzzles": [
+      {
+        "prompt": "Order these planets from closest to the Sun to farthest:",
+        "items": [
+          "Mercury",
+          "Venus",
+          "Earth",
+          "Mars"
+        ]
+      },
+      {
+        "prompt": "Order these planets from smallest to largest:",
+        "items": [
+          "Mercury",
+          "Mars",
+          "Venus",
+          "Earth"
+        ]
+      },
+      {
+        "prompt": "Order these space milestones in the order they happened:",
+        "items": [
+          "Sputnik 1 launches (1957)",
+          "Yuri Gagarin, first human in space (1961)",
+          "Apollo 11 Moon landing (1969)",
+          "First Space Shuttle flight (1981)"
+        ]
+      },
+      {
+        "prompt": "Order these moons from smallest to largest:",
+        "items": [
+          "Deimos",
+          "Phobos",
+          "Earth's Moon",
+          "Ganymede"
+        ]
+      },
+      {
+        "prompt": "Order these from shortest to longest orbital period around the Sun:",
+        "items": [
+          "Mercury",
+          "Earth",
+          "Jupiter",
+          "Neptune"
+        ]
+      },
+      {
+        "prompt": "Order these space milestones in the order they happened:",
+        "items": [
+          "Sputnik 1 (1957)",
+          "Explorer 1 (1958)",
+          "Telstar 1 (1962)",
+          "Hubble Space Telescope launch (1990)"
+        ]
+      },
+      {
+        "prompt": "Order these from closest to Earth to farthest:",
+        "items": [
+          "Moon",
+          "Sun",
+          "Mars",
+          "Alpha Centauri"
+        ]
+      },
+      {
+        "prompt": "Order these planets from fewest to most known moons:",
+        "items": [
+          "Mercury",
+          "Earth",
+          "Mars",
+          "Neptune"
+        ]
+      },
+      {
+        "prompt": "Order these astronomers from earliest to latest birth year:",
+        "items": [
+          "Ptolemy",
+          "Copernicus",
+          "Galileo",
+          "Newton"
+        ]
+      },
+      {
+        "prompt": "Order these from coolest to hottest average surface temperature:",
+        "items": [
+          "Pluto",
+          "Mars",
+          "Earth",
+          "Venus"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "animals",
+    "title": "Extinct & Ancient Creatures",
+    "icon": "🦕",
+    "lead": "Fossil Finch",
+    "leadId": "fossil",
+    "puzzles": [
+      {
+        "prompt": "Order the butterfly life cycle from start to finish:",
+        "items": [
+          "Egg",
+          "Caterpillar",
+          "Chrysalis",
+          "Butterfly"
+        ]
+      },
+      {
+        "prompt": "Order these animals from shortest to longest average lifespan:",
+        "items": [
+          "Mayfly",
+          "House mouse",
+          "Dog",
+          "Elephant"
+        ]
+      },
+      {
+        "prompt": "Order these prehistoric periods in the order they occurred:",
+        "items": [
+          "Permian Period",
+          "Triassic Period",
+          "Jurassic Period",
+          "Cretaceous Period"
+        ]
+      },
+      {
+        "prompt": "Order these animals from smallest to largest adult weight:",
+        "items": [
+          "Hummingbird",
+          "Domestic cat",
+          "Lion",
+          "African elephant"
+        ]
+      },
+      {
+        "prompt": "Order the frog life cycle from start to finish:",
+        "items": [
+          "Egg",
+          "Tadpole",
+          "Froglet",
+          "Adult frog"
+        ]
+      },
+      {
+        "prompt": "Order these animals from slowest to fastest top speed:",
+        "items": [
+          "Garden snail",
+          "Giant tortoise",
+          "Human",
+          "Cheetah"
+        ]
+      },
+      {
+        "prompt": "Order these from shortest to longest gestation or incubation period:",
+        "items": [
+          "Chicken egg",
+          "Rabbit",
+          "Human",
+          "Elephant"
+        ]
+      },
+      {
+        "prompt": "Order these ocean zones from shallowest to deepest:",
+        "items": [
+          "Coral reef zone",
+          "Twilight zone",
+          "Midnight zone",
+          "Mariana Trench"
+        ]
+      },
+      {
+        "prompt": "Order these big cats from smallest to largest average size:",
+        "items": [
+          "Ocelot",
+          "Cheetah",
+          "Lion",
+          "Siberian tiger"
+        ]
+      },
+      {
+        "prompt": "Order these animal groups by when they first appeared on Earth, earliest to latest:",
+        "items": [
+          "Fish",
+          "Amphibians",
+          "Reptiles",
+          "Mammals"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "sports",
+    "title": "Games Through History",
+    "icon": "🏛️",
+    "lead": "Olympia Swift",
+    "leadId": "olympia",
+    "puzzles": [
+      {
+        "prompt": "Order these Olympic host cities by the year they hosted:",
+        "items": [
+          "Athens (1896)",
+          "London (1908)",
+          "Los Angeles (1932)",
+          "Tokyo (1964)"
+        ]
+      },
+      {
+        "prompt": "Order these stages of a soccer match:",
+        "items": [
+          "Kickoff",
+          "First half",
+          "Halftime",
+          "Second half"
+        ]
+      },
+      {
+        "prompt": "Order these tennis scores from lowest to highest:",
+        "items": [
+          "Love",
+          "15",
+          "30",
+          "40"
+        ]
+      },
+      {
+        "prompt": "Order these Olympic host cities by the year they hosted:",
+        "items": [
+          "Beijing (2008)",
+          "London (2012)",
+          "Rio de Janeiro (2016)",
+          "Tokyo (2020)"
+        ]
+      },
+      {
+        "prompt": "Order these stages of a basketball match:",
+        "items": [
+          "First quarter",
+          "Second quarter",
+          "Halftime",
+          "Third quarter"
+        ]
+      },
+      {
+        "prompt": "Order these swimming strokes in official individual medley race order:",
+        "items": [
+          "Butterfly",
+          "Backstroke",
+          "Breaststroke",
+          "Freestyle"
+        ]
+      },
+      {
+        "prompt": "Order these sports by the year they became Summer Olympic events:",
+        "items": [
+          "Gymnastics (1896)",
+          "Basketball (1936)",
+          "Table tennis (1988)",
+          "Skateboarding (2020)"
+        ]
+      },
+      {
+        "prompt": "Order these track and field distances from shortest to longest:",
+        "items": [
+          "100m",
+          "400m",
+          "1500m",
+          "Marathon"
+        ]
+      },
+      {
+        "prompt": "Order these Soccer World Cup host countries by the year they hosted:",
+        "items": [
+          "Uruguay (1930)",
+          "Brazil (1950)",
+          "USA (1994)",
+          "Qatar (2022)"
+        ]
+      },
+      {
+        "prompt": "Order these karate belt colors from beginner to advanced:",
+        "items": [
+          "White belt",
+          "Yellow belt",
+          "Green belt",
+          "Black belt"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "thinktank",
+    "title": "The Riddle Vault",
+    "icon": "🧠",
+    "lead": "Riddle Thorne",
+    "leadId": "riddle",
+    "puzzles": [
+      {
+        "prompt": "Order these numbers from smallest to largest (a famous number pattern):",
+        "items": [
+          "2",
+          "3",
+          "5",
+          "8"
+        ]
+      },
+      {
+        "prompt": "Order these steps for solving a riddle:",
+        "items": [
+          "Read the clue carefully",
+          "Identify the key words",
+          "Eliminate the wrong answers",
+          "Choose the best answer"
+        ]
+      },
+      {
+        "prompt": "Order these sizes from smallest to largest:",
+        "items": [
+          "Small",
+          "Medium",
+          "Large",
+          "Extra-large"
+        ]
+      },
+      {
+        "prompt": "Order these numbers from smallest to largest:",
+        "items": [
+          "-10",
+          "-1",
+          "0",
+          "1"
+        ]
+      },
+      {
+        "prompt": "Order these square numbers from smallest to largest:",
+        "items": [
+          "1",
+          "4",
+          "9",
+          "16"
+        ]
+      },
+      {
+        "prompt": "Order these steps for solving a jigsaw puzzle:",
+        "items": [
+          "Sort edge pieces",
+          "Build the border",
+          "Group pieces by color",
+          "Fill in the middle"
+        ]
+      },
+      {
+        "prompt": "Order these units of time from shortest to longest:",
+        "items": [
+          "Second",
+          "Minute",
+          "Hour",
+          "Day"
+        ]
+      },
+      {
+        "prompt": "Order these words from fewest to most letters:",
+        "items": [
+          "Cat",
+          "Table",
+          "Elephant",
+          "Refrigerator"
+        ]
+      },
+      {
+        "prompt": "Order these puzzle difficulty levels from easiest to hardest:",
+        "items": [
+          "Beginner",
+          "Intermediate",
+          "Advanced",
+          "Expert"
+        ]
+      },
+      {
+        "prompt": "Order these numbers from smallest to largest:",
+        "items": [
+          "1/2",
+          "0.75",
+          "2",
+          "5"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "math",
+    "title": "Numbers Across Time",
+    "icon": "🔢",
+    "lead": "Euclid Numbers",
+    "leadId": "euclid",
+    "puzzles": [
+      {
+        "prompt": "Order these fractions from smallest to largest:",
+        "items": [
+          "1/4",
+          "1/2",
+          "3/4",
+          "1"
+        ]
+      },
+      {
+        "prompt": "Order these steps for solving an equation:",
+        "items": [
+          "Combine like terms",
+          "Isolate the variable",
+          "Divide both sides",
+          "Check your answer"
+        ]
+      },
+      {
+        "prompt": "Order these numbers from smallest to largest:",
+        "items": [
+          "-5",
+          "0",
+          "5",
+          "10"
+        ]
+      },
+      {
+        "prompt": "Order these numbers from smallest to largest:",
+        "items": [
+          "0.2",
+          "0.5",
+          "0.8",
+          "1.5"
+        ]
+      },
+      {
+        "prompt": "Order these shapes from fewest to most sides:",
+        "items": [
+          "Triangle",
+          "Pentagon",
+          "Octagon",
+          "Decagon"
+        ]
+      },
+      {
+        "prompt": "Order these steps for finding the area of a rectangle:",
+        "items": [
+          "Measure the length",
+          "Measure the width",
+          "Multiply length by width",
+          "Label the answer in square units"
+        ]
+      },
+      {
+        "prompt": "Order these place values from smallest to largest:",
+        "items": [
+          "Ones",
+          "Tens",
+          "Hundreds",
+          "Thousands"
+        ]
+      },
+      {
+        "prompt": "Order these percentages from smallest to largest:",
+        "items": [
+          "10%",
+          "25%",
+          "50%",
+          "75%"
+        ]
+      },
+      {
+        "prompt": "Order these numbers from smallest to largest:",
+        "items": [
+          "-100",
+          "-1",
+          "1",
+          "100"
+        ]
+      },
+      {
+        "prompt": "Order these steps for converting a fraction to a percentage:",
+        "items": [
+          "Divide the numerator by the denominator",
+          "Multiply the result by 100",
+          "Add a percent sign",
+          "Round if needed"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "science",
+    "title": "The Inventions Lab",
+    "icon": "🧪",
+    "lead": "Dr. Ada Sparks",
+    "leadId": "sparks",
+    "puzzles": [
+      {
+        "prompt": "Order these stages of the water cycle:",
+        "items": [
+          "Evaporation",
+          "Condensation",
+          "Precipitation",
+          "Collection"
+        ]
+      },
+      {
+        "prompt": "Order these states of matter as heat increases:",
+        "items": [
+          "Solid",
+          "Liquid",
+          "Gas",
+          "Plasma"
+        ]
+      },
+      {
+        "prompt": "Order these steps of the scientific method:",
+        "items": [
+          "Ask a question",
+          "Form a hypothesis",
+          "Test with an experiment",
+          "Draw a conclusion"
+        ]
+      },
+      {
+        "prompt": "Order these simplified steps of photosynthesis:",
+        "items": [
+          "Sunlight hits the leaf",
+          "Plant absorbs water and carbon dioxide",
+          "Plant produces glucose",
+          "Plant releases oxygen"
+        ]
+      },
+      {
+        "prompt": "Order these from smallest to largest:",
+        "items": [
+          "Atom",
+          "Molecule",
+          "Cell",
+          "Organism"
+        ]
+      },
+      {
+        "prompt": "Order these energy sources by when they became widely used, earliest to latest:",
+        "items": [
+          "Wood fire",
+          "Coal",
+          "Oil",
+          "Solar panels"
+        ]
+      },
+      {
+        "prompt": "Order these from coldest to hottest:",
+        "items": [
+          "Ice",
+          "Room temperature water",
+          "Boiling water",
+          "Lava"
+        ]
+      },
+      {
+        "prompt": "Order these steps of the rock cycle:",
+        "items": [
+          "Magma cools to form igneous rock",
+          "Rock breaks into sediment",
+          "Sediment compresses into sedimentary rock",
+          "Heat and pressure form metamorphic rock"
+        ]
+      },
+      {
+        "prompt": "Order these from softest to hardest on the Mohs scale:",
+        "items": [
+          "Talc",
+          "Gypsum",
+          "Quartz",
+          "Diamond"
+        ]
+      },
+      {
+        "prompt": "Order these stages of a simple electrical circuit:",
+        "items": [
+          "Battery provides power",
+          "Wire carries current",
+          "Switch controls the flow",
+          "Bulb lights up"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "langarts",
+    "title": "The Great Library",
+    "icon": "📚",
+    "lead": "Quill Pagewright",
+    "leadId": "quill",
+    "puzzles": [
+      {
+        "prompt": "Order these parts of a story's structure:",
+        "items": [
+          "Exposition",
+          "Rising action",
+          "Climax",
+          "Resolution"
+        ]
+      },
+      {
+        "prompt": "Order these words alphabetically:",
+        "items": [
+          "Apple",
+          "Banana",
+          "Cherry",
+          "Date"
+        ]
+      },
+      {
+        "prompt": "Order these sentences to form a clear set of instructions:",
+        "items": [
+          "First, gather your materials.",
+          "Next, mix the ingredients.",
+          "Then, bake for 20 minutes.",
+          "Finally, let it cool."
+        ]
+      },
+      {
+        "prompt": "Order these parts of a book as you’d flip through it front to back:",
+        "items": [
+          "Cover",
+          "Table of contents",
+          "Chapters",
+          "Index"
+        ]
+      },
+      {
+        "prompt": "Order these words alphabetically:",
+        "items": [
+          "Grape",
+          "Kiwi",
+          "Mango",
+          "Peach"
+        ]
+      },
+      {
+        "prompt": "Order these units of writing from smallest to largest:",
+        "items": [
+          "Letter",
+          "Word",
+          "Sentence",
+          "Paragraph"
+        ]
+      },
+      {
+        "prompt": "Order these poem forms from fewest to most lines:",
+        "items": [
+          "Haiku",
+          "Limerick",
+          "Sonnet",
+          "Epic poem"
+        ]
+      },
+      {
+        "prompt": "Order these steps of the writing process:",
+        "items": [
+          "Brainstorm ideas",
+          "Write a draft",
+          "Revise and edit",
+          "Publish or share"
+        ]
+      },
+      {
+        "prompt": "Order these words alphabetically:",
+        "items": [
+          "Igloo",
+          "Jungle",
+          "Kite",
+          "Lantern"
+        ]
+      },
+      {
+        "prompt": "Order these greetings from most informal to most formal:",
+        "items": [
+          "Hey",
+          "Hi",
+          "Hello",
+          "Good day"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "arts",
+    "title": "The Museum of Wonders",
+    "icon": "🎨",
+    "lead": "Muse Delacroix",
+    "leadId": "muse",
+    "puzzles": [
+      {
+        "prompt": "Order these art movements in the order they emerged:",
+        "items": [
+          "Renaissance",
+          "Baroque",
+          "Impressionism",
+          "Modern Art"
+        ]
+      },
+      {
+        "prompt": "Order these steps of the drawing process:",
+        "items": [
+          "Sketch the outline",
+          "Add details",
+          "Shade or add color",
+          "Final touches"
+        ]
+      },
+      {
+        "prompt": "Order these color groups from simplest to most complex:",
+        "items": [
+          "Primary colors",
+          "Secondary colors",
+          "Tertiary colors",
+          "Complex color blends"
+        ]
+      },
+      {
+        "prompt": "Order these musical dynamics from quietest to loudest:",
+        "items": [
+          "Pianissimo",
+          "Piano",
+          "Forte",
+          "Fortissimo"
+        ]
+      },
+      {
+        "prompt": "Order these steps of making a clay pot on a wheel:",
+        "items": [
+          "Center the clay",
+          "Open the clay",
+          "Shape the walls",
+          "Let it dry"
+        ]
+      },
+      {
+        "prompt": "Order these steps in a typical painting process:",
+        "items": [
+          "Sketch with pencil",
+          "Outline with pen",
+          "Paint base colors",
+          "Add fine details"
+        ]
+      },
+      {
+        "prompt": "Order these performing groups from smallest to largest:",
+        "items": [
+          "Solo",
+          "Duet",
+          "Quartet",
+          "Orchestra"
+        ]
+      },
+      {
+        "prompt": "Order these dance styles by when they roughly originated:",
+        "items": [
+          "Ballet",
+          "Tap dance",
+          "Jazz dance",
+          "Hip hop"
+        ]
+      },
+      {
+        "prompt": "Order these from simplest to most complex musical grouping:",
+        "items": [
+          "Note",
+          "Chord",
+          "Melody",
+          "Symphony"
+        ]
+      },
+      {
+        "prompt": "Order these art forms in the order they emerged:",
+        "items": [
+          "Ancient Egyptian art",
+          "Gothic art",
+          "Cubism",
+          "Digital art"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "design",
+    "title": "The Inventor's Workshop",
+    "icon": "🛠️",
+    "lead": "Gearhart Cogsworth",
+    "leadId": "gearhart",
+    "puzzles": [
+      {
+        "prompt": "Order these steps of the design process:",
+        "items": [
+          "Identify the problem",
+          "Brainstorm ideas",
+          "Build a prototype",
+          "Test and improve"
+        ]
+      },
+      {
+        "prompt": "Order these inventions in the order they were invented:",
+        "items": [
+          "Printing press",
+          "Steam engine",
+          "Telephone",
+          "Light bulb"
+        ]
+      },
+      {
+        "prompt": "Order these materials from weakest to strongest (for the same size):",
+        "items": [
+          "Wood",
+          "Brick",
+          "Steel",
+          "Titanium"
+        ]
+      },
+      {
+        "prompt": "Order these steps to build a simple birdhouse:",
+        "items": [
+          "Draw a plan",
+          "Cut the wood pieces",
+          "Assemble the frame",
+          "Paint and decorate"
+        ]
+      },
+      {
+        "prompt": "Order these bridge types from simplest to most complex:",
+        "items": [
+          "Beam bridge",
+          "Arch bridge",
+          "Truss bridge",
+          "Suspension bridge"
+        ]
+      },
+      {
+        "prompt": "Order these inventions in the order they were invented:",
+        "items": [
+          "Wheel",
+          "Bicycle",
+          "Automobile",
+          "Airplane"
+        ]
+      },
+      {
+        "prompt": "Order these building materials by when they came into common large-scale use:",
+        "items": [
+          "Stone",
+          "Brick",
+          "Steel",
+          "Reinforced concrete"
+        ]
+      },
+      {
+        "prompt": "Order these steps of the engineering design cycle:",
+        "items": [
+          "Define the problem",
+          "Research and brainstorm",
+          "Design and build",
+          "Test and redesign"
+        ]
+      },
+      {
+        "prompt": "Order these steps of electricity generation at a hydroelectric dam:",
+        "items": [
+          "Water flows down",
+          "Turbine spins",
+          "Generator creates electricity",
+          "Power lines carry electricity to homes"
+        ]
+      },
+      {
+        "prompt": "Order these communication inventions in the order they were invented:",
+        "items": [
+          "Postal mail",
+          "Telegraph",
+          "Telephone",
+          "Smartphone"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "spanish",
+    "title": "Spanish Through the Ages",
+    "icon": "🇪🇸",
+    "lead": "Isabela Cortez",
+    "leadId": "isabela",
+    "puzzles": [
+      {
+        "prompt": "Order these Spanish greetings by time of day:",
+        "items": [
+          "Buenos días",
+          "Buenas tardes",
+          "Buenas noches",
+          "Hasta luego"
+        ]
+      },
+      {
+        "prompt": "Order these Spanish numbers from smallest to largest:",
+        "items": [
+          "uno",
+          "dos",
+          "tres",
+          "cuatro"
+        ]
+      },
+      {
+        "prompt": "Put these words in the correct Spanish sentence order:",
+        "items": [
+          "Yo",
+          "soy",
+          "un",
+          "estudiante"
+        ]
+      },
+      {
+        "prompt": "Order these Spanish numbers from smallest to largest:",
+        "items": [
+          "cinco",
+          "seis",
+          "siete",
+          "ocho"
+        ]
+      },
+      {
+        "prompt": "Order these Spanish days of the week starting from Monday:",
+        "items": [
+          "lunes",
+          "martes",
+          "miércoles",
+          "jueves"
+        ]
+      },
+      {
+        "prompt": "Order these Spanish months chronologically:",
+        "items": [
+          "enero",
+          "febrero",
+          "marzo",
+          "abril"
+        ]
+      },
+      {
+        "prompt": "Order these Spanish color words alphabetically:",
+        "items": [
+          "amarillo",
+          "azul",
+          "rojo",
+          "verde"
+        ]
+      },
+      {
+        "prompt": "Put these words in the correct Spanish sentence order:",
+        "items": [
+          "Ella",
+          "tiene",
+          "un",
+          "perro"
+        ]
+      },
+      {
+        "prompt": "Order these Spanish family words from youngest to oldest generation:",
+        "items": [
+          "hijo",
+          "padre",
+          "abuelo",
+          "bisabuelo"
+        ]
+      },
+      {
+        "prompt": "Order these Spanish numbers from smallest to largest:",
+        "items": [
+          "diez",
+          "veinte",
+          "treinta",
+          "cuarenta"
+        ]
+      }
+    ]
+  }
+];
+const STORAGE_KEY = 'timeTrekkersPuzzleSave';
+
+/* ---------------- SOUND EFFECTS (synthesized, no audio files needed) ---------------- */
+let soundEnabled = true;
+try{ const s = localStorage.getItem('goodPawsSoundEnabled'); if(s!==null) soundEnabled = s==='1'; }catch(e){}
+
+const SFX = (function(){
+  let ctx = null;
+  function getCtx(){
+    if(!ctx){ ctx = new (window.AudioContext||window.webkitAudioContext)(); }
+    if(ctx.state==='suspended') ctx.resume();
+    return ctx;
+  }
+  function tone(freq, start, duration, type, vol){
+    if(!soundEnabled) return;
+    try{
+      const c = getCtx();
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      osc.connect(gain); gain.connect(c.destination);
+      const t0 = c.currentTime + start;
+      gain.gain.setValueAtTime(vol||0.15, t0);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0+duration);
+      osc.start(t0);
+      osc.stop(t0+duration+0.03);
+    }catch(e){}
+  }
+  return {
+    click(){ tone(600,0,0.06,'square',0.10); },
+    correct(){ tone(523.25,0,0.12,'sine',0.16); tone(783.99,0.1,0.16,'sine',0.16); },
+    wrong(){ tone(180,0,0.25,'sawtooth',0.13); },
+    badge(){ tone(523.25,0,0.12,'triangle',0.18); tone(659.25,0.12,0.12,'triangle',0.18); tone(783.99,0.24,0.12,'triangle',0.18); tone(1046.5,0.36,0.24,'triangle',0.2); }
+  };
+})();
+function updateSoundButtons(){ document.querySelectorAll('.sound-toggle-btn').forEach(btn=>{ btn.textContent = soundEnabled ? '🔊' : '🔇'; }); }
+function toggleSound(){
+  soundEnabled = !soundEnabled;
+  try{ localStorage.setItem('goodPawsSoundEnabled', soundEnabled ? '1' : '0'); }catch(e){}
+  updateSoundButtons();
+  if(soundEnabled) SFX.click();
+}
+document.addEventListener('click', function(e){
+  const el = e.target.closest('.btn, .era-card, .char-card');
+  if(el && !el.disabled) SFX.click();
+}, true);
+document.addEventListener('DOMContentLoaded', updateSoundButtons);
+
+function spawnConfettiBurst(count=10){
+  const emojis = ['🎉','⭐','📜','✨','🏺'];
+  for(let i=0;i<count;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    el.style.left = Math.random()*100 + 'vw';
+    el.style.animationDuration = (2 + Math.random()*1.5) + 's';
+    document.body.appendChild(el);
+    setTimeout(()=> el.remove(), 4000);
+  }
+}
+
+/* ---------------- STATE ---------------- */
+let state = {
+  name:'', character:null,
+  badges:{}, // eraId -> {stars, attempts}
+  gems:0, totalScore:0,
+  current:{ eraId:null, puzzleIndex:0, correct:[], order:[], attempts:0 }
+};
+
+function saveState(){
+  try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){}
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) state = Object.assign(state, JSON.parse(raw));
+  }catch(e){}
+}
+
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=> s.classList.remove('active'));
+  const el = document.getElementById('screen-'+name);
+  if(el) el.classList.add('active');
+  if(name==='hub') renderHub();
+  if(name==='leaderboard') renderLeaderboardScreen();
+}
+
+/* ---------------- ON-DEVICE LEADERBOARD ---------------- */
+const LB_KEY = 'leaderboard_timeTrekkers';
+
+function upsertLeaderboard(){
+  try{
+    if(!state.name) return;
+    const entry = { name: state.name, score: state.totalScore||0, gems: state.gems||0, badges: Object.keys(state.badges||{}).length, total: ERAS.length, date: new Date().toISOString() };
+    let list = [];
+    try{ list = JSON.parse(localStorage.getItem(LB_KEY)||'[]'); }catch(e){ list=[]; }
+    const idx = list.findIndex(e=> e.name===entry.name);
+    if(idx>=0){ if(entry.score>=list[idx].score) list[idx]=entry; }
+    else list.push(entry);
+    list.sort((a,b)=> b.score-a.score);
+    list = list.slice(0,20);
+    localStorage.setItem(LB_KEY, JSON.stringify(list));
+  }catch(e){}
+}
+
+function renderLeaderboardScreen(){
+  upsertLeaderboard();
+  let list = [];
+  try{ list = JSON.parse(localStorage.getItem(LB_KEY)||'[]'); }catch(e){ list=[]; }
+  const el = document.getElementById('lb-table-local');
+  if(!el) return;
+  if(!list.length){ el.innerHTML = '<p class="muted-note">No scores yet on this device — play a round to be the first!</p>'; return; }
+  el.innerHTML = '<table class="lb-table"><thead><tr><th>#</th><th>Name</th><th>Score</th><th>💎</th><th>Relics</th></tr></thead><tbody>' +
+    list.map((e,i)=> '<tr'+(e.name===state.name?' class="me"':'')+'><td>'+(i+1)+'</td><td>'+e.name+'</td><td>'+e.score+'</td><td>'+e.gems+'</td><td>'+e.badges+'/'+(e.total||ERAS.length)+'</td></tr>').join('') +
+    '</tbody></table>';
+}
+
+function getCharacter(id){ return CHARACTERS.find(c=>c.id===id); }
+function getEra(id){ return ERAS.find(e=>e.id===id); }
+
+function renderCharGrid(){
+  const grid = document.getElementById('char-grid');
+  grid.innerHTML = '';
+  CHARACTERS.forEach(c=>{
+    const card = document.createElement('div');
+    card.className = 'char-card' + (state.character===c.id ? ' selected' : '');
+    card.innerHTML = '<div class="char-emoji">'+c.avatar+'</div><div class="char-name">'+c.name+'</div><div class="char-role">'+c.role+'</div>';
+    card.onclick = ()=>{
+      state.character = c.id;
+      renderCharGrid();
+      document.getElementById('char-continue-btn').disabled = false;
+    };
+    grid.appendChild(card);
+  });
+}
+
+function goToCharSelect(){
+  const nameInput = document.getElementById('player-name');
+  const name = nameInput.value.trim();
+  if(!name){ nameInput.focus(); return; }
+  state.name = name;
+  saveState();
+  renderCharGrid();
+  showScreen('char');
+}
+function goToInstructions(){
+  saveState();
+  showScreen('instructions');
+}
+
+function renderHub(){
+  const hud = document.getElementById('hud-stats');
+  const badgeCount = Object.keys(state.badges).length;
+  hud.innerHTML = '<span>👤 <b>'+(state.name||'Trekker')+'</b></span><span>📜 Relics: <b>'+badgeCount+'/'+ERAS.length+'</b></span><span>💎 Gems: <b>'+state.gems+'</b></span>';
+
+  const grid = document.getElementById('era-grid');
+  grid.innerHTML = '';
+  ERAS.forEach(era=>{
+    const badge = state.badges[era.id];
+    const card = document.createElement('div');
+    card.className = 'era-card';
+    const stars = badge ? '⭐'.repeat(badge.stars) + '☆'.repeat(3-badge.stars) : '☆☆☆';
+    card.innerHTML = '<div class="era-icon">'+era.icon+'</div><div class="era-title">'+era.title+'</div><div class="era-lead">with '+era.lead+'</div><div class="era-stars">'+stars+'</div>';
+    card.onclick = ()=> startEra(era.id);
+    grid.appendChild(card);
+  });
+
+  document.getElementById('cert-panel').style.display = (badgeCount===ERAS.length) ? 'block' : 'none';
+  saveState();
+  upsertLeaderboard();
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function startEra(eraId){
+  const era = getEra(eraId);
+  const pIndex = Math.floor(Math.random()*era.puzzles.length);
+  const puzzle = era.puzzles[pIndex];
+  let order = shuffle(puzzle.items);
+  // ensure it's not already in the correct order
+  let tries = 0;
+  while(order.join('|')===puzzle.items.join('|') && tries<10){ order = shuffle(puzzle.items); tries++; }
+  state.current = { eraId, puzzleIndex:pIndex, correct: puzzle.items.slice(), order, attempts:0 };
+  document.getElementById('puzzle-era-title').textContent = era.icon+' '+era.title;
+  document.getElementById('puzzle-prompt').textContent = puzzle.prompt;
+  document.getElementById('puzzle-feedback').textContent = '';
+  document.getElementById('puzzle-feedback').className = 'puzzle-feedback';
+  renderItemList();
+  showScreen('puzzle');
+}
+
+let dragFromIndex = null;
+
+function renderItemList(){
+  const list = document.getElementById('item-list');
+  list.innerHTML = '';
+  state.current.order.forEach((text, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'item-card';
+    card.draggable = true;
+    card.dataset.index = idx;
+    card.innerHTML = '<span class="drag-handle">☰</span><span class="item-text">'+text+'</span>' +
+      '<div class="item-move-btns">' +
+      '<button '+(idx===0?'disabled':'')+' onclick="moveItem('+idx+',-1)">▲</button>' +
+      '<button '+(idx===state.current.order.length-1?'disabled':'')+' onclick="moveItem('+idx+',1)">▼</button>' +
+      '</div>';
+    card.addEventListener('dragstart', function(e){
+      dragFromIndex = idx;
+      card.classList.add('dragging');
+    });
+    card.addEventListener('dragend', function(){
+      card.classList.remove('dragging');
+    });
+    card.addEventListener('dragover', function(e){ e.preventDefault(); });
+    card.addEventListener('drop', function(e){
+      e.preventDefault();
+      if(dragFromIndex===null || dragFromIndex===idx) return;
+      const arr = state.current.order;
+      const [moved] = arr.splice(dragFromIndex,1);
+      arr.splice(idx,0,moved);
+      dragFromIndex = null;
+      renderItemList();
+    });
+    list.appendChild(card);
+  });
+}
+
+function moveItem(idx, dir){
+  const arr = state.current.order;
+  const target = idx+dir;
+  if(target<0 || target>=arr.length) return;
+  [arr[idx], arr[target]] = [arr[target], arr[idx]];
+  renderItemList();
+  SFX.click();
+}
+
+function checkOrder(){
+  const arr = state.current.order;
+  const correct = state.current.correct;
+  const isRight = arr.every((v,i)=> v===correct[i]);
+  const feedback = document.getElementById('puzzle-feedback');
+  if(isRight){
+    SFX.badge();
+    spawnConfettiBurst(14);
+    finishEra();
+  } else {
+    state.current.attempts++;
+    SFX.wrong();
+    feedback.textContent = 'Not quite — the order isn\'t right yet. Try again!';
+    feedback.className = 'puzzle-feedback bad';
+    document.querySelectorAll('.item-card').forEach(c=> c.classList.add('shake'));
+    setTimeout(()=>{ document.querySelectorAll('.item-card').forEach(c=> c.classList.remove('shake')); }, 400);
+  }
+}
+
+function finishEra(){
+  const eraId = state.current.eraId;
+  const attempts = state.current.attempts;
+  const stars = attempts===0 ? 3 : (attempts===1 ? 2 : 1);
+  const existing = state.badges[eraId];
+  const isNewBadge = !existing;
+  let bonusGems = 2;
+  if(isNewBadge) bonusGems += 3;
+  if(stars===3) bonusGems += 3;
+  if(!existing || stars>existing.stars){
+    state.badges[eraId] = { stars, attempts };
+  }
+  state.gems += bonusGems;
+  state.totalScore += stars*10;
+
+  const allDone = Object.keys(state.badges).length === ERAS.length;
+  if(allDone) state.gems += 15;
+
+  saveState();
+
+  const feedback = document.getElementById('puzzle-feedback');
+  feedback.textContent = 'Solved! ' + '⭐'.repeat(stars) + '☆'.repeat(3-stars) + '  (+'+bonusGems+' gems)';
+  feedback.className = 'puzzle-feedback good';
+
+  setTimeout(()=>{ showScreen('hub'); }, 1400);
+}
+
+function downloadCertificateImage(){
+  const el = document.getElementById('cert-body');
+  const btn = document.getElementById('cert-download-btn');
+  if(!el || typeof html2canvas==='undefined') return;
+  if(btn){ btn.disabled = true; btn.textContent = 'Preparing…'; }
+  html2canvas(el, { backgroundColor:'#3c2c1c', scale:2 }).then(canvas=>{
+    const link = document.createElement('a');
+    const safeName = (state.name||'trekker').replace(/[^a-z0-9]+/gi,'-').toLowerCase();
+    link.download = 'time-trekkers-certificate-' + safeName + '.png';
+    link.href = canvas.toDataURL('image/png');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if(btn){ btn.disabled = false; btn.textContent = '⬇️ Download certificate'; }
+  }).catch(()=>{
+    if(btn){ btn.disabled = false; btn.textContent = '⬇️ Download certificate'; }
+    alert('Could not generate the certificate image.');
+  });
+}
+
+/* ---------------- INIT ---------------- */
+loadState();
+if(state.name) document.getElementById('player-name').value = state.name;
+if(state.name && state.character){
+  renderCharGrid();
+  showScreen('hub');
+}
+</script>
+</body>
+</html>

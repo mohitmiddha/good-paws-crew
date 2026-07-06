@@ -1,0 +1,2949 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Star Voyagers: Galactic Missions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@600;800&family=Rajdhani:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#151a35;
+    --navy2:#1e2650;
+    --yellow:#ffd166;
+    --orange:#ff8c42;
+    --teal:#3ec6e0;
+    --pink:#ff6fb0;
+    --purple:#7c5cff;
+    --green:#3ac97f;
+    --cream:#fff8ec;
+    --card:#ffffff;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Rajdhani','Segoe UI',sans-serif;
+    background:radial-gradient(ellipse at 20% 0%, #1c2550 0%, #070a1a 62%), repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0px, rgba(255,255,255,0.025) 1px, transparent 1px, transparent 3px);
+    color:var(--cream);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  #app{ max-width:900px; margin:0 auto; padding:20px 16px 60px; min-height:100vh; }
+  .screen{ display:none; animation:fadeIn .4s ease; }
+  .screen.active{ display:block; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  h1,h2,h3,.btn{ font-family:'Orbitron','Segoe UI',sans-serif; letter-spacing:.02em; margin:.2em 0; }
+  h1{ font-size:1.7rem; text-align:center; color:var(--yellow); text-shadow:2px 2px 0 var(--navy2); }
+  h2{ font-size:1.3rem; color:var(--teal); }
+  p{ line-height:1.5; font-family:'Rajdhani','Segoe UI',sans-serif; }
+
+  .panel{
+    background:linear-gradient(160deg, rgba(30,38,80,.92), rgba(10,13,30,.96));
+    border:2px solid var(--teal);
+    border-radius:6px;
+    clip-path:polygon(18px 0, 100% 0, 100% calc(100% - 18px), calc(100% - 18px) 100%, 0 100%, 0 18px);
+    padding:22px;
+    margin:16px 0;
+    box-shadow:0 0 0 1px rgba(62,198,224,.35), 0 0 26px rgba(62,198,224,.16);
+  }
+
+  .btn{
+    display:inline-block; background:var(--orange); color:#fff; border:none; border-radius:6px;
+    padding:14px 26px; font-size:1.02rem; font-weight:bold; cursor:pointer;
+    box-shadow:0 5px 0 #b8451f; transition:transform .1s;
+  }
+  .btn:active{ transform:translateY(4px); box-shadow:0 1px 0 #b8451f; }
+  .btn:hover{ filter:brightness(1.08); }
+  .btn.secondary{ background:var(--purple); box-shadow:0 5px 0 #5a35b5; }
+  .btn.teal{ background:var(--teal); box-shadow:0 5px 0 #1c8c81; color:#053d38;}
+  .btn.small{ padding:8px 16px; font-size:.85rem; box-shadow:0 3px 0 rgba(0,0,0,.35); }
+  .btn.icon-btn{ padding:8px 12px; font-size:1rem; box-shadow:0 3px 0 rgba(0,0,0,.35); }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn-row{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:18px; }
+
+  input[type=text]{
+    width:100%; padding:12px 14px; border-radius:6px; border:3px solid var(--teal);
+    font-size:1.1rem; font-family:inherit; background:#fff; color:#1b1f3b;
+  }
+
+  .char-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-top:16px; }
+  .char-card{ background:var(--navy); border:3px solid transparent; border-radius:6px; padding:14px; text-align:center; cursor:pointer; transition:transform .15s, border-color .15s; }
+  .char-card:hover{ transform:translateY(-4px); }
+  .char-card.selected{ border-color:var(--yellow); background:#33395f; }
+  .char-emoji{ width:64px; height:64px; margin:0 auto; }
+  .char-emoji svg{ width:100%; height:100%; display:block; }
+  .char-name{ font-weight:bold; color:var(--yellow); margin:.3em 0 0; }
+  .char-role{ font-size:.8rem; color:var(--teal); }
+  .lead-avatar{ width:26px; height:26px; display:inline-block; vertical-align:middle; margin-right:5px; }
+  .lead-avatar svg{ width:100%; height:100%; display:block; }
+  .results-avatar{ width:56px; height:56px; margin:10px auto 0; }
+  .results-avatar svg{ width:100%; height:100%; display:block; }
+
+  .hud{
+    display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;
+    background:transparent; border:none; border-bottom:1px solid rgba(255,255,255,.12);
+    padding:6px 2px 18px; margin-bottom:26px; font-size:.9rem;
+  }
+  .hud b{ color:var(--yellow); }
+  .hud-right{ display:flex; gap:6px; align-items:center; }
+  .gem-pill{ display:inline-flex; align-items:center; gap:5px; background:rgba(255,255,255,.04); border:1px solid var(--teal); border-radius:20px; padding:4px 12px; font-size:.85rem; }
+
+  .badge-row{ display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+  .badge-pill{ background:var(--navy); border:2px solid var(--yellow); border-radius:30px; padding:6px 14px; font-size:.8rem; display:flex; align-items:center; gap:6px; }
+  .badge-pill.locked{ opacity:.35; border-color:#666; }
+
+  .certificate{ background:var(--cream); color:#1b1f3b; border-radius:16px; border:6px double var(--orange); padding:30px; text-align:center; margin-top:16px; }
+  .certificate h2{ color:var(--orange); font-family:'Orbitron',sans-serif; }
+  .certificate .name{ font-size:1.8rem; font-weight:bold; margin:.3em 0; color:#1b1f3b; border-bottom:3px solid var(--teal); display:inline-block; padding:0 10px 4px;}
+  .certificate .badges-earned{ font-size:1.6rem; margin:14px 0; }
+
+  .confetti{ position:fixed; top:-10px; font-size:1.4rem; animation:fall linear forwards; pointer-events:none; z-index:99; }
+  @keyframes fall{ to{ transform:translateY(105vh) rotate(360deg); opacity:.3; } }
+
+  .instr-step{ display:flex; gap:14px; align-items:flex-start; background:var(--navy); border:2px solid #3a4070; border-radius:14px; padding:14px; margin-bottom:12px; opacity:0; transform:translateX(-24px); animation:slideIn .5s ease forwards; }
+  .instr-step:nth-child(1){ animation-delay:.1s; } .instr-step:nth-child(2){ animation-delay:.3s; } .instr-step:nth-child(3){ animation-delay:.5s; } .instr-step:nth-child(4){ animation-delay:.7s; } .instr-step:nth-child(5){ animation-delay:.9s; } .instr-step:nth-child(6){ animation-delay:1.1s; }
+  @keyframes slideIn{ to{ opacity:1; transform:translateX(0); } }
+  .instr-step .instr-emoji{ font-size:1.9rem; animation:pulse 1.8s ease-in-out infinite; flex-shrink:0; }
+  @keyframes pulse{ 0%,100%{ transform:scale(1);} 50%{ transform:scale(1.15);} }
+  .instr-step .instr-text b{ display:block; margin-bottom:2px; color:var(--yellow); }
+  .instr-title-anim{ text-align:center; opacity:0; animation:dropIn .6s ease forwards; }
+  @keyframes dropIn{ from{opacity:0; transform:translateY(-20px);} to{opacity:1; transform:translateY(0);} }
+
+  .muted{ color:#9aa0c9; font-size:.85rem; }
+  .center{ text-align:center; }
+  footer.note{ text-align:center; font-size:.75rem; color:#7a80ab; margin-top:30px; }
+  .lb-table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:.95rem; }
+  .lb-table th,.lb-table td{ padding:8px 10px; text-align:left; border-bottom:1px solid #2b3166; }
+  .lb-table th{ color:var(--yellow); }
+  .lb-table tr.me{ background:rgba(95,225,255,.12); }
+  .lb-table td:first-child, .lb-table th:first-child{ width:34px; text-align:center; }
+
+  /* ---------------- STAR MAP ---------------- */
+  .star-map{ position:relative; padding:10px 4px 4px; }
+  .star-map::before{ content:''; position:absolute; left:50%; top:8px; bottom:8px; width:3px; background:repeating-linear-gradient(to bottom, var(--teal) 0 10px, transparent 10px 20px); transform:translateX(-50%); z-index:0; opacity:.5; }
+  .sys-row{ display:flex; margin:10px 0; position:relative; z-index:1; }
+  .sys-row.pos-left{ justify-content:flex-start; padding-left:2%; }
+  .sys-row.pos-center{ justify-content:center; }
+  .sys-row.pos-right{ justify-content:flex-end; padding-right:2%; }
+  .sys-node{
+    width:118px; background:linear-gradient(160deg,var(--navy2),var(--navy)); border:3px solid var(--teal);
+    border-radius:50%; aspect-ratio:1; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    cursor:pointer; text-align:center; padding:6px; transition:transform .2s, box-shadow .2s;
+  }
+  .sys-node:hover{ transform:scale(1.07); }
+  .sys-node .icon{ font-size:1.7rem; }
+  .sys-node .label{ font-size:.62rem; font-weight:bold; color:var(--yellow); margin-top:3px; line-height:1.15; font-family:'Orbitron',sans-serif; }
+  .sys-node .stars{ font-size:.68rem; margin-top:2px; }
+  .sys-node.locked{ opacity:.32; cursor:not-allowed; border-color:#4a4f6a; }
+  .sys-node.locked:hover{ transform:none; }
+  .sys-node.current{ box-shadow:0 0 0 5px rgba(62,198,224,.3); animation:nodePulse 1.6s ease-in-out infinite; }
+  @keyframes nodePulse{ 0%,100%{ box-shadow:0 0 0 4px rgba(62,198,224,.28);} 50%{ box-shadow:0 0 0 10px rgba(62,198,224,.1);} }
+  .sys-node.arcade-node{ border-style:dashed; border-color:var(--yellow); }
+
+  /* ---------------- CHALLENGE / QUESTION ---------------- */
+  .progress-bar{ background:#0e1126; border-radius:10px; height:14px; overflow:hidden; margin:10px 0 4px; }
+  .progress-fill{ background:var(--green); height:100%; width:0%; transition:width .3s; }
+  .timer-bar{ background:#0a0e22; border:1px solid rgba(62,198,224,.4); border-radius:10px; height:8px; overflow:hidden; margin-bottom:14px; }
+  .timer-fill{ background:linear-gradient(90deg, var(--teal), var(--purple)); box-shadow:0 0 10px var(--teal); height:100%; width:100%; transition:width 1s linear; }
+  .question-box{ background:var(--navy); border-radius:6px; clip-path:polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px); padding:18px; margin:12px 0; border:2px solid var(--teal); }
+  .question-box h3{ color:#fff; font-size:1.1rem; margin-top:0; }
+  .options{ display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+  @media (max-width:520px){ .options{ grid-template-columns:1fr; } }
+  .opt{ background:var(--card); color:#1b1f3b; border:3px solid #ddd; border-radius:6px; padding:12px 14px; text-align:left; cursor:pointer; font-size:.95rem; font-family:'Rajdhani',sans-serif; font-weight:bold; }
+  .opt:hover{ border-color:var(--purple); }
+  .opt.correct{ background:var(--green); border-color:#1c8c48; color:#08361c; }
+  .opt.wrong{ background:var(--pink); border-color:#b5245c; color:#4b0620; }
+  .opt:disabled{ cursor:default; }
+  .feedback{ margin-top:14px; background:#0e1126; border-left:5px solid var(--yellow); padding:12px 14px; border-radius:8px; font-size:.9rem; }
+
+  /* ---------------- RETRO MINI-GAME (Holo-Arcade) ---------------- */
+  .retro-panel{ background:#0a0c1e; border:4px solid var(--yellow); border-radius:10px; padding:16px; position:relative; overflow:hidden; font-family:'Courier New', monospace; }
+  .retro-panel::after{ content:''; position:absolute; inset:0; pointer-events:none; background:repeating-linear-gradient(rgba(0,0,0,0) 0px, rgba(0,0,0,0) 2px, rgba(0,0,0,.18) 3px, rgba(0,0,0,0) 4px); mix-blend-mode:multiply; }
+  .retro-title{ text-align:center; color:var(--yellow); letter-spacing:2px; text-transform:uppercase; text-shadow:2px 2px 0 #b8860b, 0 0 12px rgba(255,201,60,.6); margin-bottom:6px; }
+  .retro-hud{ display:flex; justify-content:space-between; align-items:center; font-family:'Courier New', monospace; color:var(--green); font-size:.95rem; margin-bottom:8px; text-shadow:0 0 6px rgba(58,197,105,.7); }
+  #minigame-canvas{ display:block; width:100%; max-width:560px; height:auto; margin:0 auto; background:#080a18; border:3px solid #3a4070; border-radius:8px; touch-action:none; image-rendering:pixelated; }
+  .retro-instructions{ text-align:center; font-size:.8rem; color:#9aa3d8; margin-top:8px; font-family:'Courier New', monospace; }
+  .retro-startcard{ text-align:center; }
+  .retro-startcard .retro-emoji{ font-size:3rem; margin:10px 0; }
+  .arcade-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(180px,1fr)); gap:16px; margin-top:18px; }
+  .arcade-card{ background:linear-gradient(160deg,#1b1440,#0a0c1e); border:3px dashed var(--yellow); border-radius:6px; padding:18px; text-align:center; cursor:pointer; }
+  .arcade-card:hover{ transform:translateY(-4px); }
+  .arcade-card .icon{ font-size:2.5rem; }
+  .arcade-card h3{ color:var(--yellow); font-size:1rem; margin:.4em 0 .1em; }
+  .arcade-card p{ font-size:.78rem; color:#cfd4f2; margin:.2em 0; }
+
+  @media print{
+    body{ background:#fff; }
+    #app > *:not(#screen-certificate){ display:none !important; }
+    .btn, .hud{ display:none !important; }
+    .certificate{ border:6px double #ff8c42; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <h1>🚀 Star Voyagers: Galactic Missions 🚀</h1>
+
+  <!-- START SCREEN -->
+  <div class="screen active" id="screen-start">
+    <div class="panel">
+      <h2>The story so far…</h2>
+      <p>Deep in the galaxy, an ancient AI called <b>the Archivist</b> scattered the Great Archive of knowledge across 11 star systems during a cosmic storm. <b>Commander Zeta</b> has recruited your crew aboard the starship <b>Nova Wanderer</b> for one mission: fly the star map, unlock each system, and recover the Archive — earning your rank as an <b>Official Star Voyager</b>.</p>
+      <p>Your nickname:</p>
+      <input type="text" id="player-name" placeholder="Pick a nickname or username" maxlength="20">
+      <p id="login-error" class="muted" style="display:none; color:#ff8888;">Please enter a nickname to continue.</p>
+      <div class="btn-row">
+        <button class="btn" onclick="goToCharSelect()">Launch the mission →</button>
+        <button class="btn teal" onclick="openInstructions('start')">📖 How to play</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CHARACTER SELECT -->
+  <div class="screen" id="screen-char">
+    <div class="panel">
+      <h2>Pick your crew avatar</h2>
+      <p class="muted">Each crew member has a specialty — but you'll fly every system either way.</p>
+      <div class="char-grid" id="char-grid"></div>
+      <div class="btn-row">
+        <button class="btn" id="confirm-char-btn" disabled onclick="confirmCharacter()">Confirm & board the ship →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- INSTRUCTIONS -->
+  <div class="screen" id="screen-instructions">
+    <div class="panel">
+      <h2 class="instr-title-anim">How to play 🚀</h2>
+      <div class="instr-step"><div class="instr-emoji">🗺️</div><div class="instr-text"><b>1. Fly the star map</b>Your 11 star systems are laid out along a route. Tap the glowing (unlocked) system to travel there.</div></div>
+      <div class="instr-step"><div class="instr-emoji">❓</div><div class="instr-text"><b>2. Answer a 5-question challenge</b>Each system gives you 5 questions, 20 seconds each. Answer well to earn 1-3 energy cells (stars) and unlock the next system.</div></div>
+      <div class="instr-step"><div class="instr-emoji">🔀</div><div class="instr-text"><b>3. Questions shuffle every time</b>Replay a completed system anytime for a fresh mix of questions and a chance at a better score.</div></div>
+      <div class="instr-step"><div class="instr-emoji">⚡</div><div class="instr-text"><b>4. Chain a Boost streak</b>Answer several in a row correctly for bonus points.</div></div>
+      <div class="instr-step"><div class="instr-emoji">🕹️</div><div class="instr-text"><b>5. Visit the Holo-Arcade</b>Free-play bonus mini-games are always open from the star map — no challenge needed. A perfect 5/5 also unlocks a surprise bonus round.</div></div>
+      <div class="instr-step"><div class="instr-emoji">🛰️</div><div class="instr-text"><b>6. Earn your certificate</b>Unlock and earn a badge in all 11 systems to claim your Official Star Voyager certificate.</div></div>
+      <div class="btn-row"><button class="btn" onclick="closeInstructions()">Got it, let's fly →</button></div>
+    </div>
+  </div>
+
+  <!-- STAR MAP -->
+  <div class="screen" id="screen-map">
+    <div class="hud">
+      <div id="hud-stats" style="display:flex; gap:14px; flex-wrap:wrap;"></div>
+      <div class="hud-right">
+        <button class="btn icon-btn small sound-toggle-btn" onclick="toggleSound()" title="Sound on/off">🔊</button>
+        <button class="btn icon-btn small" onclick="openInstructions('map')" title="How to play">❓</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Star map</h2>
+      <p>Tap a glowing system to fly there. Complete its challenge to earn energy cells and unlock the next stop on the route.</p>
+      <div class="star-map" id="star-map"></div>
+    </div>
+    <div class="panel center">
+      <h2>🕹️ Holo-Arcade</h2>
+      <p class="muted">Free play, no challenge needed — always open.</p>
+      <div class="btn-row"><button class="btn secondary" onclick="showScreen('arcade')">Enter the arcade →</button></div>
+    </div>
+    <div class="panel" id="cert-panel" style="display:none;">
+      <h2>🎓 All systems restored!</h2>
+      <p>The Great Archive is whole again. Claim your certificate.</p>
+      <div class="btn-row"><button class="btn teal" onclick="showScreen('certificate')">View my certificate →</button></div>
+    </div>
+    <div class="panel center">
+      <h2>🏆 Fleet Leaderboard</h2>
+      <p class="muted">Compare scores with everyone who's played on this device.</p>
+      <div class="btn-row"><button class="btn secondary" onclick="showScreen('leaderboard')">View leaderboard →</button></div>
+    </div>
+  </div>
+
+  <!-- LEADERBOARD -->
+  <div class="screen" id="screen-leaderboard">
+    <div class="hud">
+      <div>🏆 Fleet Leaderboard</div>
+      <div class="hud-right">
+        <button class="btn icon-btn small sound-toggle-btn" onclick="toggleSound()" title="Sound on/off">🔊</button>
+        <button class="btn icon-btn small" onclick="showScreen('map')" title="Back to star map">⬅</button>
+      </div>
+    </div>
+    <div class="panel">
+      <p class="muted">Top scores saved on this device, across everyone who's played Star Voyagers here.</p>
+      <div id="lb-table-local"></div>
+      <div class="btn-row"><button class="btn secondary small" onclick="showScreen('map')">Back to star map</button></div>
+    </div>
+  </div>
+
+  <!-- HOLO-ARCADE -->
+  <div class="screen" id="screen-arcade">
+    <div class="hud">
+      <div>🕹️ Holo-Arcade</div>
+      <div class="gem-pill">💎 <b id="arcade-gems">0</b></div>
+      <div class="hud-right">
+        <button class="btn icon-btn small sound-toggle-btn" onclick="toggleSound()" title="Sound on/off">🔊</button>
+        <button class="btn icon-btn small" onclick="showScreen('map')" title="Back to star map">⬅</button>
+      </div>
+    </div>
+    <div class="panel">
+      <h2>Choose a game</h2>
+      <p><span class="lead-avatar" id="arcade-host-avatar"></span>Bit Bot runs the arcade — free play, 35s each. Score well to earn a few bonus 💎!</p>
+      <div class="arcade-grid" id="arcade-grid"></div>
+    </div>
+  </div>
+
+  <!-- CHALLENGE / QUESTION -->
+  <div class="screen" id="screen-challenge">
+    <div class="hud">
+      <div id="challenge-title">System</div>
+      <div>Score: <b id="quiz-score">0</b></div>
+      <div>Boost: <b id="quiz-streak">0</b> ⚡</div>
+      <div class="hud-right">
+        <button class="btn icon-btn small sound-toggle-btn" onclick="toggleSound()" title="Sound on/off">🔊</button>
+      </div>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="quiz-progress"></div></div>
+    <div class="timer-bar"><div class="timer-fill" id="quiz-timer"></div></div>
+    <div class="question-box">
+      <p class="muted" id="quiz-counter">Question 1 of 5</p>
+      <h3 id="quiz-question"></h3>
+      <div class="options" id="quiz-options"></div>
+      <div class="feedback" id="quiz-feedback" style="display:none;"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="quiz-next-btn" style="display:none;" onclick="nextQuestion()">Next question →</button>
+    </div>
+  </div>
+
+  <!-- RETRO MINI-GAME BONUS ROUND -->
+  <div class="screen" id="screen-minigame">
+    <div class="panel retro-panel">
+      <h2 class="retro-title" id="mg-title">⭐ Perfect Round Bonus! ⭐</h2>
+      <div id="mg-startcard" class="retro-startcard">
+        <div class="retro-emoji" id="mg-start-emoji">🕹️</div>
+        <p id="mg-start-text" class="muted">Perfect run! You've unlocked a Holo-Arcade bonus game.</p>
+        <p class="retro-instructions" id="mg-start-instructions"></p>
+        <div class="btn-row">
+          <button class="btn" id="mg-play-btn" onclick="startMiniGamePlay()">▶ Play (35s)</button>
+          <button class="btn secondary" id="mg-skip-btn" onclick="skipMiniGame()">Skip to results</button>
+        </div>
+      </div>
+      <div id="mg-playarea" style="display:none;">
+        <div class="retro-hud">
+          <div>⏱ <b id="mg-timer">35</b>s</div>
+          <div id="mg-score-label">SCORE: <b id="mg-score">0</b></div>
+        </div>
+        <canvas id="minigame-canvas" width="560" height="300"></canvas>
+        <p class="retro-instructions" id="mg-live-instructions"></p>
+      </div>
+      <div id="mg-endcard" style="display:none; text-align:center;">
+        <div class="retro-emoji">🏆</div>
+        <h3 id="mg-end-title">Bonus round complete!</h3>
+        <p id="mg-end-summary" class="muted"></p>
+        <div class="btn-row"><button class="btn" onclick="finishMiniGameFlow()">Continue →</button></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULTS -->
+  <div class="screen" id="screen-results">
+    <div class="panel center">
+      <h2 id="results-title">System restored!</h2>
+      <p id="results-summary"></p>
+      <div id="results-badge" style="font-size:3rem;"></div>
+      <div class="results-avatar" id="results-avatar"></div>
+      <p id="results-message" class="muted"></p>
+      <p id="results-gems" class="muted"></p>
+      <div class="btn-row">
+        <button class="btn secondary" onclick="retryCurrent()">Try again</button>
+        <button class="btn" onclick="showScreen('map')">Back to star map →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- CERTIFICATE -->
+  <div class="screen" id="screen-certificate">
+    <div class="certificate" id="cert-body">
+      <p>🚀 Commander Zeta hereby certifies that</p>
+      <div class="name" id="cert-name">—</div>
+      <p>has restored the Great Archive across all 11 star systems and is officially declared an</p>
+      <h2>OFFICIAL STAR VOYAGER (CERTIFIED)</h2>
+      <div class="badges-earned" id="cert-badges"></div>
+      <p>Total score: <b id="cert-score">0</b> points</p>
+      <p id="cert-gems" class="muted"></p>
+      <p class="muted" id="cert-date"></p>
+    </div>
+    <div class="btn-row">
+      <button class="btn teal" onclick="window.print()">🖨️ Print certificate</button>
+      <button class="btn" onclick="showScreen('map')">Back to star map</button>
+    </div>
+  </div>
+
+  <footer class="note">Progress saves automatically in this browser. Charted for a curious Grade 6 star voyager.</footer>
+</div>
+
+<script>
+/* ---------------- SOUND EFFECTS (synthesized, no audio files needed) ---------------- */
+
+let soundEnabled = true;
+try{ const s = localStorage.getItem('goodPawsSoundEnabled'); if(s!==null) soundEnabled = s==='1'; }catch(e){}
+
+const SFX = (function(){
+  let ctx = null;
+  function getCtx(){
+    if(!ctx){ ctx = new (window.AudioContext||window.webkitAudioContext)(); }
+    if(ctx.state==='suspended') ctx.resume();
+    return ctx;
+  }
+  function tone(freq, start, duration, type, vol){
+    if(!soundEnabled) return;
+    try{
+      const c = getCtx();
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      osc.connect(gain); gain.connect(c.destination);
+      const t0 = c.currentTime + start;
+      gain.gain.setValueAtTime(vol||0.15, t0);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0+duration);
+      osc.start(t0);
+      osc.stop(t0+duration+0.03);
+    }catch(e){}
+  }
+  return {
+    click(){ tone(600,0,0.06,'square',0.10); },
+    correct(){ tone(523.25,0,0.12,'sine',0.16); tone(783.99,0.1,0.16,'sine',0.16); },
+    wrong(){ tone(180,0,0.25,'sawtooth',0.13); },
+    badge(){ tone(523.25,0,0.12,'triangle',0.18); tone(659.25,0.12,0.12,'triangle',0.18); tone(783.99,0.24,0.12,'triangle',0.18); tone(1046.5,0.36,0.24,'triangle',0.2); }
+  };
+})();
+
+function updateSoundButtons(){
+  document.querySelectorAll('.sound-toggle-btn').forEach(btn=>{ btn.textContent = soundEnabled ? '🔊' : '🔇'; });
+}
+function toggleSound(){
+  soundEnabled = !soundEnabled;
+  try{ localStorage.setItem('goodPawsSoundEnabled', soundEnabled ? '1' : '0'); }catch(e){}
+  updateSoundButtons();
+  if(soundEnabled) SFX.click();
+}
+document.addEventListener('click', function(e){
+  const el = e.target.closest('.btn, .mission-card, .char-card, .topic-chip');
+  if(el && !el.disabled) SFX.click();
+}, true);
+document.addEventListener('DOMContentLoaded', updateSoundButtons);
+
+
+/* ---------------- CHARACTER DATA ---------------- */
+
+const CHARACTERS = [
+  {
+    "id": "nova",
+    "emoji": "🛰️",
+    "name": "Nova Sol",
+    "role": "Star Cartography officer",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#2e5cb8\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#8ecbff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🛰️</text></svg>"
+  },
+  {
+    "id": "orbit",
+    "emoji": "☄️",
+    "name": "Orbit Comet",
+    "role": "Astrophysics officer",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#6a3fb0\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#d9b8ff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">☄️</text></svg>"
+  },
+  {
+    "id": "zeno",
+    "emoji": "👽",
+    "name": "Zeno the Xenobiologist",
+    "role": "Alien Life researcher",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#22935a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#9dffca\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">👽</text></svg>"
+  },
+  {
+    "id": "blitz",
+    "emoji": "🤖",
+    "name": "Blitz Botrunner",
+    "role": "Zero-G Games champion",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#c9601f\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffd39b\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🤖</text></svg>"
+  },
+  {
+    "id": "cypher",
+    "emoji": "🧩",
+    "name": "Cypher Nebula",
+    "role": "Puzzle Core strategist",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#c23a7a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffb8db\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🧩</text></svg>"
+  },
+  {
+    "id": "digit",
+    "emoji": "🔢",
+    "name": "Digit Vega",
+    "role": "Navigation computer officer",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#1f9e8f\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#9df3e8\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🔢</text></svg>"
+  },
+  {
+    "id": "flux",
+    "emoji": "⚗️",
+    "name": "Flux Ionova",
+    "role": "Science Lab Module lead",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#2e8b57\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#b6f2cf\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">⚗️</text></svg>"
+  },
+  {
+    "id": "lex",
+    "emoji": "📡",
+    "name": "Lex Transmitter",
+    "role": "Comm Archives officer",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#b0468a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffc7ea\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">📡</text></svg>"
+  },
+  {
+    "id": "prism",
+    "emoji": "🎨",
+    "name": "Prism Aurora",
+    "role": "Holo-Gallery curator",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#7a4fd6\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#dcc9ff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🎨</text></svg>"
+  },
+  {
+    "id": "gizmo",
+    "emoji": "🛠️",
+    "name": "Gizmo Sprocket",
+    "role": "Engineering Bay chief",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#c07a1f\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffdca3\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🛠️</text></svg>"
+  },
+  {
+    "id": "estrella",
+    "emoji": "🌟",
+    "name": "Estrella Luna",
+    "role": "Universal Translator officer",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#2665b0\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#aed4ff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🌟</text></svg>"
+  },
+  {
+    "id": "bitbot",
+    "emoji": "🤖",
+    "name": "Bit Bot",
+    "role": "Holo-Arcade keeper",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#3d3d55\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#5fe1ff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🤖</text></svg>"
+  }
+];
+function getCharacter(id){ return CHARACTERS.find(c=>c.id===id); }
+
+/* ---------------- MISSION / QUESTION DATA ---------------- */
+
+const MISSIONS = [
+  {
+    "id": "geography",
+    "title": "Chart the Lost Star Maps",
+    "icon": "🌌",
+    "lead": "Nova Sol",
+    "leadId": "nova",
+    "color": "teal",
+    "questions": [
+      {
+        "q": "Which is the largest continent on Earth, the planet Star Voyagers launched from?",
+        "options": [
+          "Africa",
+          "Asia",
+          "Europe",
+          "Antarctica"
+        ],
+        "correct": 1,
+        "fact": "Asia covers about 30% of Earth's total land area.",
+        "diff": 1
+      },
+      {
+        "q": "Which ocean is the largest, covering more area than all continents combined?",
+        "options": [
+          "Atlantic",
+          "Indian",
+          "Arctic",
+          "Pacific"
+        ],
+        "correct": 3,
+        "fact": "The Pacific Ocean covers about a third of Earth's surface.",
+        "diff": 2
+      },
+      {
+        "q": "A line of latitude that circles Earth exactly halfway between the poles is called the:",
+        "options": [
+          "Prime Meridian",
+          "Equator",
+          "Tropic of Cancer",
+          "International Date Line"
+        ],
+        "correct": 1,
+        "fact": "The Equator divides Earth into the Northern and Southern Hemispheres.",
+        "diff": 3
+      },
+      {
+        "q": "Which country is both a continent and an island?",
+        "options": [
+          "Japan",
+          "Australia",
+          "Iceland",
+          "Madagascar"
+        ],
+        "correct": 1,
+        "fact": "Australia is the only country that is also a full continent.",
+        "diff": 4
+      },
+      {
+        "q": "Mount Everest, the tallest mountain used as a landmark by star cartographers, sits on the border of which two countries?",
+        "options": [
+          "India and China",
+          "Nepal and China",
+          "Nepal and India",
+          "Pakistan and India"
+        ],
+        "correct": 1,
+        "fact": "Everest sits directly on the border between Nepal and Tibet (China).",
+        "diff": 5
+      },
+      {
+        "q": "Which desert is the largest hot desert on Earth?",
+        "options": [
+          "Gobi Desert",
+          "Kalahari Desert",
+          "Sahara Desert",
+          "Arabian Desert"
+        ],
+        "correct": 2,
+        "fact": "The Sahara spans across North Africa and is roughly the size of the USA.",
+        "diff": 6
+      },
+      {
+        "q": "The Amazon River flows primarily through which continent?",
+        "options": [
+          "Africa",
+          "South America",
+          "Asia",
+          "North America"
+        ],
+        "correct": 1,
+        "fact": "The Amazon carries more water than the next seven largest rivers combined.",
+        "diff": 7
+      },
+      {
+        "q": "Which imaginary line is used as the reference for 0° longitude?",
+        "options": [
+          "Equator",
+          "Tropic of Capricorn",
+          "Prime Meridian",
+          "Arctic Circle"
+        ],
+        "correct": 2,
+        "fact": "The Prime Meridian passes through Greenwich, London.",
+        "diff": 8
+      },
+      {
+        "q": "Which of these is a landlocked country (has no coastline)?",
+        "options": [
+          "Nepal",
+          "Brazil",
+          "Egypt",
+          "Vietnam"
+        ],
+        "correct": 0,
+        "fact": "Nepal is surrounded entirely by India and China, with no access to the sea.",
+        "diff": 9
+      },
+      {
+        "q": "Plate tectonics explains that Earth's crust is broken into large moving pieces called:",
+        "options": [
+          "Continents",
+          "Tectonic plates",
+          "Hemispheres",
+          "Archipelagos"
+        ],
+        "correct": 1,
+        "fact": "The slow movement of tectonic plates causes earthquakes, volcanoes, and mountain formation.",
+        "diff": 10
+      }
+    ]
+  },
+  {
+    "id": "space",
+    "title": "Navigate the Asteroid Belt",
+    "icon": "☄️",
+    "lead": "Orbit Comet",
+    "leadId": "orbit",
+    "color": "purple",
+    "questions": [
+      {
+        "q": "Which planet is known as the \"Red Planet\"?",
+        "options": [
+          "Venus",
+          "Mars",
+          "Jupiter",
+          "Saturn"
+        ],
+        "correct": 1,
+        "fact": "Mars looks red because of iron oxide (rust) covering its surface.",
+        "diff": 1
+      },
+      {
+        "q": "What is the closest star to Earth?",
+        "options": [
+          "Proxima Centauri",
+          "Polaris",
+          "The Sun",
+          "Sirius"
+        ],
+        "correct": 2,
+        "fact": "The Sun is about 150 million km from Earth — 1 astronomical unit (AU).",
+        "diff": 2
+      },
+      {
+        "q": "Which planet has the most moons confirmed in our solar system as of recent counts?",
+        "options": [
+          "Jupiter",
+          "Saturn",
+          "Neptune",
+          "Uranus"
+        ],
+        "correct": 1,
+        "fact": "Saturn has over 140 confirmed moons, more than any other planet.",
+        "diff": 3
+      },
+      {
+        "q": "The asteroid belt in our solar system is located between which two planets?",
+        "options": [
+          "Earth and Mars",
+          "Mars and Jupiter",
+          "Jupiter and Saturn",
+          "Venus and Earth"
+        ],
+        "correct": 1,
+        "fact": "Millions of rocky asteroids orbit the Sun in this region.",
+        "diff": 4
+      },
+      {
+        "q": "What force keeps planets in orbit around the Sun?",
+        "options": [
+          "Magnetism",
+          "Gravity",
+          "Friction",
+          "Air pressure"
+        ],
+        "correct": 1,
+        "fact": "Gravity constantly pulls planets toward the Sun, balancing their forward motion.",
+        "diff": 5
+      },
+      {
+        "q": "Which galaxy contains our solar system?",
+        "options": [
+          "Andromeda",
+          "Triangulum",
+          "Milky Way",
+          "Whirlpool"
+        ],
+        "correct": 2,
+        "fact": "The Milky Way is a barred spiral galaxy roughly 100,000 light-years across.",
+        "diff": 6
+      },
+      {
+        "q": "A star that suddenly becomes much brighter due to a massive explosion is called a:",
+        "options": [
+          "Comet",
+          "Supernova",
+          "Meteor shower",
+          "Nebula"
+        ],
+        "correct": 1,
+        "fact": "A supernova can briefly outshine an entire galaxy.",
+        "diff": 7
+      },
+      {
+        "q": "What is the name of the first human-made object to leave the solar system?",
+        "options": [
+          "Apollo 11",
+          "Voyager 1",
+          "Hubble Telescope",
+          "Sputnik 1"
+        ],
+        "correct": 1,
+        "fact": "Voyager 1, launched in 1977, entered interstellar space in 2012.",
+        "diff": 8
+      },
+      {
+        "q": "Which type of star is our Sun classified as?",
+        "options": [
+          "Red giant",
+          "White dwarf",
+          "Yellow dwarf",
+          "Neutron star"
+        ],
+        "correct": 2,
+        "fact": "The Sun is a G-type main-sequence star, often called a yellow dwarf.",
+        "diff": 9
+      },
+      {
+        "q": "Light from the Sun takes about how long to reach Earth?",
+        "options": [
+          "8 seconds",
+          "8 minutes",
+          "8 hours",
+          "8 days"
+        ],
+        "correct": 1,
+        "fact": "Light travels about 300,000 km per second, taking roughly 8 minutes to cross 150 million km.",
+        "diff": 10
+      }
+    ]
+  },
+  {
+    "id": "animals",
+    "title": "Catalog the Alien Zoo",
+    "icon": "👾",
+    "lead": "Zeno the Xenobiologist",
+    "leadId": "zeno",
+    "color": "green",
+    "questions": [
+      {
+        "q": "Which of these animals is a mammal?",
+        "options": [
+          "Shark",
+          "Dolphin",
+          "Eel",
+          "Octopus"
+        ],
+        "correct": 1,
+        "fact": "Dolphins breathe air with lungs and nurse their young — key mammal traits.",
+        "diff": 1
+      },
+      {
+        "q": "What do we call an animal that only eats plants?",
+        "options": [
+          "Carnivore",
+          "Omnivore",
+          "Herbivore",
+          "Predator"
+        ],
+        "correct": 2,
+        "fact": "Herbivores like cows and rabbits get their energy entirely from plants.",
+        "diff": 2
+      },
+      {
+        "q": "Which of these is a cold-blooded animal, meaning its body temperature changes with its surroundings?",
+        "options": [
+          "Reptile",
+          "Bird",
+          "Mammal",
+          "None of these"
+        ],
+        "correct": 0,
+        "fact": "Reptiles like snakes and lizards rely on the environment to regulate body heat.",
+        "diff": 3
+      },
+      {
+        "q": "Which animal is known for undergoing metamorphosis from caterpillar to adult?",
+        "options": [
+          "Butterfly",
+          "Spider",
+          "Beetle",
+          "Ant"
+        ],
+        "correct": 0,
+        "fact": "A butterfly transforms completely inside a chrysalis before emerging with wings.",
+        "diff": 4
+      },
+      {
+        "q": "What is a group of lions called?",
+        "options": [
+          "A pack",
+          "A pride",
+          "A herd",
+          "A colony"
+        ],
+        "correct": 1,
+        "fact": "A pride of lions can include multiple related females, their cubs, and a few males.",
+        "diff": 5
+      },
+      {
+        "q": "Which animal is considered the largest living land animal?",
+        "options": [
+          "Giraffe",
+          "White rhinoceros",
+          "African elephant",
+          "Hippopotamus"
+        ],
+        "correct": 2,
+        "fact": "African elephants can weigh over 6,000 kg.",
+        "diff": 6
+      },
+      {
+        "q": "Which of these describes an animal active mainly at night?",
+        "options": [
+          "Diurnal",
+          "Nocturnal",
+          "Crepuscular",
+          "Dormant"
+        ],
+        "correct": 1,
+        "fact": "Owls and many bats are nocturnal, hunting after dark.",
+        "diff": 7
+      },
+      {
+        "q": "What is the main function of an animal's gills?",
+        "options": [
+          "Digesting food",
+          "Breathing underwater",
+          "Sensing light",
+          "Regulating temperature"
+        ],
+        "correct": 1,
+        "fact": "Gills extract dissolved oxygen from water so fish can breathe.",
+        "diff": 8
+      },
+      {
+        "q": "Which of these species is considered an apex predator (top of its food chain)?",
+        "options": [
+          "Zebra",
+          "Great white shark",
+          "Field mouse",
+          "Sea turtle"
+        ],
+        "correct": 1,
+        "fact": "Apex predators have no natural predators of their own in their ecosystem.",
+        "diff": 9
+      },
+      {
+        "q": "Camouflage, mimicry, and hibernation are all examples of animal:",
+        "options": [
+          "Diseases",
+          "Adaptations",
+          "Habitats",
+          "Extinctions"
+        ],
+        "correct": 1,
+        "fact": "Adaptations are traits that help a species survive in its environment over generations.",
+        "diff": 10
+      }
+    ]
+  },
+  {
+    "id": "sports",
+    "title": "Win the Zero-Gravity Games",
+    "icon": "🏆",
+    "lead": "Blitz Botrunner",
+    "leadId": "blitz",
+    "color": "orange",
+    "questions": [
+      {
+        "q": "In which sport would you perform a \"slam dunk\"?",
+        "options": [
+          "Volleyball",
+          "Basketball",
+          "Tennis",
+          "Badminton"
+        ],
+        "correct": 1,
+        "fact": "A slam dunk happens when a player jumps and forces the ball through the hoop.",
+        "diff": 1
+      },
+      {
+        "q": "How many players are on the field for one soccer (football) team during a match?",
+        "options": [
+          "9",
+          "10",
+          "11",
+          "12"
+        ],
+        "correct": 2,
+        "fact": "Each team fields 11 players, including the goalkeeper.",
+        "diff": 2
+      },
+      {
+        "q": "In the Olympic Games, how often are the Summer Olympics normally held?",
+        "options": [
+          "Every 2 years",
+          "Every 3 years",
+          "Every 4 years",
+          "Every 5 years"
+        ],
+        "correct": 2,
+        "fact": "The Summer and Winter Olympics each occur every four years, staggered by two years.",
+        "diff": 3
+      },
+      {
+        "q": "Which sport uses terms like \"love,\" \"deuce,\" and \"ace\"?",
+        "options": [
+          "Golf",
+          "Tennis",
+          "Cricket",
+          "Badminton"
+        ],
+        "correct": 1,
+        "fact": "In tennis, \"love\" means a score of zero.",
+        "diff": 4
+      },
+      {
+        "q": "What shape is a standard cricket ball closest to?",
+        "options": [
+          "Oval",
+          "Sphere",
+          "Cylinder",
+          "Cone"
+        ],
+        "correct": 1,
+        "fact": "A cricket ball is a hard sphere with a stitched leather seam.",
+        "diff": 5
+      },
+      {
+        "q": "In swimming, which stroke is typically the fastest?",
+        "options": [
+          "Backstroke",
+          "Breaststroke",
+          "Freestyle (front crawl)",
+          "Butterfly"
+        ],
+        "correct": 2,
+        "fact": "Freestyle allows swimmers to use the most efficient technique, usually the front crawl.",
+        "diff": 6
+      },
+      {
+        "q": "A \"hat-trick\" in sports like soccer or hockey refers to scoring how many goals in one match by the same player?",
+        "options": [
+          "2",
+          "3",
+          "4",
+          "5"
+        ],
+        "correct": 1,
+        "fact": "The term \"hat-trick\" originated in cricket and later spread to other sports.",
+        "diff": 7
+      },
+      {
+        "q": "Which country is credited with inventing the modern sport of table tennis?",
+        "options": [
+          "China",
+          "Japan",
+          "England",
+          "USA"
+        ],
+        "correct": 2,
+        "fact": "Table tennis began in England in the late 1800s as an indoor version of lawn tennis.",
+        "diff": 8
+      },
+      {
+        "q": "In basketball, how many points is a shot worth if made from behind the three-point line?",
+        "options": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "correct": 2,
+        "fact": "Shots made from beyond the arc are worth three points instead of two.",
+        "diff": 9
+      },
+      {
+        "q": "A marathon race covers approximately how many kilometers?",
+        "options": [
+          "21 km",
+          "32 km",
+          "42 km",
+          "50 km"
+        ],
+        "correct": 2,
+        "fact": "A marathon is 42.195 kilometers, based on an ancient Greek running route.",
+        "diff": 10
+      }
+    ]
+  },
+  {
+    "id": "thinktank",
+    "title": "Crack the Puzzle Core",
+    "icon": "🧠",
+    "lead": "Cypher Nebula",
+    "leadId": "cypher",
+    "color": "pink",
+    "questions": [
+      {
+        "q": "If a spaceship leaves at 08:00 and the trip takes 5 hours 30 minutes, what time does it arrive?",
+        "options": [
+          "13:00",
+          "13:30",
+          "14:00",
+          "12:30"
+        ],
+        "correct": 1,
+        "fact": "08:00 + 5:30 = 13:30.",
+        "diff": 1
+      },
+      {
+        "q": "Which number comes next in the sequence: 2, 4, 8, 16, __?",
+        "options": [
+          "20",
+          "24",
+          "32",
+          "30"
+        ],
+        "correct": 2,
+        "fact": "Each number doubles the one before it (×2).",
+        "diff": 2
+      },
+      {
+        "q": "Three robots can scan 3 rooms in 3 minutes. How long would 6 robots take to scan 6 rooms?",
+        "options": [
+          "3 minutes",
+          "6 minutes",
+          "9 minutes",
+          "12 minutes"
+        ],
+        "correct": 0,
+        "fact": "Each robot scans its own room at the same rate, so 6 robots scanning 6 rooms still takes 3 minutes.",
+        "diff": 3
+      },
+      {
+        "q": "All Zorbons are Kelpons. Some Kelpons are Fenrix. Which statement MUST be true?",
+        "options": [
+          "All Fenrix are Zorbons",
+          "All Zorbons are Fenrix",
+          "Some Kelpons are Zorbons",
+          "No conclusion can be drawn about Fenrix and Zorbons"
+        ],
+        "correct": 3,
+        "fact": "Without more information, we cannot connect Zorbons directly to Fenrix.",
+        "diff": 4
+      },
+      {
+        "q": "Which shape completes the pattern: circle, square, circle, square, ___?",
+        "options": [
+          "Triangle",
+          "Circle",
+          "Square",
+          "Pentagon"
+        ],
+        "correct": 1,
+        "fact": "The pattern alternates strictly between circle and square.",
+        "diff": 5
+      },
+      {
+        "q": "A ship's fuel tank is half full. After using a quarter of the tank, what fraction remains?",
+        "options": [
+          "1/4",
+          "1/3",
+          "1/2",
+          "2/3"
+        ],
+        "correct": 0,
+        "fact": "Half (1/2) minus a quarter (1/4) leaves one quarter (1/4) remaining.",
+        "diff": 6
+      },
+      {
+        "q": "If today is Wednesday, what day will it be in 100 days?",
+        "options": [
+          "Monday",
+          "Thursday",
+          "Friday",
+          "Sunday"
+        ],
+        "correct": 2,
+        "fact": "100 ÷ 7 leaves a remainder of 2, so count 2 days forward from Wednesday to land on Friday.",
+        "diff": 7
+      },
+      {
+        "q": "You have 8 identical-looking coins, but one is slightly heavier. Using a balance scale, what is the minimum number of weighings needed to always find the heavier coin?",
+        "options": [
+          "1",
+          "2",
+          "3",
+          "4"
+        ],
+        "correct": 1,
+        "fact": "Splitting coins into groups of 3-3-2 lets you identify the heavier coin in just 2 weighings.",
+        "diff": 8
+      },
+      {
+        "q": "A code shows A=1, B=2, C=3. What number represents the word \"CAB\"?",
+        "options": [
+          "312",
+          "321",
+          "132",
+          "123"
+        ],
+        "correct": 0,
+        "fact": "C=3, A=1, B=2, so \"CAB\" becomes 3-1-2.",
+        "diff": 9
+      },
+      {
+        "q": "Five astronauts shake hands with each other exactly once. How many total handshakes occur?",
+        "options": [
+          "10",
+          "15",
+          "20",
+          "25"
+        ],
+        "correct": 0,
+        "fact": "This is a combination problem: 5 choose 2 = (5×4)/2 = 10 handshakes.",
+        "diff": 10
+      }
+    ]
+  },
+  {
+    "id": "math",
+    "title": "Reboot the Nav Computer",
+    "icon": "🔢",
+    "lead": "Digit Vega",
+    "leadId": "digit",
+    "color": "green",
+    "questions": [
+      {
+        "q": "What is 3/4 written as a decimal?",
+        "options": [
+          "0.34",
+          "0.75",
+          "0.43",
+          "0.7"
+        ],
+        "correct": 1,
+        "fact": "3 divided by 4 equals 0.75.",
+        "diff": 1
+      },
+      {
+        "q": "What is 15% of 200?",
+        "options": [
+          "15",
+          "20",
+          "30",
+          "45"
+        ],
+        "correct": 2,
+        "fact": "15% of 200 = 0.15 × 200 = 30.",
+        "diff": 2
+      },
+      {
+        "q": "Simplify the ratio 12:18 to its simplest form.",
+        "options": [
+          "2:3",
+          "3:4",
+          "6:9",
+          "4:6"
+        ],
+        "correct": 0,
+        "fact": "Dividing both sides by their greatest common factor, 6, gives 2:3.",
+        "diff": 3
+      },
+      {
+        "q": "What is the value of x in the equation 2x + 5 = 17?",
+        "options": [
+          "5",
+          "6",
+          "7",
+          "8"
+        ],
+        "correct": 1,
+        "fact": "2x = 12, so x = 6.",
+        "diff": 4
+      },
+      {
+        "q": "What is the area of a rectangle with length 9 cm and width 4 cm?",
+        "options": [
+          "13 cm²",
+          "26 cm²",
+          "36 cm²",
+          "40 cm²"
+        ],
+        "correct": 2,
+        "fact": "Area = length × width = 9 × 4 = 36 cm².",
+        "diff": 5
+      },
+      {
+        "q": "Which of these fractions is equivalent to 2/5?",
+        "options": [
+          "4/10",
+          "3/8",
+          "5/12",
+          "6/10"
+        ],
+        "correct": 0,
+        "fact": "Multiplying numerator and denominator of 2/5 by 2 gives 4/10.",
+        "diff": 6
+      },
+      {
+        "q": "What is the sum of the interior angles of any triangle?",
+        "options": [
+          "90°",
+          "180°",
+          "270°",
+          "360°"
+        ],
+        "correct": 1,
+        "fact": "The interior angles of a triangle always add up to 180 degrees.",
+        "diff": 7
+      },
+      {
+        "q": "If a spaceship travels 240 km in 3 hours at a constant speed, what is its speed?",
+        "options": [
+          "60 km/h",
+          "70 km/h",
+          "80 km/h",
+          "90 km/h"
+        ],
+        "correct": 2,
+        "fact": "Speed = distance ÷ time = 240 ÷ 3 = 80 km/h.",
+        "diff": 8
+      },
+      {
+        "q": "What is the value of 2³ (2 to the power of 3)?",
+        "options": [
+          "6",
+          "8",
+          "9",
+          "12"
+        ],
+        "correct": 1,
+        "fact": "2³ means 2 × 2 × 2 = 8.",
+        "diff": 9
+      },
+      {
+        "q": "A number is divisible by both 3 and 4. Which number could it be?",
+        "options": [
+          "9",
+          "16",
+          "24",
+          "28"
+        ],
+        "correct": 2,
+        "fact": "24 divides evenly by both 3 (=8) and 4 (=6).",
+        "diff": 10
+      }
+    ]
+  },
+  {
+    "id": "science",
+    "title": "Repair the Lab Module",
+    "icon": "🧪",
+    "lead": "Flux Ionova",
+    "leadId": "flux",
+    "color": "teal",
+    "questions": [
+      {
+        "q": "What is the chemical symbol for water?",
+        "options": [
+          "H2O",
+          "CO2",
+          "O2",
+          "NaCl"
+        ],
+        "correct": 0,
+        "fact": "Water is made of two hydrogen atoms and one oxygen atom.",
+        "diff": 1
+      },
+      {
+        "q": "Which state of matter has a fixed volume but no fixed shape?",
+        "options": [
+          "Solid",
+          "Liquid",
+          "Gas",
+          "Plasma"
+        ],
+        "correct": 1,
+        "fact": "Liquids take the shape of their container but keep the same volume.",
+        "diff": 2
+      },
+      {
+        "q": "What force pulls objects toward the center of the Earth?",
+        "options": [
+          "Magnetism",
+          "Gravity",
+          "Friction",
+          "Tension"
+        ],
+        "correct": 1,
+        "fact": "Gravity gives objects weight and pulls them downward.",
+        "diff": 3
+      },
+      {
+        "q": "Which part of a plant is mainly responsible for photosynthesis?",
+        "options": [
+          "Roots",
+          "Stem",
+          "Leaves",
+          "Flowers"
+        ],
+        "correct": 2,
+        "fact": "Leaves contain chlorophyll, which captures sunlight for photosynthesis.",
+        "diff": 4
+      },
+      {
+        "q": "What is the process by which liquid changes into gas called?",
+        "options": [
+          "Condensation",
+          "Evaporation",
+          "Freezing",
+          "Sublimation"
+        ],
+        "correct": 1,
+        "fact": "Evaporation happens when a liquid absorbs enough energy to become a vapor.",
+        "diff": 5
+      },
+      {
+        "q": "Which organ in the human body pumps blood throughout the circulatory system?",
+        "options": [
+          "Lungs",
+          "Liver",
+          "Heart",
+          "Kidney"
+        ],
+        "correct": 2,
+        "fact": "The heart is a muscular pump beating roughly 100,000 times a day.",
+        "diff": 6
+      },
+      {
+        "q": "Which type of energy is stored in a stretched rubber band?",
+        "options": [
+          "Kinetic energy",
+          "Potential energy",
+          "Thermal energy",
+          "Sound energy"
+        ],
+        "correct": 1,
+        "fact": "Potential energy is stored energy waiting to be released as motion.",
+        "diff": 7
+      },
+      {
+        "q": "What do we call a substance that speeds up a chemical reaction without being used up?",
+        "options": [
+          "Reactant",
+          "Catalyst",
+          "Solvent",
+          "Solute"
+        ],
+        "correct": 1,
+        "fact": "Catalysts lower the energy needed for a reaction to occur.",
+        "diff": 8
+      },
+      {
+        "q": "Which of these is NOT one of the three main types of rock?",
+        "options": [
+          "Igneous",
+          "Sedimentary",
+          "Metamorphic",
+          "Organic"
+        ],
+        "correct": 3,
+        "fact": "The three main rock types are igneous, sedimentary, and metamorphic.",
+        "diff": 9
+      },
+      {
+        "q": "What is the basic unit of life that makes up all living organisms?",
+        "options": [
+          "Atom",
+          "Molecule",
+          "Cell",
+          "Tissue"
+        ],
+        "correct": 2,
+        "fact": "Cells are considered the fundamental building blocks of all known life.",
+        "diff": 10
+      }
+    ]
+  },
+  {
+    "id": "langarts",
+    "title": "Restore the Comm Archives",
+    "icon": "📚",
+    "lead": "Lex Transmitter",
+    "leadId": "lex",
+    "color": "pink",
+    "questions": [
+      {
+        "q": "Which word is a synonym for \"enormous\"?",
+        "options": [
+          "Tiny",
+          "Huge",
+          "Fast",
+          "Quiet"
+        ],
+        "correct": 1,
+        "fact": "\"Huge\" and \"enormous\" both describe something very large in size.",
+        "diff": 1
+      },
+      {
+        "q": "Identify the verb in this sentence: \"The comet streaked across the sky.\"",
+        "options": [
+          "Comet",
+          "Streaked",
+          "Across",
+          "Sky"
+        ],
+        "correct": 1,
+        "fact": "\"Streaked\" is the action word describing what the comet did.",
+        "diff": 2
+      },
+      {
+        "q": "What is a metaphor?",
+        "options": [
+          "A comparison using \"like\" or \"as\"",
+          "A direct comparison without using \"like\" or \"as\"",
+          "A word that imitates a sound",
+          "A word with the same meaning as another"
+        ],
+        "correct": 1,
+        "fact": "Unlike a simile, a metaphor states something IS something else, e.g. \"time is a thief.\"",
+        "diff": 3
+      },
+      {
+        "q": "Which sentence uses correct punctuation?",
+        "options": [
+          "Its time to launch.",
+          "It's time to launch.",
+          "Its, time to launch",
+          "It time to launch"
+        ],
+        "correct": 1,
+        "fact": "\"It's\" is the contraction for \"it is.\"",
+        "diff": 4
+      },
+      {
+        "q": "What is the plural form of the word \"child\"?",
+        "options": [
+          "Childs",
+          "Childes",
+          "Children",
+          "Childrens"
+        ],
+        "correct": 2,
+        "fact": "\"Children\" is an irregular plural that doesn't just add -s.",
+        "diff": 5
+      },
+      {
+        "q": "Which of the following is an example of alliteration?",
+        "options": [
+          "The stars shone brightly",
+          "Silent stars streaked slowly",
+          "The moon was a silver coin",
+          "Stars are far away"
+        ],
+        "correct": 1,
+        "fact": "Alliteration repeats the same beginning sound, here the \"s\" sound.",
+        "diff": 6
+      },
+      {
+        "q": "What part of speech is the word \"quickly\" in \"The robot moved quickly\"?",
+        "options": [
+          "Noun",
+          "Verb",
+          "Adjective",
+          "Adverb"
+        ],
+        "correct": 3,
+        "fact": "Adverbs often describe how an action is performed and often end in -ly.",
+        "diff": 7
+      },
+      {
+        "q": "Which sentence is written in the past tense?",
+        "options": [
+          "She explores the station.",
+          "She will explore the station.",
+          "She explored the station.",
+          "She is exploring the station."
+        ],
+        "correct": 2,
+        "fact": "\"Explored\" shows the action already happened.",
+        "diff": 8
+      },
+      {
+        "q": "What do we call the main message or lesson of a story?",
+        "options": [
+          "Plot",
+          "Theme",
+          "Setting",
+          "Climax"
+        ],
+        "correct": 1,
+        "fact": "The theme is the underlying idea or insight the story communicates.",
+        "diff": 9
+      },
+      {
+        "q": "Choose the correctly spelled word.",
+        "options": [
+          "Recieve",
+          "Receive",
+          "Receeve",
+          "Receve"
+        ],
+        "correct": 1,
+        "fact": "Remember the rule: \"i before e except after c\" — \"receive\" fits since it follows c.",
+        "diff": 10
+      }
+    ]
+  },
+  {
+    "id": "arts",
+    "title": "Curate the Holo-Gallery",
+    "icon": "🎨",
+    "lead": "Prism Aurora",
+    "leadId": "prism",
+    "color": "purple",
+    "questions": [
+      {
+        "q": "Which three colors are considered primary colors in traditional color theory?",
+        "options": [
+          "Red, green, blue",
+          "Red, yellow, blue",
+          "Orange, green, purple",
+          "Yellow, purple, red"
+        ],
+        "correct": 1,
+        "fact": "Primary colors can be mixed to create nearly all other colors.",
+        "diff": 1
+      },
+      {
+        "q": "What do we call art created by carving or shaping into a solid, 3D form?",
+        "options": [
+          "Painting",
+          "Sculpture",
+          "Sketching",
+          "Printmaking"
+        ],
+        "correct": 1,
+        "fact": "Sculptures can be carved, cast, or built and exist in three dimensions.",
+        "diff": 2
+      },
+      {
+        "q": "Mixing blue and yellow paint together creates which color?",
+        "options": [
+          "Purple",
+          "Orange",
+          "Green",
+          "Brown"
+        ],
+        "correct": 2,
+        "fact": "Blue and yellow are both primary colors, and mixing them makes green.",
+        "diff": 3
+      },
+      {
+        "q": "What term describes the lightness or darkness of a color?",
+        "options": [
+          "Hue",
+          "Value",
+          "Texture",
+          "Form"
+        ],
+        "correct": 1,
+        "fact": "Value refers to how light or dark a color appears.",
+        "diff": 4
+      },
+      {
+        "q": "Which art movement is famous for melting clocks and dreamlike scenes, led by Salvador Dalí?",
+        "options": [
+          "Impressionism",
+          "Cubism",
+          "Surrealism",
+          "Pop Art"
+        ],
+        "correct": 2,
+        "fact": "Surrealism explored the world of dreams and the unconscious mind.",
+        "diff": 5
+      },
+      {
+        "q": "What is the term for the visual \"path\" your eye follows around an artwork?",
+        "options": [
+          "Balance",
+          "Movement",
+          "Contrast",
+          "Emphasis"
+        ],
+        "correct": 1,
+        "fact": "Movement guides the viewer's eye through the composition.",
+        "diff": 6
+      },
+      {
+        "q": "A painting technique using tiny dots of color placed closely together is called:",
+        "options": [
+          "Pointillism",
+          "Fresco",
+          "Collage",
+          "Etching"
+        ],
+        "correct": 0,
+        "fact": "Pointillism was pioneered by artists like Georges Seurat.",
+        "diff": 7
+      },
+      {
+        "q": "Which of these is considered a \"warm\" color?",
+        "options": [
+          "Blue",
+          "Green",
+          "Orange",
+          "Purple"
+        ],
+        "correct": 2,
+        "fact": "Warm colors like red, orange, and yellow feel energetic and vibrant.",
+        "diff": 8
+      },
+      {
+        "q": "What do we call the empty or open space around and between the subjects of an artwork?",
+        "options": [
+          "Positive space",
+          "Negative space",
+          "Focal point",
+          "Perspective"
+        ],
+        "correct": 1,
+        "fact": "Negative space helps define the shape of the positive subjects.",
+        "diff": 9
+      },
+      {
+        "q": "Leonardo da Vinci painted which famously mysterious portrait?",
+        "options": [
+          "The Starry Night",
+          "The Mona Lisa",
+          "The Scream",
+          "Girl with a Pearl Earring"
+        ],
+        "correct": 1,
+        "fact": "The Mona Lisa is displayed at the Louvre Museum in Paris.",
+        "diff": 10
+      }
+    ]
+  },
+  {
+    "id": "design",
+    "title": "Fix the Engineering Bay",
+    "icon": "🛠️",
+    "lead": "Gizmo Sprocket",
+    "leadId": "gizmo",
+    "color": "orange",
+    "questions": [
+      {
+        "q": "What is the first step of the design process, before building a prototype?",
+        "options": [
+          "Testing",
+          "Identifying the problem",
+          "Marketing",
+          "Manufacturing"
+        ],
+        "correct": 1,
+        "fact": "Good design starts by clearly understanding the problem you're solving.",
+        "diff": 1
+      },
+      {
+        "q": "What is a \"prototype\"?",
+        "options": [
+          "The final polished product",
+          "An early test model of a design",
+          "A marketing plan",
+          "A user manual"
+        ],
+        "correct": 1,
+        "fact": "Prototypes let designers test and improve ideas before final production.",
+        "diff": 2
+      },
+      {
+        "q": "Which material is generally the best natural conductor of electricity?",
+        "options": [
+          "Rubber",
+          "Wood",
+          "Copper",
+          "Plastic"
+        ],
+        "correct": 2,
+        "fact": "Copper is widely used in wiring because it conducts electricity efficiently.",
+        "diff": 3
+      },
+      {
+        "q": "In engineering, what does \"load\" usually refer to?",
+        "options": [
+          "The weight or force a structure must support",
+          "The color of a material",
+          "The cost of a project",
+          "The speed of construction"
+        ],
+        "correct": 0,
+        "fact": "Understanding load helps engineers design structures that won't collapse.",
+        "diff": 4
+      },
+      {
+        "q": "A triangle shape is often used in bridges and towers because it is:",
+        "options": [
+          "Cheap to build",
+          "The most flexible shape",
+          "Very structurally stable",
+          "Easy to paint"
+        ],
+        "correct": 2,
+        "fact": "Triangles distribute force evenly and resist bending, making structures stronger.",
+        "diff": 5
+      },
+      {
+        "q": "What does \"user-centered design\" mean?",
+        "options": [
+          "Designing based only on what looks impressive",
+          "Designing with the needs of the actual user in mind",
+          "Designing the cheapest possible option",
+          "Designing without any testing"
+        ],
+        "correct": 1,
+        "fact": "User-centered design focuses on solving real needs for real people.",
+        "diff": 6
+      },
+      {
+        "q": "Which of these is an example of a renewable energy source used in engineering projects?",
+        "options": [
+          "Coal",
+          "Natural gas",
+          "Solar power",
+          "Petroleum"
+        ],
+        "correct": 2,
+        "fact": "Solar power is renewable because sunlight is a constantly replenished resource.",
+        "diff": 7
+      },
+      {
+        "q": "What is the purpose of iterating (repeating and improving) a design?",
+        "options": [
+          "To waste materials",
+          "To fix flaws and make the design better each round",
+          "To make the project take longer on purpose",
+          "To avoid getting feedback"
+        ],
+        "correct": 1,
+        "fact": "Iteration helps designers refine and strengthen their solution over time.",
+        "diff": 8
+      },
+      {
+        "q": "In a simple electrical circuit, what is required for current to flow?",
+        "options": [
+          "An open loop",
+          "A closed loop",
+          "No power source",
+          "A broken wire"
+        ],
+        "correct": 1,
+        "fact": "Electricity only flows through a complete, unbroken (closed) circuit.",
+        "diff": 9
+      },
+      {
+        "q": "What does CAD stand for in engineering and design?",
+        "options": [
+          "Computer Aided Design",
+          "Creative Art Design",
+          "Constructed Automated Drawing",
+          "Central Assembly Diagram"
+        ],
+        "correct": 0,
+        "fact": "CAD software lets designers create precise digital models before building.",
+        "diff": 10
+      }
+    ]
+  },
+  {
+    "id": "spanish",
+    "title": "Calibrate the Universal Translator",
+    "icon": "🇪🇸",
+    "lead": "Estrella Luna",
+    "leadId": "estrella",
+    "color": "teal",
+    "questions": [
+      {
+        "q": "How do you say \"Good morning\" in Spanish?",
+        "options": [
+          "Buenas noches",
+          "Buenos días",
+          "Buenas tardes",
+          "Hasta luego"
+        ],
+        "correct": 1,
+        "fact": "\"Buenos días\" is used from morning until roughly midday.",
+        "diff": 1
+      },
+      {
+        "q": "What does \"gracias\" mean in English?",
+        "options": [
+          "Please",
+          "Sorry",
+          "Thank you",
+          "Hello"
+        ],
+        "correct": 2,
+        "fact": "\"Gracias\" is one of the most commonly used polite words in Spanish.",
+        "diff": 2
+      },
+      {
+        "q": "What is the Spanish word for \"one\"?",
+        "options": [
+          "Dos",
+          "Uno",
+          "Tres",
+          "Cero"
+        ],
+        "correct": 1,
+        "fact": "\"Uno\" means one; \"dos\" means two, and \"tres\" means three.",
+        "diff": 3
+      },
+      {
+        "q": "Which of these means \"I am a student\" using the correct verb \"ser\"?",
+        "options": [
+          "Yo estoy estudiante",
+          "Yo soy estudiante",
+          "Yo es estudiante",
+          "Yo son estudiante"
+        ],
+        "correct": 1,
+        "fact": "\"Ser\" is used for permanent traits or identities, like being a student.",
+        "diff": 4
+      },
+      {
+        "q": "What color is \"rojo\" in English?",
+        "options": [
+          "Blue",
+          "Green",
+          "Red",
+          "Yellow"
+        ],
+        "correct": 2,
+        "fact": "\"Rojo\" is the Spanish word for the color red.",
+        "diff": 5
+      },
+      {
+        "q": "Which word correctly completes: \"Mi hermana ___ alta\" (My sister is tall)?",
+        "options": [
+          "es",
+          "está",
+          "son",
+          "soy"
+        ],
+        "correct": 0,
+        "fact": "Height is a lasting characteristic, so \"ser\" (es) is used, not \"estar.\"",
+        "diff": 6
+      },
+      {
+        "q": "What is the correct Spanish word for \"family\"?",
+        "options": [
+          "Familia",
+          "Amigos",
+          "Casa",
+          "Comida"
+        ],
+        "correct": 0,
+        "fact": "\"Familia\" is very similar to the English word \"family.\"",
+        "diff": 7
+      },
+      {
+        "q": "What does \"¿Cómo te llamas?\" mean?",
+        "options": [
+          "How are you?",
+          "What is your name?",
+          "Where are you from?",
+          "How old are you?"
+        ],
+        "correct": 1,
+        "fact": "This common phrase literally translates to \"What do you call yourself?\"",
+        "diff": 8
+      },
+      {
+        "q": "Which is the correct \"yo\" (I) form of the verb \"ir\" (to go)?",
+        "options": [
+          "Voy",
+          "Vas",
+          "Va",
+          "Van"
+        ],
+        "correct": 0,
+        "fact": "\"Ir\" is highly irregular; its \"yo\" form \"voy\" doesn't resemble the infinitive.",
+        "diff": 9
+      },
+      {
+        "q": "Which sentence correctly uses \"estar\" to describe a location?",
+        "options": [
+          "El libro es en la mesa.",
+          "El libro está en la mesa.",
+          "El libro tiene en la mesa.",
+          "El libro hay en la mesa."
+        ],
+        "correct": 1,
+        "fact": "Location always uses \"estar,\" even for permanent locations.",
+        "diff": 10
+      }
+    ]
+  }
+];
+function getMission(id){ return MISSIONS.find(m=>m.id===id); }
+
+const QUESTION_TIME = 20;
+const STORAGE_KEY = 'starVoyagersMapSave';
+
+function shuffle(arr){
+  for(let i=arr.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [arr[i],arr[j]]=[arr[j],arr[i]];
+  }
+  return arr;
+}
+
+/* ---------------- STATE ---------------- */
+
+let state = {
+  name:'', character:null,
+  unlocked:1, // number of systems unlocked (1 = only first system open)
+  badges:{}, // missionId -> {stars, score}
+  totalScore:0,
+  gems:0,
+  current:{ missionMeta:null, questions:[], qIndex:0, score:0, streak:0, correctCount:0, timerId:null, timeLeft:QUESTION_TIME, answered:false }
+};
+let instructionsReturnTo = 'start';
+
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      name:state.name, character:state.character, unlocked:state.unlocked,
+      badges:state.badges, totalScore:state.totalScore, gems:state.gems
+    }));
+  }catch(e){}
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const d = JSON.parse(raw);
+    state.name = d.name || '';
+    state.character = d.character || null;
+    state.unlocked = d.unlocked || 1;
+    state.badges = d.badges || {};
+    state.totalScore = d.totalScore || 0;
+    state.gems = d.gems || 0;
+  }catch(e){}
+}
+
+/* ---------------- NAVIGATION ---------------- */
+
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('screen-'+name).classList.add('active');
+  if(window.scrollTo) window.scrollTo({top:0, behavior:'smooth'});
+  if(name==='map') renderMap();
+  if(name==='certificate') renderCertificate();
+  if(name==='arcade') openArcade();
+  if(name==='leaderboard') renderLeaderboardScreen();
+}
+
+/* ---------------- ON-DEVICE LEADERBOARD ---------------- */
+const LB_KEY = 'leaderboard_starVoyagers';
+
+function upsertLeaderboard(){
+  try{
+    if(!state.name) return;
+    const entry = { name: state.name, score: state.totalScore||0, gems: state.gems||0, badges: Object.keys(state.badges||{}).length, total: MISSIONS.length, date: new Date().toISOString() };
+    let list = [];
+    try{ list = JSON.parse(localStorage.getItem(LB_KEY)||'[]'); }catch(e){ list=[]; }
+    const idx = list.findIndex(e=> e.name===entry.name);
+    if(idx>=0){ if(entry.score>=list[idx].score) list[idx]=entry; }
+    else list.push(entry);
+    list.sort((a,b)=> b.score-a.score);
+    list = list.slice(0,20);
+    localStorage.setItem(LB_KEY, JSON.stringify(list));
+  }catch(e){}
+}
+
+function renderLeaderboardScreen(){
+  upsertLeaderboard();
+  let list = [];
+  try{ list = JSON.parse(localStorage.getItem(LB_KEY)||'[]'); }catch(e){ list=[]; }
+  const el = document.getElementById('lb-table-local');
+  if(!el) return;
+  if(!list.length){ el.innerHTML = '<p class="muted">No scores yet on this device — play a round to be the first!</p>'; return; }
+  el.innerHTML = '<table class="lb-table"><thead><tr><th>#</th><th>Name</th><th>Score</th><th>💎</th><th>Badges</th></tr></thead><tbody>' +
+    list.map((e,i)=> '<tr'+(e.name===state.name?' class="me"':'')+'><td>'+(i+1)+'</td><td>'+e.name+'</td><td>'+e.score+'</td><td>'+e.gems+'</td><td>'+e.badges+'/'+(e.total||MISSIONS.length)+'</td></tr>').join('') +
+    '</tbody></table>';
+}
+
+function openInstructions(fromScreen){
+  instructionsReturnTo = fromScreen;
+  document.querySelectorAll('#screen-instructions .instr-step, #screen-instructions .instr-title-anim').forEach(el=>{
+    el.style.animation = 'none';
+    void el.offsetWidth;
+    el.style.animation = '';
+  });
+  showScreen('instructions');
+}
+function closeInstructions(){
+  showScreen(instructionsReturnTo === 'map' ? 'map' : 'start');
+}
+
+/* ---------------- LOGIN / CHARACTER SELECT ---------------- */
+
+function goToCharSelect(){
+  const errEl = document.getElementById('login-error');
+  const name1 = document.getElementById('player-name').value.trim();
+  if(!name1){
+    if(errEl) errEl.style.display = 'block';
+    return;
+  }
+  if(errEl) errEl.style.display = 'none';
+  state.name = name1;
+  renderCharGrid();
+  showScreen('char');
+}
+
+function renderCharGrid(){
+  const grid = document.getElementById('char-grid');
+  grid.innerHTML = '';
+  CHARACTERS.forEach(c=>{
+    const div = document.createElement('div');
+    div.className = 'char-card' + (state.character===c.id ? ' selected' : '');
+    div.onclick = ()=>{
+      state.character = c.id;
+      renderCharGrid();
+      document.getElementById('confirm-char-btn').disabled = false;
+    };
+    div.innerHTML = `<div class="char-emoji">${c.avatar}</div><p class="char-name">${c.name}</p><p class="char-role">${c.role}</p>`;
+    grid.appendChild(div);
+  });
+  document.getElementById('confirm-char-btn').disabled = !state.character;
+}
+
+function confirmCharacter(){
+  saveState();
+  showScreen('map');
+}
+
+/* ---------------- STAR MAP ---------------- */
+
+function renderMap(){
+  const statsWrap = document.getElementById('hud-stats');
+  const badgeCount = Object.keys(state.badges).length;
+  statsWrap.innerHTML = `
+    <div>🚀 Voyager: <b>${state.name}</b></div>
+    <div>⭐ Total score: <b>${state.totalScore}</b></div>
+    <div>🛰️ Systems: <b>${badgeCount}/${MISSIONS.length}</b></div>
+    <div class="gem-pill">💎 <b>${state.gems}</b></div>
+  `;
+
+  const mapEl = document.getElementById('star-map');
+  mapEl.innerHTML = '';
+  const positions = ['pos-left','pos-center','pos-right'];
+  MISSIONS.forEach((m,i)=>{
+    const row = document.createElement('div');
+    row.className = 'sys-row ' + positions[i%3];
+    const locked = i >= state.unlocked;
+    const isCurrent = i === state.unlocked - 1 && !state.badges[m.id];
+    const badge = state.badges[m.id];
+    const node = document.createElement('div');
+    node.className = 'sys-node' + (locked ? ' locked' : '') + (isCurrent ? ' current' : '');
+    node.onclick = locked ? null : ()=> startChallenge(m.id);
+    node.innerHTML = `
+      <div class="icon">${locked ? '🔒' : m.icon}</div>
+      <div class="label">${m.title}</div>
+      ${badge ? '<div class="stars">' + '★'.repeat(badge.stars) + '☆'.repeat(3-badge.stars) + '</div>' : ''}
+    `;
+    row.appendChild(node);
+    mapEl.appendChild(row);
+  });
+
+  document.getElementById('cert-panel').style.display = (badgeCount===MISSIONS.length) ? 'block' : 'none';
+  refreshArcadeGems();
+  upsertLeaderboard();
+}
+
+/* ---------------- CHALLENGE FLOW ---------------- */
+
+function startChallenge(missionId){
+  const mission = getMission(missionId);
+  const questions = shuffle(mission.questions.slice()).slice(0, 5);
+  state.current = {
+    missionMeta: { id:mission.id, title:mission.title, icon:mission.icon, lead:mission.lead, leadId:mission.leadId },
+    questions, qIndex:0, score:0, streak:0, correctCount:0,
+    timerId:null, timeLeft:QUESTION_TIME, answered:false
+  };
+  document.getElementById('challenge-title').innerHTML = `<span class="lead-avatar">${getCharacter(mission.leadId).avatar}</span>${mission.icon} ${mission.title}`;
+  renderQuestion();
+  showScreen('challenge');
+}
+
+function retryCurrent(){
+  startChallenge(state.current.missionMeta.id);
+}
+
+function renderQuestion(){
+  const questions = state.current.questions;
+  const q = questions[state.current.qIndex];
+  state.current.answered = false;
+
+  document.getElementById('quiz-counter').textContent = `Question ${state.current.qIndex+1} of ${questions.length}`;
+  document.getElementById('quiz-question').textContent = q.q;
+  document.getElementById('quiz-score').textContent = state.current.score;
+  document.getElementById('quiz-streak').textContent = state.current.streak;
+  document.getElementById('quiz-progress').style.width = (state.current.qIndex/questions.length*100) + '%';
+  document.getElementById('quiz-feedback').style.display = 'none';
+  document.getElementById('quiz-next-btn').style.display = 'none';
+
+  const optsDiv = document.getElementById('quiz-options');
+  optsDiv.innerHTML = '';
+  q.options.forEach((opt, idx)=>{
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    btn.textContent = opt;
+    btn.onclick = ()=> answerQuestion(idx);
+    optsDiv.appendChild(btn);
+  });
+
+  startTimer();
+}
+
+function startTimer(){
+  clearInterval(state.current.timerId);
+  state.current.timeLeft = QUESTION_TIME;
+  const fill = document.getElementById('quiz-timer');
+  fill.style.transition = 'none';
+  fill.style.width = '100%';
+  requestAnimationFrame(()=>{ fill.style.transition = `width ${QUESTION_TIME}s linear`; fill.style.width = '0%'; });
+
+  state.current.timerId = setInterval(()=>{
+    state.current.timeLeft--;
+    if(state.current.timeLeft<=0){
+      clearInterval(state.current.timerId);
+      if(!state.current.answered) answerQuestion(-1);
+    }
+  }, 1000);
+}
+
+function answerQuestion(selectedIdx){
+  if(state.current.answered) return;
+  state.current.answered = true;
+  clearInterval(state.current.timerId);
+
+  const q = state.current.questions[state.current.qIndex];
+  const opts = document.querySelectorAll('#quiz-options .opt');
+  opts.forEach((btn, idx)=>{
+    btn.disabled = true;
+    if(idx===q.correct) btn.classList.add('correct');
+    else if(idx===selectedIdx) btn.classList.add('wrong');
+  });
+
+  const feedback = document.getElementById('quiz-feedback');
+  feedback.style.display = 'block';
+
+  if(selectedIdx===q.correct){
+    state.current.streak++;
+    state.current.correctCount++;
+    let pts = 10;
+    if(state.current.streak>0 && state.current.streak % 3 === 0) pts += 5;
+    state.current.score += pts;
+    feedback.innerHTML = `<b>Correct! +${pts} pts</b><br>${q.fact}`;
+    spawnConfettiBurst();
+    SFX.correct();
+  } else {
+    state.current.streak = 0;
+    const msg = selectedIdx===-1 ? "Time's up!" : "Not quite.";
+    feedback.innerHTML = `<b>${msg}</b><br>${q.fact}`;
+    SFX.wrong();
+  }
+
+  document.getElementById('quiz-score').textContent = state.current.score;
+  document.getElementById('quiz-streak').textContent = state.current.streak;
+  document.getElementById('quiz-next-btn').style.display = 'inline-block';
+  const isLast = state.current.qIndex+1 >= state.current.questions.length;
+  document.getElementById('quiz-next-btn').textContent = isLast ? 'See results →' : 'Next question →';
+  document.getElementById('quiz-next-btn').onclick = isLast ? finishChallenge : nextQuestion;
+}
+
+function nextQuestion(){
+  state.current.qIndex++;
+  renderQuestion();
+}
+
+function finishChallenge(){
+  const meta = state.current.missionMeta;
+  const total = state.current.questions.length;
+  const correct = state.current.correctCount;
+  const score = state.current.score;
+  let stars = 1;
+  if(correct >= 5) stars = 3;
+  else if(correct >= 3) stars = 2;
+
+  const prevBest = state.badges[meta.id];
+  const isNewBadge = !prevBest;
+  const systemIndex = MISSIONS.findIndex(m=>m.id===meta.id);
+  if(!prevBest || score > prevBest.score){
+    state.badges[meta.id] = {stars, score};
+  }
+  state.totalScore += score;
+  if(isNewBadge && systemIndex+1 >= state.unlocked && systemIndex+1 < MISSIONS.length){
+    state.unlocked = systemIndex + 2;
+  } else if(isNewBadge && systemIndex+1 >= MISSIONS.length){
+    // last system, nothing further to unlock
+  }
+
+  let bonusGems = 0;
+  if(isNewBadge) bonusGems += 3;
+  if(stars===3) bonusGems += 5;
+  state.gems += bonusGems;
+  saveState();
+
+  document.getElementById('results-title').textContent = meta.icon + ' System restored!';
+  document.getElementById('results-summary').textContent = `${state.name}, you got ${correct} out of ${total} correct and scored ${score} points.`;
+  document.getElementById('results-badge').textContent = '⭐'.repeat(stars) + '☆'.repeat(3-stars);
+  document.getElementById('results-avatar').innerHTML = getCharacter(meta.leadId).avatar;
+
+  let msg = '';
+  if(stars===3) msg = `Perfect flight, Voyager ${state.name}! ${meta.lead} says you're a natural.`;
+  else if(stars===2) msg = `Solid flight! A little more practice and you'll ace it next time.`;
+  else msg = `System logged! Come back and try again — the questions shuffle fresh each time.`;
+  if(isNewBadge && systemIndex+1 < MISSIONS.length) msg += ` The next system is now unlocked.`;
+  document.getElementById('results-message').textContent = msg;
+
+  let gemsLine = `💎 Gems: ${state.gems} total`;
+  if(bonusGems>0) gemsLine += ` (+${bonusGems} bonus this round)`;
+  document.getElementById('results-gems').textContent = gemsLine;
+
+  if(isNewBadge || stars===3){ spawnConfettiBurst(24); SFX.badge(); }
+
+  const perfectRound = correct === total;
+  if(perfectRound){
+    launchMiniGame(meta, state.name, function(minigameBonus){
+      if(minigameBonus>0){
+        state.gems += minigameBonus;
+        saveState();
+        let gemsLine2 = document.getElementById('results-gems').textContent;
+        document.getElementById('results-gems').textContent = gemsLine2 + ` · +${minigameBonus} bonus 💎 from mini-game!`;
+      }
+      showScreen('results');
+    });
+  } else {
+    showScreen('results');
+  }
+}
+
+/* ---------------- CERTIFICATE ---------------- */
+
+function renderCertificate(){
+  document.getElementById('cert-name').textContent = state.name;
+  document.getElementById('cert-badges').textContent = '🛰️'.repeat(Object.keys(state.badges).length);
+  document.getElementById('cert-score').textContent = state.totalScore;
+  document.getElementById('cert-gems').textContent = `💎 ${state.gems} gems collected`;
+  document.getElementById('cert-date').textContent = 'Awarded on ' + new Date().toLocaleDateString('en-IN', {year:'numeric', month:'long', day:'numeric'});
+}
+
+/* ---------------- HOLO-ARCADE (FREE PLAY) ---------------- */
+
+function openArcade(){
+  const hostAvatarEl = document.getElementById('arcade-host-avatar');
+  if(hostAvatarEl) hostAvatarEl.innerHTML = getCharacter('bitbot').avatar;
+  const grid = document.getElementById('arcade-grid');
+  grid.innerHTML = Object.keys(MINIGAME_INFO).map(function(key){
+    const info = MINIGAME_INFO[key];
+    return `<div class="arcade-card" onclick="playArcadeGame('${key}')">
+      <div class="icon">${info.emoji}</div>
+      <h3>${info.name}</h3>
+      <p>${info.instructions}</p>
+    </div>`;
+  }).join('');
+  refreshArcadeGems();
+}
+
+function refreshArcadeGems(){
+  const el = document.getElementById('arcade-gems');
+  if(el) el.textContent = String(state.gems);
+}
+
+function playArcadeGame(type){
+  launchMiniGame(null, state.name || 'Voyager', function(bonus){
+    if(bonus>0){
+      state.gems += bonus;
+      saveState();
+    }
+    showScreen('arcade');
+  }, {forceType:type, arcade:true});
+}
+
+/* ---------------- RETRO PERFECT-ROUND MINI-GAME ---------------- */
+// Triggers whenever a real mission round is finished with every question
+// correct, at any level. Stars the player's own crew avatar in a short,
+// original retro arcade bonus round (no licensed "Bad Guys" movie art —
+// only the game's own original characters and art, per earlier agreement).
+
+const MINIGAME_DURATION = 35; // seconds (within the requested 30-40s window)
+
+const MINIGAME_INFO = {
+  runner:  { name:'Getaway Dash',   emoji:'🏃', instructions:'Tap, click, or press SPACE to jump over alarms and grab gems!' },
+  catcher: { name:'Catch the Loot', emoji:'💰', instructions:'Drag or use ←/→ arrow keys to catch gems and dodge alarms!' },
+  whack:   { name:'Whack-a-Heist',  emoji:'👊', instructions:'Tap the good paw prints — avoid the alarm decoys!' },
+  vault:   { name:'Vault Cracker',  emoji:'🔐', instructions:'Tap, click, or press SPACE when the marker lands in the gold zone!' },
+  signal:  { name:'Signal Sweep',   emoji:'🚦', instructions:'Tap fast when you see a paw print — do NOT tap the alarm!' },
+  memory:  { name:'Pattern Recall', emoji:'🧠', instructions:'Watch the flashing pattern, then tap the cells back in the same order.' }
+};
+
+let mg = { type:null, canvas:null, ctx:null, timeLeft:MINIGAME_DURATION, score:0, running:false, cleanup:null, bonusGems:0, arcade:false, _tickTimer:null };
+let mgOnComplete = null;
+let lastMiniGameType = null;
+
+function launchMiniGame(missionMeta, playerName, onComplete, opts){
+  opts = opts || {};
+  mgOnComplete = onComplete;
+  mg.missionMeta = missionMeta;
+  mg.playerName = playerName;
+  mg.arcade = !!opts.arcade;
+  mg.score = 0;
+  mg.bonusGems = 0;
+
+  const options = Object.keys(MINIGAME_INFO);
+  let pick = (opts.forceType && MINIGAME_INFO[opts.forceType]) ? opts.forceType : options[Math.floor(Math.random()*options.length)];
+  if(!opts.forceType && options.length>1){
+    let tries=0;
+    while(pick===lastMiniGameType && tries<6){ pick = options[Math.floor(Math.random()*options.length)]; tries++; }
+  }
+  mg.type = pick;
+  lastMiniGameType = pick;
+  const info = MINIGAME_INFO[pick];
+
+  document.getElementById('mg-startcard').style.display='block';
+  document.getElementById('mg-playarea').style.display='none';
+  document.getElementById('mg-endcard').style.display='none';
+  document.getElementById('mg-title').textContent = mg.arcade ? `🕹️ ${info.name}` : '⭐ Perfect Round Bonus! ⭐';
+  document.getElementById('mg-start-emoji').textContent = info.emoji;
+  document.getElementById('mg-start-text').textContent = mg.arcade
+    ? `${info.name} — free play, ${MINIGAME_DURATION} seconds. Beat your best score!`
+    : `Perfect round, ${playerName}! You've unlocked "${info.name}" — a ${MINIGAME_DURATION}-second retro bonus round.`;
+  document.getElementById('mg-start-instructions').textContent = info.instructions;
+  document.getElementById('mg-live-instructions').textContent = info.instructions;
+  document.getElementById('mg-skip-btn').textContent = mg.arcade ? 'Cancel' : 'Skip to results';
+  showScreen('minigame');
+}
+
+function startMiniGamePlay(){
+  document.getElementById('mg-startcard').style.display='none';
+  document.getElementById('mg-playarea').style.display='block';
+  mg.canvas = document.getElementById('minigame-canvas');
+  mg.ctx = mg.canvas.getContext('2d');
+  mg.timeLeft = MINIGAME_DURATION;
+  mg.score = 0;
+  document.getElementById('mg-score').textContent = '0';
+  document.getElementById('mg-timer').textContent = String(MINIGAME_DURATION);
+  SFX.click();
+
+  const impl = MiniGames[mg.type];
+  mg.cleanup = impl.start(mg.canvas, mg.ctx, function(s){
+    mg.score = s;
+    document.getElementById('mg-score').textContent = String(s);
+  });
+
+  mg.running = true;
+  clearInterval(mg._tickTimer);
+  mg._tickTimer = setInterval(function(){
+    mg.timeLeft--;
+    document.getElementById('mg-timer').textContent = String(Math.max(0, mg.timeLeft));
+    if(mg.timeLeft<=0) endMiniGamePlay();
+  }, 1000);
+}
+
+function endMiniGamePlay(){
+  if(!mg.running) return;
+  mg.running = false;
+  clearInterval(mg._tickTimer);
+  if(mg.cleanup){ mg.cleanup(); mg.cleanup = null; }
+
+  const info = MINIGAME_INFO[mg.type];
+  const rawBonus = Math.max(2, Math.min(15, Math.round(mg.score/4) + 2));
+  const bonusGems = mg.arcade ? Math.max(1, Math.round(rawBonus/2)) : rawBonus;
+  mg.bonusGems = bonusGems;
+
+  document.getElementById('mg-playarea').style.display='none';
+  document.getElementById('mg-endcard').style.display='block';
+  document.getElementById('mg-end-title').textContent = `${info.emoji} ${info.name} — Score: ${mg.score}`;
+  document.getElementById('mg-end-summary').textContent = `Nice work, ${mg.playerName}! You earned +${bonusGems} bonus 💎 gems.`;
+  spawnConfettiBurst(16);
+  SFX.badge();
+}
+
+function skipMiniGame(){
+  if(mg.running){ mg.running = false; clearInterval(mg._tickTimer); if(mg.cleanup){ mg.cleanup(); mg.cleanup=null; } }
+  mg.bonusGems = 0;
+  const cb = mgOnComplete; mgOnComplete = null;
+  if(cb) cb(0);
+}
+
+function finishMiniGameFlow(){
+  const cb = mgOnComplete; mgOnComplete = null;
+  const bonus = mg.bonusGems || 0;
+  mg.bonusGems = 0;
+  if(cb) cb(bonus);
+}
+
+/* ---------------- RETRO ARCADE (FREE PLAY, MISSION #12) ---------------- */
+
+function openArcade(){
+  const hostAvatarEl = document.getElementById('arcade-host-avatar');
+  if(hostAvatarEl) hostAvatarEl.innerHTML = getCharacter('bitbot').avatar;
+  const grid = document.getElementById('arcade-grid');
+  grid.innerHTML = Object.keys(MINIGAME_INFO).map(function(key){
+    const info = MINIGAME_INFO[key];
+    return `<div class="mission-card" onclick="playArcadeGame('${key}')">
+      <div class="icon">${info.emoji}</div>
+      <h3>${info.name}</h3>
+      <p class="muted">${info.instructions}</p>
+    </div>`;
+  }).join('');
+  refreshArcadeGems();
+}
+
+function refreshArcadeGems(){
+  const el = document.getElementById('arcade-gems');
+  if(el) el.textContent = String(state.gems);
+}
+
+function playArcadeGame(type){
+  launchMiniGame(null, state.name || 'Voyager', function(bonus){
+    if(bonus>0){
+      state.gems += bonus;
+      saveState();
+    }
+    showScreen('arcade');
+  }, {forceType:type, arcade:true});
+}
+
+const MiniGames = {
+  runner: {
+    start(canvas, ctx, onScore){
+      let score = 0;
+      const W = canvas.width, H = canvas.height;
+      const floorY = H - 40;
+      const player = { x:70, r:16, y:floorY-16, vy:0 };
+      const gravity = 1700, jumpV = -560;
+      let obstacles = [], gems = [];
+      let spawnTimer = 0.6, gemTimer = 0.4, speed = 220;
+      let last = performance.now(), raf = null, running = true;
+
+      function standY(){ return floorY - player.r; }
+      function jump(){ if(player.y >= standY()-1){ player.vy = jumpV; SFX.click(); } }
+      function onKey(e){ if(e.code==='Space'){ e.preventDefault(); jump(); } }
+      function onPointer(e){ e.preventDefault(); jump(); }
+      window.addEventListener('keydown', onKey);
+      canvas.addEventListener('mousedown', onPointer);
+      canvas.addEventListener('touchstart', onPointer, {passive:false});
+
+      function loop(now){
+        if(!running) return;
+        const dt = Math.min(0.05, (now-last)/1000); last = now;
+        speed = Math.min(380, speed + dt*4);
+
+        player.vy += gravity*dt;
+        player.y += player.vy*dt;
+        if(player.y > standY()){ player.y = standY(); player.vy = 0; }
+
+        spawnTimer -= dt;
+        if(spawnTimer<=0){ obstacles.push({x:W+20, w:18, h:34, passed:false, hit:false}); spawnTimer = 0.9+Math.random()*0.9; }
+        gemTimer -= dt;
+        if(gemTimer<=0){ gems.push({x:W+20, y: Math.random()<0.4 ? floorY-70 : floorY-player.r, r:9, got:false}); gemTimer = 0.6+Math.random()*0.7; }
+
+        obstacles.forEach(function(o){
+          o.x -= speed*dt;
+          if(!o.passed && o.x+o.w < player.x-player.r){ o.passed = true; score += 1; onScore(score); }
+          const horiz = (player.x+player.r) > o.x && (player.x-player.r) < (o.x+o.w);
+          const vert = (player.y+player.r) > (floorY-o.h);
+          if(horiz && vert && !o.hit){ o.hit = true; SFX.wrong(); }
+        });
+        gems.forEach(function(g){
+          g.x -= speed*dt;
+          if(!g.got){
+            const d = Math.hypot(g.x-player.x, g.y-player.y);
+            if(d < g.r+player.r){ g.got = true; score += 1; onScore(score); SFX.correct(); }
+          }
+        });
+        obstacles = obstacles.filter(function(o){ return o.x > -40; });
+        gems = gems.filter(function(g){ return g.x > -20 && !g.got; });
+
+        ctx.fillStyle = '#080a18'; ctx.fillRect(0,0,W,H);
+        ctx.strokeStyle = '#3a4070'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(0,floorY); ctx.lineTo(W,floorY); ctx.stroke();
+        ctx.fillStyle = '#ff6b35';
+        obstacles.forEach(function(o){ ctx.fillRect(o.x, floorY-o.h, o.w, o.h); });
+        ctx.fillStyle = '#ffc93c';
+        gems.forEach(function(g){ ctx.beginPath(); ctx.arc(g.x,g.y,g.r,0,Math.PI*2); ctx.fill(); });
+        ctx.fillStyle = '#3ac569';
+        ctx.beginPath(); ctx.arc(player.x, player.y, player.r, 0, Math.PI*2); ctx.fill();
+
+        raf = requestAnimationFrame(loop);
+      }
+      raf = requestAnimationFrame(loop);
+
+      return function cleanup(){
+        running = false;
+        if(raf) cancelAnimationFrame(raf);
+        window.removeEventListener('keydown', onKey);
+        canvas.removeEventListener('mousedown', onPointer);
+        canvas.removeEventListener('touchstart', onPointer);
+      };
+    }
+  },
+
+  catcher: {
+    start(canvas, ctx, onScore){
+      let score = 0;
+      const W = canvas.width, H = canvas.height;
+      const basket = { x:W/2, w:70, h:16, y:H-30 };
+      let items = [], spawnTimer = 0.5, speed = 140;
+      let last = performance.now(), raf = null, running = true, pointerX = null;
+
+      function onMove(e){
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+        pointerX = (clientX-rect.left) * (canvas.width/rect.width);
+      }
+      function onKey(e){
+        if(e.code==='ArrowLeft') basket.x -= 40;
+        if(e.code==='ArrowRight') basket.x += 40;
+        basket.x = Math.max(basket.w/2, Math.min(W-basket.w/2, basket.x));
+      }
+      canvas.addEventListener('mousemove', onMove);
+      canvas.addEventListener('touchmove', onMove, {passive:true});
+      window.addEventListener('keydown', onKey);
+
+      function loop(now){
+        if(!running) return;
+        const dt = Math.min(0.05, (now-last)/1000); last = now;
+        speed = Math.min(260, speed + dt*3);
+
+        if(pointerX!==null){
+          basket.x += (pointerX-basket.x) * Math.min(1, dt*10);
+          basket.x = Math.max(basket.w/2, Math.min(W-basket.w/2, basket.x));
+        }
+
+        spawnTimer -= dt;
+        if(spawnTimer<=0){
+          const bad = Math.random() < 0.3;
+          items.push({x:20+Math.random()*(W-40), y:-10, r:12, bad, caught:false});
+          spawnTimer = 0.55+Math.random()*0.5;
+        }
+        items.forEach(function(it){ it.y += speed*dt; });
+        items.forEach(function(it){
+          if(!it.caught && it.y+it.r >= basket.y && it.y-it.r <= basket.y+basket.h && it.x > basket.x-basket.w/2 && it.x < basket.x+basket.w/2){
+            it.caught = true;
+            if(it.bad){ score = Math.max(0, score-1); SFX.wrong(); } else { score += 2; SFX.correct(); }
+            onScore(score);
+          }
+        });
+        items = items.filter(function(it){ return it.y < H+20 && !it.caught; });
+
+        ctx.fillStyle = '#080a18'; ctx.fillRect(0,0,W,H);
+        ctx.fillStyle = '#8557ff'; ctx.fillRect(basket.x-basket.w/2, basket.y, basket.w, basket.h);
+        items.forEach(function(it){
+          ctx.fillStyle = it.bad ? '#ff6b35' : '#ffc93c';
+          ctx.beginPath(); ctx.arc(it.x, it.y, it.r, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = '#0a0c1e'; ctx.font = '13px monospace'; ctx.textAlign = 'center'; ctx.textBaseline='middle';
+          ctx.fillText(it.bad ? '!' : '$', it.x, it.y+1);
+        });
+
+        raf = requestAnimationFrame(loop);
+      }
+      raf = requestAnimationFrame(loop);
+
+      return function cleanup(){
+        running = false;
+        if(raf) cancelAnimationFrame(raf);
+        canvas.removeEventListener('mousemove', onMove);
+        canvas.removeEventListener('touchmove', onMove);
+        window.removeEventListener('keydown', onKey);
+      };
+    }
+  },
+
+  whack: {
+    start(canvas, ctx, onScore){
+      let score = 0;
+      const W = canvas.width, H = canvas.height;
+      const cols = 3, rows = 3;
+      const cellW = W/cols, cellH = H/rows;
+      const holes = [];
+      for(let r=0;r<rows;r++){ for(let c=0;c<cols;c++){ holes.push({cx:c*cellW+cellW/2, cy:r*cellH+cellH/2, active:false, bad:false, timer:0}); } }
+      let spawnTimer = 0.3;
+      let last = performance.now(), raf = null, running = true;
+
+      function onClick(e){
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+        const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+        const scaleX = canvas.width/rect.width, scaleY = canvas.height/rect.height;
+        const x = (clientX-rect.left)*scaleX, y = (clientY-rect.top)*scaleY;
+        holes.forEach(function(h){
+          if(h.active && Math.abs(x-h.cx) < cellW*0.4 && Math.abs(y-h.cy) < cellH*0.4){
+            h.active = false;
+            if(h.bad){ score = Math.max(0, score-1); SFX.wrong(); } else { score += 2; SFX.correct(); }
+            onScore(score);
+          }
+        });
+      }
+      canvas.addEventListener('mousedown', onClick);
+      canvas.addEventListener('touchstart', onClick, {passive:true});
+
+      function loop(now){
+        if(!running) return;
+        const dt = Math.min(0.05, (now-last)/1000); last = now;
+        spawnTimer -= dt;
+        if(spawnTimer<=0){
+          const idle = holes.filter(function(h){ return !h.active; });
+          if(idle.length){
+            const h = idle[Math.floor(Math.random()*idle.length)];
+            h.active = true; h.bad = Math.random()<0.3; h.timer = 0.75+Math.random()*0.35;
+          }
+          spawnTimer = 0.35+Math.random()*0.3;
+        }
+        holes.forEach(function(h){ if(h.active){ h.timer -= dt; if(h.timer<=0) h.active=false; } });
+
+        ctx.fillStyle = '#080a18'; ctx.fillRect(0,0,W,H);
+        holes.forEach(function(h){
+          ctx.fillStyle = '#151a33';
+          ctx.beginPath(); ctx.arc(h.cx, h.cy, Math.min(cellW,cellH)*0.32, 0, Math.PI*2); ctx.fill();
+          if(h.active){
+            ctx.font = Math.floor(Math.min(cellW,cellH)*0.4)+'px monospace';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.fillText(h.bad ? '🚨' : '🐾', h.cx, h.cy);
+          }
+        });
+
+        raf = requestAnimationFrame(loop);
+      }
+      raf = requestAnimationFrame(loop);
+
+      return function cleanup(){
+        running = false;
+        if(raf) cancelAnimationFrame(raf);
+        canvas.removeEventListener('mousedown', onClick);
+        canvas.removeEventListener('touchstart', onClick);
+      };
+    }
+  },
+
+  vault: {
+    start(canvas, ctx, onScore){
+      let score = 0;
+      const W = canvas.width, H = canvas.height;
+      const barY = H/2, barX0 = 40, barX1 = W-40, barW = barX1-barX0;
+      let pointerX = barX0, dir = 1, speed = 260;
+      let zoneStart = barX0, zoneW = barW*0.18;
+      let flashTimer = 0, flashColor = null;
+      let last = performance.now(), raf = null, running = true;
+
+      function newZone(){
+        zoneW = Math.max(28, barW*0.18 - Math.random()*20);
+        zoneStart = barX0 + Math.random()*(barW-zoneW);
+      }
+      newZone();
+
+      function attempt(){
+        const hit = pointerX >= zoneStart && pointerX <= zoneStart+zoneW;
+        if(hit){ score += 3; SFX.correct(); flashColor='#3ac569'; speed = Math.min(520, speed+18); }
+        else { score = Math.max(0, score-1); SFX.wrong(); flashColor='#ff6b35'; }
+        flashTimer = 0.25;
+        onScore(score);
+        newZone();
+      }
+      function onKey(e){ if(e.code==='Space'){ e.preventDefault(); attempt(); } }
+      function onPointer(e){ e.preventDefault(); attempt(); }
+      window.addEventListener('keydown', onKey);
+      canvas.addEventListener('mousedown', onPointer);
+      canvas.addEventListener('touchstart', onPointer, {passive:false});
+
+      function loop(now){
+        if(!running) return;
+        const dt = Math.min(0.05, (now-last)/1000); last = now;
+        pointerX += dir*speed*dt;
+        if(pointerX>barX1){ pointerX=barX1; dir=-1; }
+        if(pointerX<barX0){ pointerX=barX0; dir=1; }
+        if(flashTimer>0) flashTimer -= dt;
+
+        ctx.fillStyle = '#080a18'; ctx.fillRect(0,0,W,H);
+        ctx.fillStyle = '#fff'; ctx.font = '13px monospace'; ctx.textAlign = 'center';
+        ctx.fillText('Tap when the marker is in the gold zone!', W/2, barY-40);
+        ctx.fillStyle = '#151a33'; ctx.fillRect(barX0, barY-14, barW, 28);
+        ctx.fillStyle = '#ffc93c'; ctx.fillRect(zoneStart, barY-14, zoneW, 28);
+        if(flashTimer>0){ ctx.globalAlpha=0.3; ctx.fillStyle=flashColor; ctx.fillRect(0,0,W,H); ctx.globalAlpha=1; }
+        ctx.fillStyle = '#8557ff';
+        ctx.beginPath(); ctx.arc(pointerX, barY, 10, 0, Math.PI*2); ctx.fill();
+
+        raf = requestAnimationFrame(loop);
+      }
+      raf = requestAnimationFrame(loop);
+
+      return function cleanup(){
+        running = false;
+        if(raf) cancelAnimationFrame(raf);
+        window.removeEventListener('keydown', onKey);
+        canvas.removeEventListener('mousedown', onPointer);
+        canvas.removeEventListener('touchstart', onPointer);
+      };
+    }
+  },
+
+  signal: {
+    start(canvas, ctx, onScore){
+      let score = 0;
+      const W = canvas.width, H = canvas.height;
+      let current = null, spawnTimer = 0.5;
+      let last = performance.now(), raf = null, running = true;
+
+      function spawn(){
+        current = { bad: Math.random()<0.35, born: performance.now(), life: Math.max(0.5, 1.1 - Math.min(0.6, score*0.01)) };
+      }
+      function onPointer(e){
+        e.preventDefault();
+        if(!current) return;
+        const elapsed = (performance.now()-current.born)/1000;
+        if(current.bad){ score = Math.max(0, score-2); SFX.wrong(); }
+        else {
+          const speedBonus = elapsed<0.4 ? 3 : elapsed<0.7 ? 2 : 1;
+          score += speedBonus; SFX.correct();
+        }
+        onScore(score);
+        current = null;
+        spawnTimer = 0.35+Math.random()*0.35;
+      }
+      canvas.addEventListener('mousedown', onPointer);
+      canvas.addEventListener('touchstart', onPointer, {passive:false});
+
+      function loop(now){
+        if(!running) return;
+        const dt = Math.min(0.05, (now-last)/1000); last = now;
+
+        if(!current){
+          spawnTimer -= dt;
+          if(spawnTimer<=0) spawn();
+        } else if((performance.now()-current.born)/1000 > current.life){
+          current = null; spawnTimer = 0.3;
+        }
+
+        ctx.fillStyle = '#080a18'; ctx.fillRect(0,0,W,H);
+        ctx.fillStyle = '#fff'; ctx.font = '13px monospace'; ctx.textAlign = 'center';
+        ctx.fillText('Tap fast for a paw print — dodge the alarm!', W/2, 26);
+        if(current){
+          const remain = Math.max(0, 1 - (performance.now()-current.born)/1000/current.life);
+          ctx.strokeStyle = current.bad ? '#ff6b35' : '#3ac569';
+          ctx.lineWidth = 6;
+          ctx.beginPath(); ctx.arc(W/2, H/2, 50, -Math.PI/2, -Math.PI/2 + remain*Math.PI*2); ctx.stroke();
+          ctx.font = '42px monospace'; ctx.fillStyle = '#fff'; ctx.textBaseline = 'middle';
+          ctx.fillText(current.bad ? '🚨' : '🐾', W/2, H/2+16);
+        }
+        raf = requestAnimationFrame(loop);
+      }
+      raf = requestAnimationFrame(loop);
+
+      return function cleanup(){
+        running = false;
+        if(raf) cancelAnimationFrame(raf);
+        canvas.removeEventListener('mousedown', onPointer);
+        canvas.removeEventListener('touchstart', onPointer);
+      };
+    }
+  },
+
+  memory: {
+    start(canvas, ctx, onScore){
+      let score = 0;
+      const W = canvas.width, H = canvas.height;
+      const cols = 3, rows = 3;
+      const cellW = W/cols, cellH = H/rows;
+      const cells = [];
+      for(let r=0;r<rows;r++){ for(let c=0;c<cols;c++){ cells.push({cx:c*cellW+cellW/2, cy:r*cellH+cellH/2}); } }
+      let sequence = [], inputIndex = 0, phase = 'show', showIdx = 0, showTimer = 0.15, showBlank = false, activeCell = -1;
+      let last = performance.now(), raf = null, running = true;
+
+      function nextRound(){
+        sequence.push(Math.floor(Math.random()*cells.length));
+        inputIndex = 0; showIdx = 0; showTimer = 0.15; showBlank = false; phase = 'show'; activeCell = -1;
+      }
+      nextRound();
+
+      function onClick(e){
+        if(phase!=='input') return;
+        const rect = canvas.getBoundingClientRect();
+        const clientX = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+        const clientY = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+        const scaleX = canvas.width/rect.width, scaleY = canvas.height/rect.height;
+        const x = (clientX-rect.left)*scaleX, y = (clientY-rect.top)*scaleY;
+        let clicked = -1;
+        cells.forEach(function(c,i){ if(Math.abs(x-c.cx)<cellW*0.4 && Math.abs(y-c.cy)<cellH*0.4) clicked = i; });
+        if(clicked===-1) return;
+        activeCell = clicked;
+        if(clicked === sequence[inputIndex]){
+          inputIndex++;
+          SFX.click();
+          if(inputIndex >= sequence.length){
+            score += sequence.length; onScore(score); SFX.correct();
+            phase = 'wait';
+            setTimeout(function(){ if(running) nextRound(); }, 260);
+          }
+        } else {
+          score = Math.max(0, score-2); onScore(score); SFX.wrong();
+          sequence = [];
+          phase = 'wait';
+          setTimeout(function(){ if(running) nextRound(); }, 400);
+        }
+      }
+      canvas.addEventListener('mousedown', onClick);
+      canvas.addEventListener('touchstart', onClick, {passive:true});
+
+      function loop(now){
+        if(!running) return;
+        const dt = Math.min(0.05, (now-last)/1000); last = now;
+
+        if(phase==='show'){
+          showTimer -= dt;
+          if(showTimer<=0){
+            if(showBlank){
+              if(showIdx < sequence.length){
+                activeCell = sequence[showIdx];
+                showTimer = 0.5;
+                showIdx++;
+                showBlank = false;
+              } else {
+                phase = 'input';
+                activeCell = -1;
+              }
+            } else {
+              activeCell = -1;
+              showTimer = 0.18;
+              showBlank = true;
+            }
+          }
+        }
+
+        ctx.fillStyle = '#080a18'; ctx.fillRect(0,0,W,H);
+        cells.forEach(function(c,i){
+          ctx.fillStyle = (i===activeCell) ? '#ffc93c' : '#151a33';
+          ctx.beginPath(); ctx.arc(c.cx, c.cy, Math.min(cellW,cellH)*0.32, 0, Math.PI*2); ctx.fill();
+          ctx.fillStyle = '#3a4070'; ctx.font = '20px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText('🐾', c.cx, c.cy);
+        });
+        ctx.fillStyle = '#fff'; ctx.font = '13px monospace'; ctx.textAlign = 'center';
+        ctx.fillText(phase==='input' ? 'Your turn — repeat it!' : 'Watch the pattern...', W/2, 20);
+
+        raf = requestAnimationFrame(loop);
+      }
+      raf = requestAnimationFrame(loop);
+
+      return function cleanup(){
+        running = false;
+        if(raf) cancelAnimationFrame(raf);
+        canvas.removeEventListener('mousedown', onClick);
+        canvas.removeEventListener('touchstart', onClick);
+      };
+    }
+  }
+};
+
+/* ---------------- CONFETTI ---------------- */
+
+function spawnConfettiBurst(count=10){
+  const emojis = ['🎉','⭐','🏅','✨','🎊'];
+  for(let i=0;i<count;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    el.style.left = Math.random()*100 + 'vw';
+    el.style.animationDuration = (2 + Math.random()*1.5) + 's';
+    document.body.appendChild(el);
+    setTimeout(()=> el.remove(), 4000);
+  }
+}
+
+
+
+/* ---------------- INIT ---------------- */
+
+loadState();
+if(state.name) document.getElementById('player-name').value = state.name;
+if(state.name && state.character){
+  showScreen('map');
+}
+</script>
+</body>
+</html>

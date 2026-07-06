@@ -1,0 +1,1304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fact Defenders: Outpost Alliance</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@600;700&family=Titillium+Web:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#151d2e; --navy2:#1e2c47; --yellow:#ffcf56; --orange:#ff6b4d;
+    --teal:#3ec6a0; --pink:#ff5d7a; --purple:#7c5cff; --green:#3ac97f;
+    --cream:#fff8ec; --card:#ffffff; --danger:#ff3b5c;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:'Titillium Web','Segoe UI',sans-serif;
+    background:radial-gradient(circle at 25% 5%, #1e2c47 0%, #0a0f1a 70%);
+    color:var(--cream);
+    min-height:100vh;
+    overflow-x:hidden;
+  }
+  #app{ max-width:920px; margin:0 auto; padding:20px 16px 60px; min-height:100vh; }
+  .screen{ display:none; animation:fadeIn .4s ease; }
+  .screen.active{ display:block; }
+  @keyframes fadeIn{ from{opacity:0; transform:translateY(8px);} to{opacity:1; transform:translateY(0);} }
+
+  h1,h2,h3,.btn{ font-family:'Rajdhani',sans-serif; font-weight:700; margin:.2em 0; }
+  h1{ font-size:2rem; text-align:center; color:var(--yellow); text-shadow:2px 2px 0 var(--navy2); letter-spacing:.03em; }
+  h2{ font-size:1.4rem; color:var(--teal); }
+  p{ line-height:1.55; }
+
+  .panel{
+    background:linear-gradient(160deg, #1e2c47, #151d2e);
+    border:2px solid var(--teal);
+    border-radius:10px;
+    padding:22px;
+    margin:16px 0;
+    box-shadow:0 6px 0 rgba(0,0,0,.35);
+  }
+
+  .btn{
+    display:inline-block; background:var(--orange); color:#fff; border:none;
+    border-radius:8px; padding:14px 26px; font-size:1.1rem;
+    cursor:pointer; box-shadow:0 5px 0 #b8391f; transition:transform .1s;
+  }
+  .btn:active{ transform:translateY(4px); box-shadow:0 1px 0 #b8391f; }
+  .btn:hover{ filter:brightness(1.08); }
+  .btn.secondary{ background:var(--purple); box-shadow:0 5px 0 #4a34b5; }
+  .btn.teal{ background:var(--teal); box-shadow:0 5px 0 #1f7d63; color:#04261d; }
+  .btn.small{ padding:8px 16px; font-size:.9rem; box-shadow:0 3px 0 rgba(0,0,0,.35); }
+  .btn.true-btn{ background:var(--teal); box-shadow:0 5px 0 #1f7d63; color:#04261d; }
+  .btn.false-btn{ background:var(--danger); box-shadow:0 5px 0 #a11a34; }
+  .btn:disabled{ opacity:.4; cursor:not-allowed; }
+  .btn-row{ display:flex; gap:12px; flex-wrap:wrap; justify-content:center; margin-top:18px; }
+
+  input[type=text]{
+    width:100%; padding:12px 14px; border-radius:8px; border:3px solid var(--teal);
+    font-size:1.1rem; font-family:inherit; background:#fff; color:#151d2e;
+  }
+
+  .char-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin-top:16px; }
+  .char-card{
+    background:var(--navy); border:3px solid transparent; border-radius:10px; padding:14px;
+    text-align:center; cursor:pointer; transition:transform .15s, border-color .15s;
+  }
+  .char-card:hover{ transform:translateY(-4px); }
+  .char-card.selected{ border-color:var(--yellow); background:#24314f; }
+  .char-emoji{ width:64px; height:64px; margin:0 auto; }
+  .char-emoji svg{ width:100%; height:100%; display:block; }
+  .char-name{ font-weight:bold; color:var(--yellow); margin:.3em 0 0; }
+  .char-role{ font-size:.8rem; color:var(--teal); }
+
+  .instr-step{ display:flex; gap:14px; align-items:flex-start; margin:14px 0; }
+  .instr-emoji{ font-size:1.8rem; flex-shrink:0; }
+  .instr-text b{ color:var(--yellow); display:block; margin-bottom:2px; }
+
+  .hud{ display:flex; gap:14px; flex-wrap:wrap; justify-content:center; background:var(--navy); border-radius:10px; padding:10px 16px; margin-bottom:16px; font-size:.95rem; }
+  .hud span b{ color:var(--yellow); }
+
+  .outpost-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:16px; margin-top:18px; }
+  .outpost-card{
+    background:linear-gradient(160deg, #1e2c47, #151d2e);
+    border:2px solid var(--teal);
+    border-radius:10px;
+    padding:16px; cursor:pointer; transition:transform .15s;
+    text-align:center;
+  }
+  .outpost-card:hover{ transform:translateY(-5px); }
+  .outpost-icon{ font-size:2.2rem; }
+  .outpost-title{ font-weight:bold; color:var(--yellow); margin:.3em 0 2px; font-size:1rem; }
+  .outpost-lead{ font-size:.78rem; color:var(--teal); margin-bottom:6px; }
+  .outpost-stars{ font-size:1rem; letter-spacing:2px; }
+
+  .lane{ position:relative; height:90px; background:linear-gradient(90deg, #1a2438, #24314f); border-radius:10px; overflow:hidden; margin-bottom:16px; border:2px solid var(--navy2); }
+  .lane-base{ position:absolute; right:0; top:0; bottom:0; width:52px; background:var(--navy); display:flex; align-items:center; justify-content:center; font-size:1.8rem; border-left:3px solid var(--yellow); }
+  .creature{ position:absolute; top:50%; transform:translateY(-50%); left:6px; font-size:2.4rem; transition:left linear; }
+  .danger-bar{ height:8px; background:var(--navy2); border-radius:6px; overflow:hidden; margin-bottom:14px; }
+  .danger-fill{ height:100%; background:linear-gradient(90deg, var(--teal), var(--danger)); width:0%; transition:width linear; }
+
+  .statement-box{ text-align:center; font-size:1.25rem; margin:10px 0 18px; min-height:2.6em; }
+  .wave-feedback{ text-align:center; margin-top:10px; font-size:1rem; min-height:1.4em; }
+  .wave-feedback.good{ color:#8fe0b0; }
+  .wave-feedback.bad{ color:#ff9fae; }
+  .fact-note{ text-align:center; font-size:.88rem; color:var(--teal); margin-top:8px; min-height:1.3em; }
+
+  .cert-panel{ text-align:center; border-color:var(--yellow); }
+  .cert-badge-big{ font-size:3.5rem; }
+  .cert-name{ font-size:1.6rem; color:var(--yellow); font-weight:bold; margin:.3em 0; }
+  .cert-title{ font-size:1.1rem; letter-spacing:1px; color:var(--teal); }
+
+  .sound-toggle-btn{ position:fixed; top:14px; right:14px; background:var(--navy2); border:2px solid var(--yellow); border-radius:50%; width:40px; height:40px; font-size:1.1rem; cursor:pointer; z-index:50; }
+
+  .confetti{ position:fixed; top:-30px; font-size:1.6rem; pointer-events:none; animation:confettiFall linear forwards; z-index:100; }
+  @keyframes confettiFall{ to{ transform:translateY(105vh) rotate(360deg); opacity:.3; } }
+
+  .lb-table{ width:100%; border-collapse:collapse; margin-top:10px; font-size:.95rem; }
+  .lb-table th,.lb-table td{ padding:8px 10px; text-align:left; border-bottom:1px solid var(--navy2); }
+  .lb-table th{ color:var(--yellow); }
+  .lb-table tr.me{ background:rgba(255,207,86,.12); }
+  .lb-table td:first-child, .lb-table th:first-child{ width:34px; text-align:center; }
+
+  .footer-note{ text-align:center; font-size:.8rem; color:#8fa0c9; margin-top:30px; }
+  .muted{ color:#8fa0c9; font-size:.85rem; text-align:center; }
+
+  @media (max-width:480px){ .statement-box{ font-size:1.05rem; } }
+</style>
+</head>
+<body>
+<button class="sound-toggle-btn" onclick="toggleSound()">🔊</button>
+<div id="app">
+
+  <div id="screen-start" class="screen active">
+    <h1>🛡️ Fact Defenders: Outpost Alliance 🛡️</h1>
+    <div class="panel">
+      <p><b>Commander Vex</b> needs your help. Waves of <b>Confusion Creatures</b> are marching on 11 border outposts, each one carrying a claim that's either TRUE or FALSE. Tap the right gate before each creature reaches the wall — covering geography, space, animals, sports, logic, maths, science, language arts, art, design, and Spanish.</p>
+      <p>Pick a nickname, choose your defender, and hold the line!</p>
+      <label for="player-name" style="font-weight:bold;">Your nickname</label>
+      <input type="text" id="player-name" placeholder="Enter a nickname" maxlength="18" style="margin-top:6px;">
+      <div class="btn-row">
+        <button class="btn" onclick="goToCharSelect()">Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-char" class="screen">
+    <h1>Choose your Defender</h1>
+    <div class="panel">
+      <div class="char-grid" id="char-grid"></div>
+      <div class="btn-row">
+        <button class="btn" id="char-continue-btn" onclick="goToInstructions()" disabled>Continue →</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-instructions" class="screen">
+    <h1>How to Defend</h1>
+    <div class="panel">
+      <div class="instr-step"><div class="instr-emoji">🛡️</div><div class="instr-text"><b>1. Pick any outpost</b>All 11 outposts are open from the start — geography with Terra, space with Nova, animals with Fang, sports with Blitz, logic with Cipher, maths with Vector, science with Volt, language arts with Lex, art with Prism, design with Forge, and Spanish with Sol.</div></div>
+      <div class="instr-step"><div class="instr-emoji">👾</div><div class="instr-text"><b>2. Read the claim</b>Each wave sends 8 creatures, one at a time, each carrying a claim. Decide if it's TRUE or FALSE before it reaches the wall.</div></div>
+      <div class="instr-step"><div class="instr-emoji">⏱️</div><div class="instr-text"><b>3. Beat the danger bar</b>The bar fills as the creature marches closer. Tap the correct gate before it reaches the end!</div></div>
+      <div class="instr-step"><div class="instr-emoji">🔀</div><div class="instr-text"><b>4. Waves shuffle every time</b>Each outpost has a bigger pool of claims than one wave uses, so replaying pulls a fresh mix.</div></div>
+      <div class="instr-step"><div class="instr-emoji">📛</div><div class="instr-text"><b>5. Earn badges & a certificate</b>More correct gates means more badges. Defend all 11 outposts to unlock your Alliance certificate.</div></div>
+      <div class="btn-row">
+        <button class="btn" onclick="showScreen('hub')">Start Defending!</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="screen-hub" class="screen">
+    <h1>🛡️ Outpost Alliance Map 🛡️</h1>
+    <div class="hud" id="hud-stats"></div>
+    <div class="panel">
+      <div class="outpost-grid" id="outpost-grid"></div>
+    </div>
+    <div class="panel cert-panel" id="cert-panel" style="display:none;">
+      <p>📛 Every outpost defended! Your certificate awaits.</p>
+      <div class="btn-row"><button class="btn teal" onclick="showScreen('certificate')">View Certificate</button></div>
+    </div>
+    <div class="panel center">
+      <h2>🏆 Alliance Leaderboard</h2>
+      <p class="muted">Compare scores with everyone who's played on this device.</p>
+      <div class="btn-row"><button class="btn secondary small" onclick="showScreen('leaderboard')">View leaderboard →</button></div>
+    </div>
+    <div class="btn-row"><button class="btn secondary small" onclick="showScreen('instructions')">How to Play</button></div>
+  </div>
+
+  <div id="screen-leaderboard" class="screen">
+    <h1>🏆 Alliance Leaderboard</h1>
+    <div class="panel">
+      <p class="muted">Top scores saved on this device, across everyone who's played Fact Defenders here.</p>
+      <div id="lb-table-local"></div>
+      <div class="btn-row"><button class="btn secondary small" onclick="showScreen('hub')">Back to map</button></div>
+    </div>
+  </div>
+
+  <div id="screen-wave" class="screen">
+    <h1 id="wave-outpost-title">Outpost</h1>
+    <div class="hud" id="wave-hud"></div>
+    <div class="panel">
+      <div class="lane" id="lane">
+        <div class="creature" id="creature">👾</div>
+        <div class="lane-base">🏰</div>
+      </div>
+      <div class="danger-bar"><div class="danger-fill" id="danger-fill"></div></div>
+      <div class="statement-box" id="statement-box"></div>
+      <div class="btn-row">
+        <button class="btn true-btn" onclick="answerStatement(true)">✅ TRUE</button>
+        <button class="btn false-btn" onclick="answerStatement(false)">❌ FALSE</button>
+      </div>
+      <div class="wave-feedback" id="wave-feedback"></div>
+      <div class="fact-note" id="fact-note"></div>
+      <div class="btn-row"><button class="btn secondary small" onclick="showScreen('hub')">Retreat to map</button></div>
+    </div>
+  </div>
+
+  <div id="screen-certificate" class="screen">
+    <h1>📛 Certificate of Achievement 📛</h1>
+    <div class="panel cert-panel" id="cert-body">
+      <div class="cert-badge-big">🛡️</div>
+      <p>🛡️ Commander Vex hereby certifies that</p>
+      <div class="cert-name" id="cert-name"></div>
+      <div class="cert-title">OFFICIAL OUTPOST DEFENDER (CERTIFIED)</div>
+      <p style="margin-top:14px;">Every outpost on the border has been defended. Well done, Defender!</p>
+    </div>
+    <div class="btn-row">
+      <button class="btn" id="cert-download-btn" onclick="downloadCertificateImage()">⬇️ Download certificate</button>
+      <button class="btn" onclick="showScreen('hub')">Back to map</button>
+    </div>
+  </div>
+
+</div>
+<div class="footer-note" style="text-align:center;">Progress saves automatically in this browser. Built for a curious Grade 6 outpost defender.</div>
+
+<script>
+const CHARACTERS = [
+  {
+    "id": "terra",
+    "emoji": "🗺️",
+    "name": "Terra Bastion",
+    "role": "Geography Outpost guard",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#2c5a3a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#a8f0cf\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🗺️</text></svg>"
+  },
+  {
+    "id": "nova",
+    "emoji": "🌌",
+    "name": "Nova Sentinel",
+    "role": "Space Outpost guard",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#25366e\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#aecbff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🌌</text></svg>"
+  },
+  {
+    "id": "fang",
+    "emoji": "🦁",
+    "name": "Fang Warden",
+    "role": "Animals Outpost guard",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#8a5a1f\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffdca3\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🦁</text></svg>"
+  },
+  {
+    "id": "blitz",
+    "emoji": "⚽",
+    "name": "Blitz Guard",
+    "role": "Sports Outpost guard",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#1f6a3a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#a8f0c8\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">⚽</text></svg>"
+  },
+  {
+    "id": "cipher",
+    "emoji": "🧠",
+    "name": "Cipher Watch",
+    "role": "Thinktank Outpost guard",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#5a3a8a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#dcc9ff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🧠</text></svg>"
+  },
+  {
+    "id": "vector",
+    "emoji": "🔢",
+    "name": "Vector Prime",
+    "role": "Math Outpost guard",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#8a6a1f\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffedbf\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🔢</text></svg>"
+  },
+  {
+    "id": "volt",
+    "emoji": "🧪",
+    "name": "Volt Ranger",
+    "role": "Science Outpost guard",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#1f6a8a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#a8e4f5\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🧪</text></svg>"
+  },
+  {
+    "id": "lex",
+    "emoji": "📖",
+    "name": "Lex Keeper",
+    "role": "Language Arts Outpost guard",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#6a2f4a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#f5c2d6\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">📖</text></svg>"
+  },
+  {
+    "id": "prism",
+    "emoji": "🎨",
+    "name": "Prism Guard",
+    "role": "Arts Outpost guard",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#6a1f8a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#e3c2ff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🎨</text></svg>"
+  },
+  {
+    "id": "forge",
+    "emoji": "🛠️",
+    "name": "Forge Marshal",
+    "role": "Design Outpost guard",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#8a4a1f\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffcf9e\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🛠️</text></svg>"
+  },
+  {
+    "id": "sol",
+    "emoji": "🇪🇸",
+    "name": "Sol Centinela",
+    "role": "Spanish Outpost guard",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#8a1f3a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#ffb2c2\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🇪🇸</text></svg>"
+  },
+  {
+    "id": "vex",
+    "emoji": "🛡️",
+    "name": "Commander Vex",
+    "role": "Alliance Commander",
+    "avatar": "<svg viewBox=\"0 0 100 100\" xmlns=\"http://www.w3.org/2000/svg\"><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"#333a4a\"/><circle cx=\"50\" cy=\"50\" r=\"48\" fill=\"none\" stroke=\"#5fe1ff\" stroke-width=\"3\"/><text x=\"50\" y=\"66\" font-size=\"46\" text-anchor=\"middle\">🛡️</text></svg>"
+  }
+];
+const TOPICS = [
+  {
+    "id": "geography",
+    "title": "Geography Outpost",
+    "icon": "🗺️",
+    "lead": "Terra Bastion",
+    "leadId": "terra",
+    "statements": [
+      {
+        "text": "Mount Everest is the tallest mountain above sea level.",
+        "isTrue": true,
+        "fact": "Everest stands at about 8,849 meters."
+      },
+      {
+        "text": "The Nile is the longest river in Africa.",
+        "isTrue": true,
+        "fact": "The Nile flows about 6,650 km through northeastern Africa."
+      },
+      {
+        "text": "Russia is the largest country in the world by area.",
+        "isTrue": true,
+        "fact": "Russia spans over 17 million square kilometers."
+      },
+      {
+        "text": "The Pacific is the largest ocean on Earth.",
+        "isTrue": true,
+        "fact": "The Pacific Ocean covers about a third of the planet."
+      },
+      {
+        "text": "Antarctica is covered mostly in ice.",
+        "isTrue": true,
+        "fact": "Antarctica holds most of the world’s fresh water as ice."
+      },
+      {
+        "text": "The Sahara Desert is located in South America.",
+        "isTrue": false,
+        "fact": "The Sahara is actually in northern Africa."
+      },
+      {
+        "text": "Australia is the largest continent.",
+        "isTrue": false,
+        "fact": "Australia is actually the smallest continent."
+      },
+      {
+        "text": "Mount Kilimanjaro is located in Asia.",
+        "isTrue": false,
+        "fact": "Kilimanjaro is in Tanzania, in Africa."
+      },
+      {
+        "text": "The Amazon River is located in Europe.",
+        "isTrue": false,
+        "fact": "The Amazon is in South America."
+      },
+      {
+        "text": "The Great Wall of China is located in Japan.",
+        "isTrue": false,
+        "fact": "The Great Wall is in China."
+      }
+    ]
+  },
+  {
+    "id": "space",
+    "title": "Space Outpost",
+    "icon": "🌌",
+    "lead": "Nova Sentinel",
+    "leadId": "nova",
+    "statements": [
+      {
+        "text": "Jupiter is the largest planet in our solar system.",
+        "isTrue": true,
+        "fact": "Jupiter could fit all the other planets inside it."
+      },
+      {
+        "text": "The Sun is a star.",
+        "isTrue": true,
+        "fact": "The Sun is a medium-sized star at the center of our solar system."
+      },
+      {
+        "text": "Mars is often called the Red Planet.",
+        "isTrue": true,
+        "fact": "Iron oxide on its surface gives Mars its reddish color."
+      },
+      {
+        "text": "The Moon orbits the Earth.",
+        "isTrue": true,
+        "fact": "The Moon takes about 27.3 days to orbit Earth."
+      },
+      {
+        "text": "A day on Earth is about 24 hours long.",
+        "isTrue": true,
+        "fact": "That's how long it takes Earth to rotate once."
+      },
+      {
+        "text": "Venus is the closest planet to the Sun.",
+        "isTrue": false,
+        "fact": "Mercury is actually the closest planet to the Sun."
+      },
+      {
+        "text": "The Earth has two moons.",
+        "isTrue": false,
+        "fact": "Earth has just one moon."
+      },
+      {
+        "text": "Saturn is closer to the Sun than Earth.",
+        "isTrue": false,
+        "fact": "Saturn is much farther from the Sun than Earth."
+      },
+      {
+        "text": "Stars are made mostly of solid rock.",
+        "isTrue": false,
+        "fact": "Stars are made mostly of hydrogen and helium gas."
+      },
+      {
+        "text": "The Moon is larger than the Earth.",
+        "isTrue": false,
+        "fact": "The Moon is much smaller than Earth."
+      }
+    ]
+  },
+  {
+    "id": "animals",
+    "title": "Animals Outpost",
+    "icon": "🦁",
+    "lead": "Fang Warden",
+    "leadId": "fang",
+    "statements": [
+      {
+        "text": "A blue whale is the largest animal on Earth.",
+        "isTrue": true,
+        "fact": "Blue whales can grow up to 30 meters long."
+      },
+      {
+        "text": "Cheetahs are the fastest land animals.",
+        "isTrue": true,
+        "fact": "Cheetahs can reach speeds over 100 km/h."
+      },
+      {
+        "text": "Octopuses have eight arms.",
+        "isTrue": true,
+        "fact": "Octopuses use their eight arms to move and grab prey."
+      },
+      {
+        "text": "Elephants are mammals.",
+        "isTrue": true,
+        "fact": "Elephants give birth to live young and nurse them with milk."
+      },
+      {
+        "text": "Bees make honey.",
+        "isTrue": true,
+        "fact": "Bees turn flower nectar into honey in their hives."
+      },
+      {
+        "text": "Spiders are insects.",
+        "isTrue": false,
+        "fact": "Spiders are arachnids, not insects."
+      },
+      {
+        "text": "Penguins can fly.",
+        "isTrue": false,
+        "fact": "Penguins are flightless birds that swim instead."
+      },
+      {
+        "text": "Sharks are mammals.",
+        "isTrue": false,
+        "fact": "Sharks are fish, not mammals."
+      },
+      {
+        "text": "Snakes have legs.",
+        "isTrue": false,
+        "fact": "Most snakes have no legs at all."
+      },
+      {
+        "text": "Fish can breathe air the same way humans do.",
+        "isTrue": false,
+        "fact": "Fish breathe using gills, not lungs."
+      }
+    ]
+  },
+  {
+    "id": "sports",
+    "title": "Sports Outpost",
+    "icon": "⚽",
+    "lead": "Blitz Guard",
+    "leadId": "blitz",
+    "statements": [
+      {
+        "text": "A soccer match has two halves.",
+        "isTrue": true,
+        "fact": "Each half is normally 45 minutes long."
+      },
+      {
+        "text": "Basketball hoops are 10 feet high in professional play.",
+        "isTrue": true,
+        "fact": "The standard rim height is 10 feet (3.05 m)."
+      },
+      {
+        "text": "The Olympics happen every four years.",
+        "isTrue": true,
+        "fact": "The Summer and Winter Games each follow a four-year cycle."
+      },
+      {
+        "text": "A marathon is approximately 26.2 miles long.",
+        "isTrue": true,
+        "fact": "The distance was standardized in the early 20th century."
+      },
+      {
+        "text": "A hat-trick means scoring three goals in one game.",
+        "isTrue": true,
+        "fact": "The term is used across several sports, including soccer and hockey."
+      },
+      {
+        "text": "A soccer team has 15 players on the field at once.",
+        "isTrue": false,
+        "fact": "A soccer team has 11 players on the field."
+      },
+      {
+        "text": "Basketball games are played with an oval ball.",
+        "isTrue": false,
+        "fact": "Basketball uses a round ball."
+      },
+      {
+        "text": "A baseball game has 5 innings by default.",
+        "isTrue": false,
+        "fact": "A standard baseball game has 9 innings."
+      },
+      {
+        "text": "Volleyball is played with a bat and ball.",
+        "isTrue": false,
+        "fact": "Volleyball is played by hitting the ball with hands or arms."
+      },
+      {
+        "text": "Chess is played on a court with a net.",
+        "isTrue": false,
+        "fact": "Chess is a board game with no court or net."
+      }
+    ]
+  },
+  {
+    "id": "thinktank",
+    "title": "Thinktank Outpost",
+    "icon": "🧠",
+    "lead": "Cipher Watch",
+    "leadId": "cipher",
+    "statements": [
+      {
+        "text": "A palindrome reads the same forwards and backwards.",
+        "isTrue": true,
+        "fact": "Examples include \"level\" and \"racecar\"."
+      },
+      {
+        "text": "Two even numbers added together always make an even number.",
+        "isTrue": true,
+        "fact": "For example, 4 + 6 = 10."
+      },
+      {
+        "text": "A triangle has three sides.",
+        "isTrue": true,
+        "fact": "That’s the defining feature of a triangle."
+      },
+      {
+        "text": "Every square is a rectangle.",
+        "isTrue": true,
+        "fact": "A square meets all the requirements of a rectangle."
+      },
+      {
+        "text": "A hexagon has six sides.",
+        "isTrue": true,
+        "fact": "The prefix \"hexa\" means six."
+      },
+      {
+        "text": "A prime number can be divided evenly by many numbers.",
+        "isTrue": false,
+        "fact": "A prime number can only be divided evenly by 1 and itself."
+      },
+      {
+        "text": "Zero is a positive number.",
+        "isTrue": false,
+        "fact": "Zero is neither positive nor negative."
+      },
+      {
+        "text": "All rectangles are squares.",
+        "isTrue": false,
+        "fact": "Only rectangles with four equal sides are squares."
+      },
+      {
+        "text": "An odd number plus an odd number always makes an odd number.",
+        "isTrue": false,
+        "fact": "Odd plus odd always makes an even number."
+      },
+      {
+        "text": "A number divisible only by 1 and itself (other than 1) is called a composite number.",
+        "isTrue": false,
+        "fact": "That describes a prime number, not a composite number."
+      }
+    ]
+  },
+  {
+    "id": "math",
+    "title": "Math Outpost",
+    "icon": "🔢",
+    "lead": "Vector Prime",
+    "leadId": "vector",
+    "statements": [
+      {
+        "text": "3 x 4 equals 12.",
+        "isTrue": true,
+        "fact": "Multiplication: 3 groups of 4 make 12."
+      },
+      {
+        "text": "Half of 100 is 50.",
+        "isTrue": true,
+        "fact": "100 divided by 2 is 50."
+      },
+      {
+        "text": "A right angle measures 90 degrees.",
+        "isTrue": true,
+        "fact": "A right angle looks like the corner of a square."
+      },
+      {
+        "text": "10 squared is 100.",
+        "isTrue": true,
+        "fact": "10 x 10 = 100."
+      },
+      {
+        "text": "An even number can be divided by 2 with no remainder.",
+        "isTrue": true,
+        "fact": "That's the definition of an even number."
+      },
+      {
+        "text": "7 + 5 equals 11.",
+        "isTrue": false,
+        "fact": "7 + 5 actually equals 12."
+      },
+      {
+        "text": "A triangle has four sides.",
+        "isTrue": false,
+        "fact": "A triangle has three sides."
+      },
+      {
+        "text": "100 divided by 10 is 100.",
+        "isTrue": false,
+        "fact": "100 divided by 10 is 10."
+      },
+      {
+        "text": "Half of 50 is 20.",
+        "isTrue": false,
+        "fact": "Half of 50 is 25."
+      },
+      {
+        "text": "Multiplying any number by zero gives you that same number.",
+        "isTrue": false,
+        "fact": "Multiplying any number by zero gives zero."
+      }
+    ]
+  },
+  {
+    "id": "science",
+    "title": "Science Outpost",
+    "icon": "🧪",
+    "lead": "Volt Ranger",
+    "leadId": "volt",
+    "statements": [
+      {
+        "text": "Water boils at 100 degrees Celsius at sea level.",
+        "isTrue": true,
+        "fact": "This is the standard boiling point of water."
+      },
+      {
+        "text": "Plants need sunlight to make their own food.",
+        "isTrue": true,
+        "fact": "This process is called photosynthesis."
+      },
+      {
+        "text": "The human body has a skeleton made of bones.",
+        "isTrue": true,
+        "fact": "Adult humans have 206 bones."
+      },
+      {
+        "text": "Ice is frozen water.",
+        "isTrue": true,
+        "fact": "Water freezes into ice at 0 degrees Celsius."
+      },
+      {
+        "text": "The heart pumps blood through the body.",
+        "isTrue": true,
+        "fact": "The heart is a muscle that circulates blood."
+      },
+      {
+        "text": "The Earth is the center of the solar system.",
+        "isTrue": false,
+        "fact": "The Sun is at the center of the solar system."
+      },
+      {
+        "text": "Humans can breathe underwater without equipment.",
+        "isTrue": false,
+        "fact": "Humans need equipment like scuba gear to breathe underwater."
+      },
+      {
+        "text": "Metal is a poor conductor of electricity.",
+        "isTrue": false,
+        "fact": "Metal is generally a good conductor of electricity."
+      },
+      {
+        "text": "Sound travels faster than light.",
+        "isTrue": false,
+        "fact": "Light travels far faster than sound."
+      },
+      {
+        "text": "Rocks are considered living things.",
+        "isTrue": false,
+        "fact": "Rocks are non-living, since they don’t grow, breathe, or reproduce."
+      }
+    ]
+  },
+  {
+    "id": "langarts",
+    "title": "Language Arts Outpost",
+    "icon": "📖",
+    "lead": "Lex Keeper",
+    "leadId": "lex",
+    "statements": [
+      {
+        "text": "A noun is a person, place, thing, or idea.",
+        "isTrue": true,
+        "fact": "Nouns name people, places, things, or ideas."
+      },
+      {
+        "text": "A sentence needs a subject and a verb.",
+        "isTrue": true,
+        "fact": "These are the two core parts of a complete sentence."
+      },
+      {
+        "text": "\"Happy\" is an adjective.",
+        "isTrue": true,
+        "fact": "Adjectives describe nouns, like \"happy\" describing a feeling."
+      },
+      {
+        "text": "A metaphor compares two things without using \"like\" or \"as\".",
+        "isTrue": true,
+        "fact": "Example: \"Time is a thief.\""
+      },
+      {
+        "text": "A synonym is a word that means the same as another word.",
+        "isTrue": true,
+        "fact": "For example, \"happy\" and \"glad\" are synonyms."
+      },
+      {
+        "text": "A verb is always a naming word.",
+        "isTrue": false,
+        "fact": "Nouns are naming words; verbs show action or being."
+      },
+      {
+        "text": "All sentences end with a question mark.",
+        "isTrue": false,
+        "fact": "Only questions end with a question mark."
+      },
+      {
+        "text": "A simile never uses the word \"like\" or \"as\".",
+        "isTrue": false,
+        "fact": "A simile always uses \"like\" or \"as\" to compare things."
+      },
+      {
+        "text": "An adverb always describes a noun.",
+        "isTrue": false,
+        "fact": "Adverbs describe verbs, adjectives, or other adverbs."
+      },
+      {
+        "text": "A question always ends with a period.",
+        "isTrue": false,
+        "fact": "A question ends with a question mark."
+      }
+    ]
+  },
+  {
+    "id": "arts",
+    "title": "Arts Outpost",
+    "icon": "🎨",
+    "lead": "Prism Guard",
+    "leadId": "prism",
+    "statements": [
+      {
+        "text": "Leonardo da Vinci painted the Mona Lisa.",
+        "isTrue": true,
+        "fact": "He painted it in the early 16th century."
+      },
+      {
+        "text": "Mixing blue and yellow paint makes green.",
+        "isTrue": true,
+        "fact": "Blue and yellow are both primary colors that combine to make green."
+      },
+      {
+        "text": "A sculpture is a three-dimensional artwork.",
+        "isTrue": true,
+        "fact": "Sculptures can be viewed from many angles, unlike flat paintings."
+      },
+      {
+        "text": "Vincent van Gogh painted Starry Night.",
+        "isTrue": true,
+        "fact": "He painted it in 1889."
+      },
+      {
+        "text": "A color wheel shows how colors relate to each other.",
+        "isTrue": true,
+        "fact": "It helps artists understand color mixing and harmony."
+      },
+      {
+        "text": "Pablo Picasso invented the piano.",
+        "isTrue": false,
+        "fact": "Picasso was a painter who helped found Cubism, not an instrument inventor."
+      },
+      {
+        "text": "Red, green, and orange are the three primary colors.",
+        "isTrue": false,
+        "fact": "The primary colors are red, blue, and yellow."
+      },
+      {
+        "text": "A painting must always use paint made from oil.",
+        "isTrue": false,
+        "fact": "Paintings can use watercolor, acrylic, and many other materials."
+      },
+      {
+        "text": "Music and dance are not considered art forms.",
+        "isTrue": false,
+        "fact": "Music and dance are both widely recognized art forms."
+      },
+      {
+        "text": "Black and white are considered the brightest primary colors.",
+        "isTrue": false,
+        "fact": "Black and white are not primary colors at all."
+      }
+    ]
+  },
+  {
+    "id": "design",
+    "title": "Design Outpost",
+    "icon": "🛠️",
+    "lead": "Forge Marshal",
+    "leadId": "forge",
+    "statements": [
+      {
+        "text": "The Wright brothers invented the first successful airplane.",
+        "isTrue": true,
+        "fact": "They achieved powered flight in 1903."
+      },
+      {
+        "text": "A blueprint is a plan for building something.",
+        "isTrue": true,
+        "fact": "Blueprints show detailed measurements and layouts."
+      },
+      {
+        "text": "Thomas Edison is credited with developing a practical light bulb.",
+        "isTrue": true,
+        "fact": "He patented a long-lasting light bulb in 1879."
+      },
+      {
+        "text": "Engineers often build prototypes to test their ideas.",
+        "isTrue": true,
+        "fact": "Prototypes help engineers find and fix problems early."
+      },
+      {
+        "text": "A prototype helps designers test and improve their ideas.",
+        "isTrue": true,
+        "fact": "It’s an early version used for testing, not the final product."
+      },
+      {
+        "text": "The wheel was invented in the 20th century.",
+        "isTrue": false,
+        "fact": "The wheel dates back to around 3500 BC."
+      },
+      {
+        "text": "A prototype is the final, finished product sold to customers.",
+        "isTrue": false,
+        "fact": "A prototype is an early test version, not the final product."
+      },
+      {
+        "text": "Steel is weaker than paper.",
+        "isTrue": false,
+        "fact": "Steel is far stronger than paper."
+      },
+      {
+        "text": "The printing press was invented after the internet.",
+        "isTrue": false,
+        "fact": "The printing press came centuries before the internet."
+      },
+      {
+        "text": "Recycling and reusing materials has no benefit in design.",
+        "isTrue": false,
+        "fact": "Recycling and reusing materials can reduce waste and cost."
+      }
+    ]
+  },
+  {
+    "id": "spanish",
+    "title": "Spanish Outpost",
+    "icon": "🇪🇸",
+    "lead": "Sol Centinela",
+    "leadId": "sol",
+    "statements": [
+      {
+        "text": "\"Hola\" means \"Hello\" in Spanish.",
+        "isTrue": true,
+        "fact": "\"Hola\" is a common Spanish greeting."
+      },
+      {
+        "text": "\"Gracias\" means \"Thank you\" in Spanish.",
+        "isTrue": true,
+        "fact": "It’s used to express gratitude."
+      },
+      {
+        "text": "Spanish is spoken in Mexico.",
+        "isTrue": true,
+        "fact": "Spanish is the most widely spoken language in Mexico."
+      },
+      {
+        "text": "\"Uno\" means \"one\" in Spanish.",
+        "isTrue": true,
+        "fact": "\"Uno\" is the Spanish word for the number one."
+      },
+      {
+        "text": "\"Gato\" means \"cat\" in Spanish.",
+        "isTrue": true,
+        "fact": "\"Gato\" is the Spanish word for cat."
+      },
+      {
+        "text": "\"Adiós\" means \"Good morning\" in Spanish.",
+        "isTrue": false,
+        "fact": "\"Adiós\" means \"Goodbye\"; good morning is \"Buenos días\"."
+      },
+      {
+        "text": "\"Perro\" means \"cat\" in Spanish.",
+        "isTrue": false,
+        "fact": "\"Perro\" means \"dog\"; cat is \"gato\"."
+      },
+      {
+        "text": "\"Rojo\" means \"blue\" in Spanish.",
+        "isTrue": false,
+        "fact": "\"Rojo\" means \"red\"; blue is \"azul\"."
+      },
+      {
+        "text": "\"Cinco\" means \"ten\" in Spanish.",
+        "isTrue": false,
+        "fact": "\"Cinco\" means \"five\"; ten is \"diez\"."
+      },
+      {
+        "text": "\"Azul\" means \"red\" in Spanish.",
+        "isTrue": false,
+        "fact": "\"Azul\" means \"blue\"; red is \"rojo\"."
+      }
+    ]
+  }
+];
+const STORAGE_KEY = 'factDefendersSave';
+const STATEMENT_TIME_MS = 6000;
+
+/* ---------------- SOUND EFFECTS (synthesized, no audio files needed) ---------------- */
+let soundEnabled = true;
+try{ const s = localStorage.getItem('goodPawsSoundEnabled'); if(s!==null) soundEnabled = s==='1'; }catch(e){}
+
+const SFX = (function(){
+  let ctx = null;
+  function getCtx(){
+    if(!ctx){ ctx = new (window.AudioContext||window.webkitAudioContext)(); }
+    if(ctx.state==='suspended') ctx.resume();
+    return ctx;
+  }
+  function tone(freq, start, duration, type, vol){
+    if(!soundEnabled) return;
+    try{
+      const c = getCtx();
+      const osc = c.createOscillator();
+      const gain = c.createGain();
+      osc.type = type || 'sine';
+      osc.frequency.value = freq;
+      osc.connect(gain); gain.connect(c.destination);
+      const t0 = c.currentTime + start;
+      gain.gain.setValueAtTime(vol||0.15, t0);
+      gain.gain.exponentialRampToValueAtTime(0.001, t0+duration);
+      osc.start(t0);
+      osc.stop(t0+duration+0.03);
+    }catch(e){}
+  }
+  return {
+    click(){ tone(600,0,0.06,'square',0.10); },
+    correct(){ tone(523.25,0,0.12,'sine',0.16); tone(783.99,0.1,0.16,'sine',0.16); },
+    wrong(){ tone(180,0,0.25,'sawtooth',0.13); },
+    badge(){ tone(523.25,0,0.12,'triangle',0.18); tone(659.25,0.12,0.12,'triangle',0.18); tone(783.99,0.24,0.12,'triangle',0.18); tone(1046.5,0.36,0.24,'triangle',0.2); }
+  };
+})();
+function updateSoundButtons(){ document.querySelectorAll('.sound-toggle-btn').forEach(btn=>{ btn.textContent = soundEnabled ? '🔊' : '🔇'; }); }
+function toggleSound(){
+  soundEnabled = !soundEnabled;
+  try{ localStorage.setItem('goodPawsSoundEnabled', soundEnabled ? '1' : '0'); }catch(e){}
+  updateSoundButtons();
+  if(soundEnabled) SFX.click();
+}
+document.addEventListener('click', function(e){
+  const el = e.target.closest('.btn, .outpost-card, .char-card');
+  if(el && !el.disabled) SFX.click();
+}, true);
+document.addEventListener('DOMContentLoaded', updateSoundButtons);
+
+function spawnConfettiBurst(count=10){
+  const emojis = ['🎉','⭐','📛','✨','🛡️'];
+  for(let i=0;i<count;i++){
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    el.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+    el.style.left = Math.random()*100 + 'vw';
+    el.style.animationDuration = (2 + Math.random()*1.5) + 's';
+    document.body.appendChild(el);
+    setTimeout(()=> el.remove(), 4000);
+  }
+}
+
+/* ---------------- STATE ---------------- */
+let state = {
+  name:'', character:null,
+  badges:{}, // topicId -> {stars, correct}
+  gems:0, totalScore:0,
+  current:{ topicId:null, statements:[], idx:0, correctCount:0, score:0, timerId:null, deadline:0 }
+};
+
+function saveState(){ try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }catch(e){} }
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(raw) state = Object.assign(state, JSON.parse(raw));
+  }catch(e){}
+}
+
+function showScreen(name){
+  document.querySelectorAll('.screen').forEach(s=> s.classList.remove('active'));
+  const el = document.getElementById('screen-'+name);
+  if(el) el.classList.add('active');
+  if(name==='hub') renderHub();
+  if(name==='leaderboard') renderLeaderboardScreen();
+}
+
+function getCharacter(id){ return CHARACTERS.find(c=>c.id===id); }
+function getTopic(id){ return TOPICS.find(t=>t.id===id); }
+
+function renderCharGrid(){
+  const grid = document.getElementById('char-grid');
+  grid.innerHTML = '';
+  CHARACTERS.forEach(c=>{
+    const card = document.createElement('div');
+    card.className = 'char-card' + (state.character===c.id ? ' selected' : '');
+    card.innerHTML = '<div class="char-emoji">'+c.avatar+'</div><div class="char-name">'+c.name+'</div><div class="char-role">'+c.role+'</div>';
+    card.onclick = ()=>{
+      state.character = c.id;
+      renderCharGrid();
+      document.getElementById('char-continue-btn').disabled = false;
+    };
+    grid.appendChild(card);
+  });
+}
+
+function goToCharSelect(){
+  const nameInput = document.getElementById('player-name');
+  const name = nameInput.value.trim();
+  if(!name){ nameInput.focus(); return; }
+  state.name = name;
+  saveState();
+  renderCharGrid();
+  showScreen('char');
+}
+function goToInstructions(){
+  saveState();
+  showScreen('instructions');
+}
+
+function renderHub(){
+  const hud = document.getElementById('hud-stats');
+  const badgeCount = Object.keys(state.badges).length;
+  hud.innerHTML = '<span>👤 <b>'+(state.name||'Defender')+'</b></span><span>📛 Badges: <b>'+badgeCount+'/'+TOPICS.length+'</b></span><span>💎 Gems: <b>'+state.gems+'</b></span>';
+
+  const grid = document.getElementById('outpost-grid');
+  grid.innerHTML = '';
+  TOPICS.forEach(topic=>{
+    const badge = state.badges[topic.id];
+    const card = document.createElement('div');
+    card.className = 'outpost-card';
+    const stars = badge ? '⭐'.repeat(badge.stars) + '☆'.repeat(3-badge.stars) : '☆☆☆';
+    card.innerHTML = '<div class="outpost-icon">'+topic.icon+'</div><div class="outpost-title">'+topic.title+'</div><div class="outpost-lead">with '+topic.lead+'</div><div class="outpost-stars">'+stars+'</div>';
+    card.onclick = ()=> startWave(topic.id);
+    grid.appendChild(card);
+  });
+
+  document.getElementById('cert-panel').style.display = (badgeCount===TOPICS.length) ? 'block' : 'none';
+  saveState();
+  upsertLeaderboard();
+}
+
+function shuffle(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]] = [a[j],a[i]];
+  }
+  return a;
+}
+
+function startWave(topicId){
+  const topic = getTopic(topicId);
+  const statements = shuffle(topic.statements).slice(0, 8);
+  state.current = { topicId, statements, idx:0, correctCount:0, score:0, timerId:null, deadline:0 };
+  document.getElementById('wave-outpost-title').textContent = topic.icon + ' ' + topic.title;
+  showScreen('wave');
+  renderWaveHud();
+  nextStatement();
+}
+
+function renderWaveHud(){
+  const hud = document.getElementById('wave-hud');
+  hud.innerHTML = '<span>👾 Wave: <b>'+(state.current.idx+1)+'/'+state.current.statements.length+'</b></span><span>✅ Correct: <b>'+state.current.correctCount+'</b></span><span>⭐ Score: <b>'+state.current.score+'</b></span>';
+}
+
+function nextStatement(){
+  clearTimeout(state.current.timerId);
+  if(state.current.idx >= state.current.statements.length){
+    finishWave();
+    return;
+  }
+  const s = state.current.statements[state.current.idx];
+  document.getElementById('statement-box').textContent = s.text;
+  document.getElementById('wave-feedback').textContent = '';
+  document.getElementById('wave-feedback').className = 'wave-feedback';
+  document.getElementById('fact-note').textContent = '';
+  renderWaveHud();
+
+  const creature = document.getElementById('creature');
+  const dangerFill = document.getElementById('danger-fill');
+  creature.style.transition = 'none';
+  creature.style.left = '6px';
+  dangerFill.style.transition = 'none';
+  dangerFill.style.width = '0%';
+  // force reflow so the transition restarts cleanly
+  void creature.offsetWidth;
+  creature.style.transition = 'left ' + (STATEMENT_TIME_MS/1000) + 's linear';
+  dangerFill.style.transition = 'width ' + (STATEMENT_TIME_MS/1000) + 's linear';
+  creature.style.left = 'calc(100% - 90px)';
+  dangerFill.style.width = '100%';
+
+  state.current.answered = false;
+  state.current.deadline = Date.now() + STATEMENT_TIME_MS;
+  state.current.timerId = setTimeout(()=> handleTimeout(), STATEMENT_TIME_MS);
+}
+
+function handleTimeout(){
+  if(state.current.answered) return;
+  state.current.answered = true;
+  SFX.wrong();
+  const s = state.current.statements[state.current.idx];
+  const feedback = document.getElementById('wave-feedback');
+  feedback.textContent = '⏱️ Too slow! The creature reached the wall.';
+  feedback.className = 'wave-feedback bad';
+  document.getElementById('fact-note').textContent = '💡 ' + s.fact;
+  advanceAfterDelay();
+}
+
+function answerStatement(guessTrue){
+  if(state.current.answered) return;
+  state.current.answered = true;
+  clearTimeout(state.current.timerId);
+  const s = state.current.statements[state.current.idx];
+  const feedback = document.getElementById('wave-feedback');
+  if(guessTrue === s.isTrue){
+    state.current.correctCount++;
+    state.current.score += 10;
+    SFX.correct();
+    feedback.textContent = '✅ Correct! Creature zapped.';
+    feedback.className = 'wave-feedback good';
+  } else {
+    SFX.wrong();
+    feedback.textContent = '❌ Not quite.';
+    feedback.className = 'wave-feedback bad';
+  }
+  document.getElementById('fact-note').textContent = '💡 ' + s.fact;
+  advanceAfterDelay();
+}
+
+function advanceAfterDelay(){
+  renderWaveHud();
+  state.current.idx++;
+  state.current.timerId = setTimeout(()=> nextStatement(), 1100);
+}
+
+function finishWave(){
+  const topicId = state.current.topicId;
+  const correct = state.current.correctCount;
+  const stars = correct>=7 ? 3 : (correct>=5 ? 2 : 1);
+  const existing = state.badges[topicId];
+  const isNewBadge = !existing;
+  let bonusGems = 2;
+  if(isNewBadge) bonusGems += 3;
+  if(stars===3) bonusGems += 3;
+  if(!existing || stars>existing.stars){
+    state.badges[topicId] = { stars, correct };
+  }
+  state.gems += bonusGems;
+  state.totalScore += state.current.score;
+
+  const allDone = Object.keys(state.badges).length === TOPICS.length;
+  if(allDone) state.gems += 15;
+
+  saveState();
+  SFX.badge();
+  spawnConfettiBurst(14);
+
+  const feedback = document.getElementById('wave-feedback');
+  feedback.textContent = 'Wave cleared! ' + correct + '/8 correct ' + '⭐'.repeat(stars) + '☆'.repeat(3-stars) + '  (+'+bonusGems+' gems)';
+  feedback.className = 'wave-feedback good';
+  document.getElementById('fact-note').textContent = '';
+
+  setTimeout(()=>{ showScreen('hub'); }, 1600);
+}
+
+function renderCertificate(){
+  document.getElementById('cert-name').textContent = state.name;
+}
+
+/* ---------------- ON-DEVICE LEADERBOARD ---------------- */
+const LB_KEY = 'leaderboard_factDefenders';
+
+function upsertLeaderboard(){
+  try{
+    if(!state.name) return;
+    const entry = { name: state.name, score: state.totalScore||0, gems: state.gems||0, badges: Object.keys(state.badges||{}).length, total: TOPICS.length, date: new Date().toISOString() };
+    let list = [];
+    try{ list = JSON.parse(localStorage.getItem(LB_KEY)||'[]'); }catch(e){ list=[]; }
+    const idx = list.findIndex(e=> e.name===entry.name);
+    if(idx>=0){ if(entry.score>=list[idx].score) list[idx]=entry; }
+    else list.push(entry);
+    list.sort((a,b)=> b.score-a.score);
+    list = list.slice(0,20);
+    localStorage.setItem(LB_KEY, JSON.stringify(list));
+  }catch(e){}
+}
+
+function renderLeaderboardScreen(){
+  upsertLeaderboard();
+  let list = [];
+  try{ list = JSON.parse(localStorage.getItem(LB_KEY)||'[]'); }catch(e){ list=[]; }
+  const el = document.getElementById('lb-table-local');
+  if(!el) return;
+  if(!list.length){ el.innerHTML = '<p class="muted">No scores yet on this device — play a round to be the first!</p>'; return; }
+  el.innerHTML = '<table class="lb-table"><thead><tr><th>#</th><th>Name</th><th>Score</th><th>💎</th><th>Badges</th></tr></thead><tbody>' +
+    list.map((e,i)=> '<tr'+(e.name===state.name?' class="me"':'')+'><td>'+(i+1)+'</td><td>'+e.name+'</td><td>'+e.score+'</td><td>'+e.gems+'</td><td>'+e.badges+'/'+(e.total||TOPICS.length)+'</td></tr>').join('') +
+    '</tbody></table>';
+}
+
+function downloadCertificateImage(){
+  const el = document.getElementById('cert-body');
+  const btn = document.getElementById('cert-download-btn');
+  if(!el || typeof html2canvas==='undefined') return;
+  if(btn){ btn.disabled = true; btn.textContent = 'Preparing…'; }
+  html2canvas(el, { backgroundColor:'#1e2c47', scale:2 }).then(canvas=>{
+    const link = document.createElement('a');
+    const safeName = (state.name||'defender').replace(/[^a-z0-9]+/gi,'-').toLowerCase();
+    link.download = 'fact-defenders-certificate-' + safeName + '.png';
+    link.href = canvas.toDataURL('image/png');
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    if(btn){ btn.disabled = false; btn.textContent = '⬇️ Download certificate'; }
+  }).catch(()=>{
+    if(btn){ btn.disabled = false; btn.textContent = '⬇️ Download certificate'; }
+    alert('Could not generate the certificate image.');
+  });
+}
+
+/* ---------------- INIT ---------------- */
+loadState();
+if(state.name) document.getElementById('player-name').value = state.name;
+if(state.name && state.character){
+  renderCharGrid();
+  showScreen('hub');
+}
+</script>
+</body>
+</html>
