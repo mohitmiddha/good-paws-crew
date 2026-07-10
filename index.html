@@ -45,60 +45,98 @@
     margin:0 auto;
     line-height:1.55;
   }
-  .grid{
-    display:grid;
-    grid-template-columns:repeat(auto-fit, minmax(230px, 1fr));
-    gap:22px;
-  }
-  a.card{
-    display:block;
-    text-decoration:none;
-    color:inherit;
-    border-radius:28px;
-    padding:34px 26px 30px;
-    position:relative;
-    overflow:hidden;
-    isolation:isolate;
-    transition:transform .4s cubic-bezier(.2,.8,.2,1), box-shadow .4s ease;
-    box-shadow:0 2px 10px rgba(0,0,0,.06);
-  }
-  a.card:hover{
-    transform:translateY(-10px) scale(1.035);
-    box-shadow:0 26px 50px -18px rgba(0,0,0,.35);
-  }
-  a.card:active{ transform:translateY(-4px) scale(1.01); }
-  .card .icon{
-    font-size:3.4rem;
-    display:inline-block;
-    transition:transform .4s cubic-bezier(.3,1.6,.4,1);
-  }
-  a.card:hover .icon{ transform:scale(1.15) rotate(-6deg); }
-  .card h2{
-    font-size:1.35rem;
-    margin:.5em 0 .3em;
+  .map-heading{
+    text-align:center;
+    font-size:1.6rem;
+    margin:0 0 22px;
     letter-spacing:-.01em;
   }
-  .card p{
-    font-size:.92rem;
-    line-height:1.5;
-    margin:0;
-    opacity:.92;
+  .world-map{
+    position:relative;
+    max-width:640px;
+    margin:0 auto 20px;
+    aspect-ratio:1000/1300;
+    border-radius:36px;
+    overflow:hidden;
+    box-shadow:0 2px 10px rgba(0,0,0,.08);
   }
-  .card .play{
-    display:inline-block;
-    margin-top:18px;
-    font-weight:700;
-    font-size:.88rem;
-    opacity:.95;
+  .map-bg{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    display:block;
   }
-  .card.paws{ background:linear-gradient(155deg,#ffe1c4,#ffc6a3); color:#5a2e10; }
-  .card.voyagers{ background:linear-gradient(155deg,#c9d6ff,#9fb4ff); color:#1a1f5c; }
-  .card.trekkers{ background:linear-gradient(155deg,#f3dfb0,#e0bd7d); color:#3d2b10; }
-  .card.wonders{ background:linear-gradient(155deg,#bdf0d8,#8adcb6); color:#0f3d24; }
-  .card.builder{ background:linear-gradient(155deg,#fff3b0,#ffe066); color:#4a3a00; }
-  .card.defenders{ background:linear-gradient(155deg,#c2f0e0,#7fe0c0); color:#0d3d2c; }
-  .card.wizards{ background:linear-gradient(155deg,#e0cbff,#c19bff); color:#2e0f5c; }
-  .card.racers{ background:linear-gradient(155deg,#ffd7b0,#ff9d5c); color:#4a2200; }
+  .map-nodes{ position:absolute; inset:0; }
+  .map-tag{
+    position:absolute;
+    transform:translate(-50%,-50%);
+    font-weight:800;
+    font-size:.78rem;
+    letter-spacing:.04em;
+    color:#fff;
+    background:rgba(30,20,10,.55);
+    padding:5px 14px;
+    border-radius:999px;
+    white-space:nowrap;
+  }
+  .land{
+    position:absolute;
+    transform:translate(-50%,-50%);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    text-decoration:none;
+    width:120px;
+    text-align:center;
+  }
+  .land-mound{
+    width:84px;
+    height:84px;
+    border-radius:50%;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:2.5rem;
+    border:5px solid rgba(255,255,255,.7);
+    box-shadow:0 8px 0 -1px rgba(0,0,0,.1), 0 16px 26px -10px rgba(0,0,0,.4);
+    transition:transform .35s cubic-bezier(.3,1.6,.4,1), box-shadow .35s ease;
+  }
+  .land:hover .land-mound, .land:focus-visible .land-mound{
+    transform:scale(1.14) translateY(-6px) rotate(-4deg);
+    box-shadow:0 4px 0 -1px rgba(0,0,0,.1), 0 22px 30px -10px rgba(0,0,0,.45);
+  }
+  .land-name{
+    margin-top:9px;
+    font-weight:800;
+    font-size:.78rem;
+    line-height:1.2;
+    color:#3d2b10;
+    background:rgba(255,255,255,.92);
+    padding:4px 10px;
+    border-radius:999px;
+    box-shadow:0 2px 6px rgba(0,0,0,.1);
+  }
+  .land.paws .land-mound{ background:linear-gradient(155deg,#ffe1c4,#ff9d5c); }
+  .land.voyagers .land-mound{ background:linear-gradient(155deg,#c9d6ff,#7f9aff); }
+  .land.trekkers .land-mound{ background:linear-gradient(155deg,#f3dfb0,#dcae5e); }
+  .land.wonders .land-mound{ background:linear-gradient(155deg,#bdf0d8,#69cf9e); }
+  .land.builder .land-mound{ background:linear-gradient(155deg,#fff3b0,#ffd23f); }
+  .land.defenders .land-mound{ background:linear-gradient(155deg,#c2f0e0,#5cd2ab); }
+  .land.wizards .land-mound{ background:linear-gradient(155deg,#e0cbff,#a877ff); }
+  .land.racers .land-mound{ background:linear-gradient(155deg,#ffd7b0,#ff8a3d); }
+  .map-note{
+    text-align:center;
+    font-size:.85rem;
+    color:#9ca3af;
+    margin:0 0 12px;
+  }
+  @media (max-width:600px){
+    .land{ width:88px; }
+    .land-mound{ width:60px; height:60px; font-size:1.7rem; border-width:3px; }
+    .land-name{ font-size:.66rem; padding:3px 7px; }
+    .map-tag{ font-size:.62rem; padding:4px 10px; }
+  }
 
   footer.note{
     text-align:center;
@@ -246,57 +284,80 @@
       <p>Eight games, one brainy crew of explorers — a quiz adventure, a star-map expedition, a history-repair puzzle, a postcard memory match, a theme park to build, an outpost to defend, a vocabulary quest, and a grand circuit race, all covering geography, space, animals, sports, logic, maths, science, language arts, art, design, and Spanish.</p>
     </header>
     <div class="trailer-wrap">
-      <video src="quest-crew-arcade-trailer-voiced.mp4" controls playsinline preload="metadata"></video>
+      <video src="quest-crew-arcade-trailer.mp4" controls playsinline preload="metadata"></video>
     </div>
-    <div class="grid">
-      <a class="card paws" href="good-paws-crew.html">
-        <div class="icon">🐾</div>
-        <h2>Good Paws Crew</h2>
-        <p>Reformed troublemakers turned good guys. Complete 11 world missions and earn your badges — plus a retro arcade of bonus mini-games.</p>
-        <div class="play">Play →</div>
-      </a>
-      <a class="card voyagers" href="star-voyagers.html">
-        <div class="icon">🚀</div>
-        <h2>Star Voyagers</h2>
-        <p>Recover the galaxy's lost knowledge aboard the starship Nova Wanderer. 11 star systems, one Great Archive to restore.</p>
-        <div class="play">Play →</div>
-      </a>
-      <a class="card trekkers" href="time-trekkers.html">
-        <div class="icon">⏳</div>
-        <h2>Time Trekkers</h2>
-        <p>A mysterious Time Fog has scrambled history. Trek across 11 ancient eras to repair the timeline for good.</p>
-        <div class="play">Play →</div>
-      </a>
-      <a class="card wonders" href="passport-quest.html">
-        <div class="icon">🧳</div>
-        <h2>Passport Quest</h2>
-        <p>Postcards from Everywhere: flip and match postcard pairs across 11 famous stops to fill your passport and become an Official Globetrotter.</p>
-        <div class="play">Play →</div>
-      </a>
-      <a class="card builder" href="world-wonders-builder.html">
-        <div class="icon">🏗️</div>
-        <h2>World Wonders Builder</h2>
-        <p>Build your own theme park across four zones with your Good Paws crew, earning Spark Points and tackling Vera's Discovery Challenges.</p>
-        <div class="play">Play →</div>
-      </a>
-      <a class="card defenders" href="fact-defenders.html">
-        <div class="icon">🛡️</div>
-        <h2>Fact Defenders</h2>
-        <p>Outpost Alliance: zap true-or-false claims before they reach the wall across 11 border outposts, defending alongside Commander Vex.</p>
-        <div class="play">Play →</div>
-      </a>
-      <a class="card wizards" href="word-wizards.html">
-        <div class="icon">📚</div>
-        <h2>Word Wizards</h2>
-        <p>Vocabulary Quest: tap scrambled letter tiles to restore vocabulary words from their clues across 11 realms, guided by Archmage Lexicon.</p>
-        <div class="play">Play →</div>
-      </a>
-      <a class="card racers" href="fact-racers.html">
-        <div class="icon">🏁</div>
-        <h2>Fact Racers</h2>
-        <p>Grand Circuit: pick the correct answer to boost your car down 11 circuits of quick two-option questions, guided by Chief Checkered.</p>
-        <div class="play">Play →</div>
-      </a>
+    <h2 class="map-heading">🗺️ Choose Your Quest</h2>
+    <p class="map-note">Tap a land to start that quest — every game still has its own 11 missions, badges and leaderboard.</p>
+    <div class="world-map">
+      <svg class="map-bg" viewBox="0 0 1000 1300" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <defs>
+          <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fdf3e7"/>
+            <stop offset="45%" stop-color="#eef6e6"/>
+            <stop offset="100%" stop-color="#e4f1fa"/>
+          </linearGradient>
+        </defs>
+        <rect x="0" y="0" width="1000" height="1300" fill="url(#sky)"/>
+        <g opacity=".55" fill="#fff">
+          <ellipse cx="140" cy="60" rx="70" ry="24"/>
+          <ellipse cx="195" cy="48" rx="46" ry="20"/>
+          <ellipse cx="860" cy="120" rx="60" ry="22"/>
+          <ellipse cx="905" cy="150" rx="42" ry="18"/>
+        </g>
+        <g opacity=".5">
+          <ellipse cx="60" cy="170" rx="150" ry="70" fill="#d9ecd2"/>
+          <ellipse cx="900" cy="340" rx="170" ry="80" fill="#e6f0d4"/>
+          <ellipse cx="90" cy="500" rx="160" ry="75" fill="#d9ecd2"/>
+          <ellipse cx="920" cy="640" rx="170" ry="80" fill="#dcefe4"/>
+          <ellipse cx="70" cy="790" rx="150" ry="70" fill="#e6f0d4"/>
+          <ellipse cx="910" cy="940" rx="170" ry="80" fill="#d9ecd2"/>
+          <ellipse cx="90" cy="1080" rx="160" ry="75" fill="#e3ecfa"/>
+          <ellipse cx="500" cy="1220" rx="260" ry="90" fill="#dcefe4"/>
+        </g>
+        <path d="M190,100 L780,235 L200,382 L790,528 L190,674 L790,820 L200,967 L500,1138"
+          fill="none" stroke="#e3a86b" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="2 26" opacity=".85"/>
+        <g opacity=".7" fill="#f0a35f">
+          <path d="M100 40 l6 16 h16 l-13 10 l5 16 l-14 -10 l-14 10 l5 -16 l-13 -10 h16 z"/>
+          <path d="M900 470 l5 13 h13 l-10 8 l4 13 l-11 -8 l-11 8 l4 -13 l-10 -8 h13 z"/>
+          <path d="M110 900 l5 13 h13 l-10 8 l4 13 l-11 -8 l-11 8 l4 -13 l-10 -8 h13 z"/>
+        </g>
+      </svg>
+      <div class="map-nodes">
+        <div class="map-tag" style="left:9%; top:2.5%;">START</div>
+        <a class="land paws" href="good-paws-crew.html" style="left:19%; top:7.7%;" title="Reformed troublemakers turned good guys. Complete 11 world missions and earn your badges — plus a retro arcade of bonus mini-games.">
+          <span class="land-mound">🐾</span>
+          <span class="land-name">Good Paws Crew</span>
+        </a>
+        <a class="land voyagers" href="star-voyagers.html" style="left:78%; top:18.1%;" title="Recover the galaxy's lost knowledge aboard the starship Nova Wanderer. 11 star systems, one Great Archive to restore.">
+          <span class="land-mound">🚀</span>
+          <span class="land-name">Star Voyagers</span>
+        </a>
+        <a class="land trekkers" href="time-trekkers.html" style="left:20%; top:29.4%;" title="A mysterious Time Fog has scrambled history. Trek across 11 ancient eras to repair the timeline for good.">
+          <span class="land-mound">⏳</span>
+          <span class="land-name">Time Trekkers</span>
+        </a>
+        <a class="land wonders" href="passport-quest.html" style="left:79%; top:40.6%;" title="Postcards from Everywhere: flip and match postcard pairs across 11 famous stops to fill your passport and become an Official Globetrotter.">
+          <span class="land-mound">🧳</span>
+          <span class="land-name">Passport Quest</span>
+        </a>
+        <a class="land builder" href="world-wonders-builder.html" style="left:19%; top:51.8%;" title="Build your own theme park across four zones with your Good Paws crew, earning Spark Points and tackling Vera's Discovery Challenges.">
+          <span class="land-mound">🏗️</span>
+          <span class="land-name">World Wonders Builder</span>
+        </a>
+        <a class="land defenders" href="fact-defenders.html" style="left:79%; top:63.1%;" title="Outpost Alliance: zap true-or-false claims before they reach the wall across 11 border outposts, defending alongside Commander Vex.">
+          <span class="land-mound">🛡️</span>
+          <span class="land-name">Fact Defenders</span>
+        </a>
+        <a class="land wizards" href="word-wizards.html" style="left:20%; top:74.4%;" title="Vocabulary Quest: tap scrambled letter tiles to restore vocabulary words from their clues across 11 realms, guided by Archmage Lexicon.">
+          <span class="land-mound">📚</span>
+          <span class="land-name">Word Wizards</span>
+        </a>
+        <a class="land racers" href="fact-racers.html" style="left:50%; top:87.5%;" title="Grand Circuit: pick the correct answer to boost your car down 11 circuits of quick two-option questions, guided by Chief Checkered.">
+          <span class="land-mound">🏁</span>
+          <span class="land-name">Fact Racers</span>
+        </a>
+        <div class="map-tag" style="left:50%; top:97%;">FINISH 🏆</div>
+      </div>
     </div>
     <div class="combined-lb">
       <h2>🏆 Combined Leaderboard</h2>
