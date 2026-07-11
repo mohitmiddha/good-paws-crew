@@ -154,7 +154,7 @@
     border-radius:36px;
     overflow:hidden;
     box-shadow:0 10px 40px -12px rgba(0,0,0,.25);
-    background:linear-gradient(180deg,#bfe0ff 0%,#cfe8ff 30%,#e6f3e0 62%,#fdf3e7 100%);
+    background:linear-gradient(180deg,#5fa8ec 0%,#8cc6f2 26%,#cfe8ff 48%,#e6f3e0 68%,#fdf3e7 100%);
   }
   .map-layer{
     position:absolute;
@@ -165,6 +165,16 @@
     pointer-events:none;
   }
   .map-nodes{ position:absolute; inset:0; z-index:5; }
+  .map-mascot{
+    position:absolute;
+    left:50%;
+    bottom:16px;
+    transform:translateX(-50%);
+    width:78px;
+    z-index:6;
+    filter:drop-shadow(0 14px 12px rgba(0,0,0,.35));
+    pointer-events:none;
+  }
   .hub-label{
     position:absolute;
     left:50%; top:50%;
@@ -213,35 +223,22 @@
     filter:drop-shadow(0 8px 6px rgba(0,0,0,.35));
     transition:transform .35s cubic-bezier(.3,1.6,.4,1);
   }
-  .island-disc{
+  .island-rock{
     position:absolute;
-    left:50%;
-    top:56px;
-    width:130px;
-    height:92px;
-    transform:translateX(-50%) rotateX(58deg);
-    border-radius:50%;
-    background:linear-gradient(155deg,var(--c1),var(--c2));
-    box-shadow:0 0 0 6px rgba(255,255,255,.55) inset, 0 0 22px rgba(0,0,0,.18) inset, 0 30px 34px -14px rgba(0,0,0,.42);
-    z-index:2;
+    inset:0;
+    filter:drop-shadow(0 18px 16px rgba(0,0,0,.35));
+    transition:transform .35s cubic-bezier(.3,1.6,.4,1);
   }
-  .island-base{
+  .facet-top, .facet-left, .facet-right{
     position:absolute;
-    left:50%;
-    top:96px;
-    width:96px;
-    height:58px;
-    transform:translateX(-50%);
-    clip-path:polygon(12% 0%, 88% 0%, 68% 100%, 32% 100%);
-    background:
-      repeating-linear-gradient(180deg, rgba(255,255,255,.14) 0 5px, rgba(0,0,0,0) 5px 13px),
-      linear-gradient(180deg, var(--c2), var(--c3));
-    box-shadow:0 16px 22px -8px rgba(0,0,0,.4);
-    z-index:1;
+    inset:0;
   }
+  .facet-top{ clip-path:polygon(50% 4%, 92% 34%, 50% 54%, 8% 34%); background:var(--c1); }
+  .facet-left{ clip-path:polygon(8% 34%, 50% 54%, 50% 98%, 14% 76%); background:var(--c2); }
+  .facet-right{ clip-path:polygon(92% 34%, 50% 54%, 50% 98%, 86% 76%); background:var(--c3); }
   .land:hover .island-icon, .land:focus-visible .island-icon, .land.selected .island-icon{ transform:translateX(-50%) scale(1.15) rotate(-4deg); }
-  .land:hover .island-disc, .land:focus-visible .island-disc, .land.selected .island-disc{ box-shadow:0 0 0 6px rgba(255,255,255,.7) inset, 0 0 22px rgba(0,0,0,.18) inset, 0 36px 40px -14px rgba(0,0,0,.48); }
-  .land.selected .island-disc{ outline:4px solid var(--c2); outline-offset:6px; }
+  .land:hover .island-rock, .land:focus-visible .island-rock, .land.selected .island-rock{ transform:scale(1.08) translateY(-4px); }
+  .land.selected .facet-top{ outline:4px solid #fff; outline-offset:-4px; }
   .land-name{
     margin-top:8px;
     font-weight:800;
@@ -275,13 +272,12 @@
   }
   @media (max-width:600px){
     .land{ width:96px; }
-    .island-3d{ width:96px; height:104px; perspective:280px; }
-    .island-icon{ font-size:1.8rem; }
-    .island-disc{ top:38px; width:88px; height:62px; }
-    .island-base{ top:64px; width:64px; height:38px; }
+    .island-3d{ width:96px; height:104px; }
+    .island-icon{ font-size:1.8rem; top:0; }
     .land-name{ font-size:.68rem; margin-top:6px; }
     .land-code{ font-size:.54rem; padding:2px 7px; }
     .hub-label{ font-size:.62rem; width:100px; }
+    .map-mascot{ width:48px; bottom:8px; }
   }
 
   footer.note{
@@ -493,8 +489,11 @@
         <a class="land paws" href="good-paws-crew.html" style="left:15%; top:16%;" data-x="15" data-y="16" title="Reformed troublemakers turned good guys. Complete 11 world missions and earn your badges — plus a retro arcade of bonus mini-games.">
           <span class="island-3d">
             <span class="island-icon">🐾</span>
-            <span class="island-disc"></span>
-            <span class="island-base"></span>
+            <span class="island-rock">
+              <span class="facet-top"></span>
+              <span class="facet-left"></span>
+              <span class="facet-right"></span>
+            </span>
           </span>
           <span class="land-name">Good Paws Crew</span>
           <span class="land-code">PAWS</span>
@@ -502,8 +501,11 @@
         <a class="land voyagers" href="star-voyagers.html" style="left:52%; top:11%;" data-x="52" data-y="11" title="Recover the galaxy's lost knowledge aboard the starship Nova Wanderer. 11 star systems, one Great Archive to restore.">
           <span class="island-3d">
             <span class="island-icon">🚀</span>
-            <span class="island-disc"></span>
-            <span class="island-base"></span>
+            <span class="island-rock">
+              <span class="facet-top"></span>
+              <span class="facet-left"></span>
+              <span class="facet-right"></span>
+            </span>
           </span>
           <span class="land-name">Star Voyagers</span>
           <span class="land-code">VOYA</span>
@@ -511,8 +513,11 @@
         <a class="land trekkers" href="time-trekkers.html" style="left:85%; top:22%;" data-x="85" data-y="22" title="A mysterious Time Fog has scrambled history. Trek across 11 ancient eras to repair the timeline for good.">
           <span class="island-3d">
             <span class="island-icon">⏳</span>
-            <span class="island-disc"></span>
-            <span class="island-base"></span>
+            <span class="island-rock">
+              <span class="facet-top"></span>
+              <span class="facet-left"></span>
+              <span class="facet-right"></span>
+            </span>
           </span>
           <span class="land-name">Time Trekkers</span>
           <span class="land-code">TREK</span>
@@ -520,8 +525,11 @@
         <a class="land defenders" href="fact-defenders.html" style="left:13%; top:54%;" data-x="13" data-y="54" title="Outpost Alliance: zap true-or-false claims before they reach the wall across 11 border outposts, defending alongside Commander Vex.">
           <span class="island-3d">
             <span class="island-icon">🛡️</span>
-            <span class="island-disc"></span>
-            <span class="island-base"></span>
+            <span class="island-rock">
+              <span class="facet-top"></span>
+              <span class="facet-left"></span>
+              <span class="facet-right"></span>
+            </span>
           </span>
           <span class="land-name">Fact Defenders</span>
           <span class="land-code">DFND</span>
@@ -529,8 +537,11 @@
         <a class="land builder" href="world-wonders-builder.html" style="left:43%; top:47%;" data-x="43" data-y="47" title="Build your own theme park across four zones with your Good Paws crew, earning Spark Points and tackling Vera's Discovery Challenges.">
           <span class="island-3d">
             <span class="island-icon">🏗️</span>
-            <span class="island-disc"></span>
-            <span class="island-base"></span>
+            <span class="island-rock">
+              <span class="facet-top"></span>
+              <span class="facet-left"></span>
+              <span class="facet-right"></span>
+            </span>
           </span>
           <span class="land-name">World Wonders Builder</span>
           <span class="land-code">BLDR</span>
@@ -538,8 +549,11 @@
         <a class="land wonders" href="passport-quest.html" style="left:78%; top:54%;" data-x="78" data-y="54" title="Postcards from Everywhere: flip and match postcard pairs across 11 famous stops to fill your passport and become an Official Globetrotter.">
           <span class="island-3d">
             <span class="island-icon">🧳</span>
-            <span class="island-disc"></span>
-            <span class="island-base"></span>
+            <span class="island-rock">
+              <span class="facet-top"></span>
+              <span class="facet-left"></span>
+              <span class="facet-right"></span>
+            </span>
           </span>
           <span class="land-name">Passport Quest</span>
           <span class="land-code">PASS</span>
@@ -547,8 +561,11 @@
         <a class="land wizards" href="word-wizards.html" style="left:28%; top:82%;" data-x="28" data-y="82" title="Vocabulary Quest: tap scrambled letter tiles to restore vocabulary words from their clues across 11 realms, guided by Archmage Lexicon.">
           <span class="island-3d">
             <span class="island-icon">📚</span>
-            <span class="island-disc"></span>
-            <span class="island-base"></span>
+            <span class="island-rock">
+              <span class="facet-top"></span>
+              <span class="facet-left"></span>
+              <span class="facet-right"></span>
+            </span>
           </span>
           <span class="land-name">Word Wizards</span>
           <span class="land-code">WORD</span>
@@ -556,13 +573,31 @@
         <a class="land racers" href="fact-racers.html" style="left:65%; top:85%;" data-x="65" data-y="85" title="Grand Circuit: pick the correct answer to boost your car down 11 circuits of quick two-option questions, guided by Chief Checkered.">
           <span class="island-3d">
             <span class="island-icon">🏁</span>
-            <span class="island-disc"></span>
-            <span class="island-base"></span>
+            <span class="island-rock">
+              <span class="facet-top"></span>
+              <span class="facet-left"></span>
+              <span class="facet-right"></span>
+            </span>
           </span>
           <span class="land-name">Fact Racers</span>
           <span class="land-code">RACE</span>
         </a>
       </div>
+      <svg class="map-mascot" viewBox="0 0 200 210" aria-hidden="true">
+        <ellipse cx="100" cy="200" rx="70" ry="10" fill="rgba(0,0,0,.18)"/>
+        <path d="M20 205 L60 150 L140 150 L180 205 Z" fill="#c9b79c"/>
+        <rect x="76" y="118" width="16" height="30" rx="7" class="bot-leg"/>
+        <rect x="108" y="118" width="16" height="30" rx="7" class="bot-leg"/>
+        <rect x="55" y="46" width="16" height="40" rx="8" class="bot-arm"/>
+        <rect x="129" y="46" width="16" height="40" rx="8" class="bot-arm"/>
+        <rect x="66" y="32" width="68" height="88" rx="22" class="bot-body"/>
+        <circle cx="100" cy="76" r="14" class="bot-chest"/>
+        <circle cx="100" cy="76" r="7" class="bot-chest-core"/>
+        <circle cx="100" cy="16" r="38" class="bot-head"/>
+        <rect x="72" y="6" width="56" height="26" rx="13" class="bot-visor"/>
+        <circle cx="87" cy="19" r="7" class="bot-eye"/>
+        <circle cx="113" cy="19" r="7" class="bot-eye"/>
+      </svg>
     </div>
     <div class="combined-lb" id="combined-lb">
       <h2>🏆 Combined Leaderboard</h2>
